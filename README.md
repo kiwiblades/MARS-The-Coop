@@ -28,22 +28,7 @@ Optional but helpful:
 
 ## First-time setup
 
-### 1) Clone repo + start the database
-From the project root:
-
-```bash
-docker compose up -d
-docker compose ps
-```
-
-> Docker will automatically download/pull the Postgres image the first time you run this. Much easier than last time.
-
-To stop containers later:
-```bash
-docker compose down
-```
-
-### 2) Backend setup
+### 1) Backend setup
 
 From the project root:
 ```bash
@@ -69,7 +54,7 @@ npm install
 > [!NOTE]
 > You may need to repeat `npm install` after pulling new changes. Dependencies may change over time.
 
-### 3) Frontend setup
+### 2) Frontend setup
 
 From the project root:
 ```bash
@@ -98,7 +83,21 @@ flutter doctor
 ```
 If this command produces any errors, follow the output to correct them. Mainly, verify 'Android toolchain' is marked with a green check.
 
----
+### 3) Database setup
+
+From the project root:
+
+```bash
+docker compose --env-file backend/.env up -d
+docker compose --env-file backend/.env ps
+```
+
+> Docker will automatically download/pull the Postgres image the first time you run this. Much easier than last time.
+
+To stop containers later:
+```bash
+docker compose down
+```
 
 ## Running the project
 
@@ -121,7 +120,7 @@ Open a browser to:
 You should see JSON like `{ ok: true, ... }`.
 
 If it fails:
-- Make sure Docker is running (`docker compose ps`).
+- Make sure Docker is running (`docker compose --env-file backend/.env ps`).
 - Make sure `backend/.env` exists and is correct.
 - Make sure the backend server is running.
 - (Optional) Contact Rye and complain.
@@ -170,8 +169,9 @@ Note that `backend/.env` and `frontend/.env` exist separately. Any keys or sensi
 - Check that `SV_PORT` in `backend/.env` matches the port in this URL.
 
 ### Database healthcheck fails
-- Run `docker compose ps` and ensure the Postgres container is healthy (look under status).
-- Restart containers: `docker compose down` then `docker compose up -d`.
+- Run `docker compose --env-file backend/.env ps` and ensure the Postgres container is healthy (look under status).
+- Restart containers: `docker compose down` then `docker compose --env-file backend/.env up -d`.
+- Restart the backend server: `npm run dev`, then check the endpoint again.
 - If it's still not working, open Docker Desktop, navigate to this project's container, then open logs. At the far right, there is a "copy to clipboard" option; do this and send to Rye.
 
 ## Commands
@@ -197,8 +197,8 @@ Run these from `backend/`
 - `npm run db:rollback` -> rolls back the **most recent** migration (useful if a migration was wrong or you need to undo a schema change)
 
 ### Database
-- `docker compose up -d` -> starts all docker services in background
-- `docker compose ps` -> displays all running docker containers + their status
+- `docker compose --env-file backend/.env up -d` -> starts all docker services in background using backend .env values
+- `docker compose --env-file backend/.env ps` -> displays all running docker containers + their status
 - `docker compose logs -f postgres` -> real-time docker log display in terminal for troubleshooting
 - `docker compose down` -> stops containers but keeps database volume (persists data)
 - `docker compose down -v` -> stops containers **and deletes volumes** (full reset)
