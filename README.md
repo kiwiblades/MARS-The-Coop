@@ -13,18 +13,19 @@ Repo structure:
 
 ## Prerequisites
 
-Install these before running the project:
+Install these or verify you have them installed before running the project:
 
 ### Backend + Database
 - Node.js + npm
+    - https://nodejs.org/en/download/current
 - Docker Desktop (required for PostgreSQL)
+    - https://www.docker.com/products/docker-desktop/
 
 ### Frontend
 - Flutter SDK
+    - https://docs.flutter.dev/install
 - Android Studio (for the Android emulator)
-
-Optional but helpful:
-- VS Code Flutter + Dart extensions
+    - https://developer.android.com/studio
 
 ## First-time setup
 
@@ -72,6 +73,11 @@ Create the frontend env file:
     ```
 - Or use a GUI file-manager.
 
+If you already had Flutter SDK installed prior to project setup, make sure it's up to date:
+```bash
+flutter upgrade
+```
+
 Install Flutter packages:
 ```bash
 flutter pub get
@@ -93,11 +99,6 @@ docker compose --env-file backend/.env ps
 ```
 
 > Docker will automatically download/pull the Postgres image the first time you run this. Much easier than last time.
-
-To stop containers later:
-```bash
-docker compose down
-```
 
 ## Running the project
 
