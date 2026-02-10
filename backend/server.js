@@ -13,7 +13,7 @@ import Healthcheck from './src/models/Healthcheck.js';
 */
 
 const app = express(); // create a request handler via Express
-app.use(express.json()); // attach general middleware
+app.use(express.json()); // attach json parsing middleware
 
 const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
@@ -42,8 +42,11 @@ app.get('/health/db', async (req, res) => {
     }
 });
 
-// TODO: attach custom error handling middleware
-// error-handling middleware muist be attached last.
+// error-handling middleware muist be attached last
+import AppError from './src/utils/errors/AppError.js';
+import errorHandler from './src/middleware/errorHandler.js';
+app.use((req, res, next) => next(AppError.notFound('Route not found')));
+app.use(errorHandler);
 
 await sequelize.authenticate();
 console.log("Database connected");
