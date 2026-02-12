@@ -3,7 +3,6 @@ import express from 'express'; // http framework
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
-import Healthcheck from './src/models/Healthcheck.js';
 
 /*
     The server consists of multiple parts:
@@ -19,33 +18,13 @@ const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
 
 // TODO: attach API routes here
-
-// route for server healthcheck
-app.get('/health', async (req, res) => {
-    try {
-        res.json({ ok: true, message: 'backend reachable' });
-    } catch(e) {
-        console.error(e);
-        res.status(500).json({ ok: false, error: "db healthcheck failed" });
-    }
-})
-
-// route for db healthcheck
-app.get('/health/db', async (req, res) => {
-    try {
-        const row = await Healthcheck.create({});
-        const count = await Healthcheck.count();
-        res.json({ ok: true, insertedId: row.id, totalRows: count });
-    } catch(e) {
-        console.error(e);
-        res.status(500).json({ ok: false, error: "db healthcheck failed" });
-    }
-});
+import healthRoutes from './src/routes/healthRoutes.js';
+app.use('/health', healthRoutes);
 
 // error-handling middleware muist be attached last
 import AppError from './src/utils/errors/AppError.js';
 import errorHandler from './src/middleware/errorHandler.js';
-app.use((req, res, next) => next(AppError.notFound('Route not found')));
+app.use((req, res, next) => next(AppError.notFound('Route not found'))); // 404 for unknown routes
 app.use(errorHandler);
 
 await sequelize.authenticate();
