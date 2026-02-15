@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/mail_screen.dart';
+import 'package:frontend/view/myCoop_screen.dart';
 import 'services/api_client.dart';
 import 'services/health_service.dart';
 
@@ -19,12 +21,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       // title: 'Backend test',
-      // home: HealthPage(), // TODO: replace HealthPage once other screens exist
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
       initialRoute: MailScreen.routeName, //no home page, Mail will be initial
       //can have theme
       routes: {
-        MailScreen.routeName: (BuildContext context) => const MailScreen(),
+        MailScreen.routeName: (BuildContext context) => const AppShell(child: MailScreen()),
+        MyCoopScreen.routeName: (BuildContext context) => const AppShell(child: MyCoopScreen()),
       },
     );
   }
