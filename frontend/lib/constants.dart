@@ -19,7 +19,7 @@ class AppColors {
 }
 
 class AppTextStyles {
-  static const String fontFamily = 'Josefin Sans'; 
+  static const String fontFamily = 'Zalando Sans'; 
   
   static const TextStyle heading = TextStyle(
     fontSize: 24,
