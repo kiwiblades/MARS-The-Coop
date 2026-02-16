@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/api_client.dart';
 import 'services/health_service.dart';
+import 'view/signup_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,57 +14,66 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+//   // This widget is the root of your application.
+//   @override
+//   Widget build(BuildContext context) {
+//     return const MaterialApp(
+//       title: 'Backend test',
+//       home: HealthPage(), // TODO: replace HealthPage once other screens exist
+//     );
+//   }
+// }
+
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'Backend test',
-      home: HealthPage(), // TODO: replace HealthPage once other screens exist
+      title: 'The Coop',
+      home: SignupPage(), 
     );
   }
 }
 
-// entry point to prove the mobile app can reach the backend -- feel free to remove/comment out
-class HealthPage extends StatefulWidget {
-  const HealthPage({super.key});
-  @override
-  State<HealthPage> createState() => _HealthPageState();
-}
+// // entry point to prove the mobile app can reach the backend -- feel free to remove/comment out
+// class HealthPage extends StatefulWidget {
+//   const HealthPage({super.key});
+//   @override
+//   State<HealthPage> createState() => _HealthPageState();
+// }
 
-class _HealthPageState extends State<HealthPage> {
-  late final HealthService _healthService;
-  late Future<Map<String, dynamic>> _future;
+// class _HealthPageState extends State<HealthPage> {
+//   late final HealthService _healthService;
+//   late Future<Map<String, dynamic>> _future;
 
-  @override
-  void initState() {
-    super.initState();
-    _healthService = HealthService(ApiClient());
-    _future = _healthService.fetchHealth(); // run immediately on page load
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     _healthService = HealthService(ApiClient());
+//     _future = _healthService.fetchHealth(); // run immediately on page load
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Backend connectivity test')),
-      body: Center(
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: _future,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-            final data = snapshot.data!;
-            return Text('${data['message']}');
-          }
-        )
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => setState(() => _future = _healthService.fetchHealth()),
-        child: const Icon(Icons.refresh)
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Backend connectivity test')),
+//       body: Center(
+//         child: FutureBuilder<Map<String, dynamic>>(
+//           future: _future,
+//           builder: (context, snapshot) {
+//             if (snapshot.connectionState == ConnectionState.waiting) {
+//               return const CircularProgressIndicator();
+//             }
+//             if (snapshot.hasError) {
+//               return Text('Error: ${snapshot.error}');
+//             }
+//             final data = snapshot.data!;
+//             return Text('${data['message']}');
+//           }
+//         )
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () => setState(() => _future = _healthService.fetchHealth()),
+//         child: const Icon(Icons.refresh)
+//       ),
+//     );
+//   }
+// }
