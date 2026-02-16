@@ -9,16 +9,16 @@ class AppShell extends StatelessWidget {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        // title: const Text('Title Test'),
+        automaticallyImplyLeading: false, //gets rid of auto back arrow
         title: Builder(
           builder: (BuildContext context) {
             return Row(
               children: [
-                TextButton(onPressed: () {
-                  Navigator.pushNamed(context, '/mailScreen');
+                TextButton(onPressed: () { //Mail Button
+                  Navigator.pushNamed(context, '/mailScreen'); //routes to mail screen when clicked
                 }, child: const Text('Mail')),
-                TextButton(onPressed: () {
-                  Navigator.pushNamed(context, '/myCoopScreen');
+                TextButton(onPressed: () { //My Coop Button
+                  Navigator.pushNamed(context, '/myCoopScreen'); //navigates to my coop screen when clicked
                 }, child: const Text('My Coop')),
               ],
             );
@@ -27,8 +27,9 @@ class AppShell extends StatelessWidget {
         actions: [
           IconButton(
           icon: const Icon(Icons.person),
-          // tooltip: 'Increase volume by 10',
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pushNamed(context, '/profileScreen');
+          },
         ),
         ],
       ),

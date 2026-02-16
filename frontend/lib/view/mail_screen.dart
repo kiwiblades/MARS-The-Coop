@@ -18,6 +18,5 @@ class MailScreenState extends State<MailScreen> {
     return const Center(
       child: Text("Mail screen"),
     );
-
   }
 }

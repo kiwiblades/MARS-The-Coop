@@ -3,8 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/myCoop_screen.dart';
-import 'services/api_client.dart';
-import 'services/health_service.dart';
+import 'package:frontend/view/profile_screen.dart';
+// import 'services/api_client.dart';
+// import 'services/health_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
       routes: {
         MailScreen.routeName: (BuildContext context) => const AppShell(child: MailScreen()),
         MyCoopScreen.routeName: (BuildContext context) => const AppShell(child: MyCoopScreen()),
+        ProfileScreen.routeName: (BuildContext context) => const AppShell(child: ProfileScreen()),
       },
     );
   }
