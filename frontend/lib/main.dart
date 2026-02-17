@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/myCoop_screen.dart';
+import 'package:frontend/view/profilePicSelection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
 // import 'services/api_client.dart';
 // import 'services/health_service.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
         MailScreen.routeName: (BuildContext context) => const AppShell(child: MailScreen()),
         MyCoopScreen.routeName: (BuildContext context) => const AppShell(child: MyCoopScreen()),
         ProfileScreen.routeName: (BuildContext context) => const AppShell(child: ProfileScreen()),
+        ProfilePicSelectionScreen.routeName: (BuildContext context) => const ProfilePicSelectionScreen(),
       },
     );
   }
