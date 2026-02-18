@@ -8,7 +8,9 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
+      backgroundColor: Color(0xFFD1A681),
       appBar: AppBar(
+      backgroundColor: Color(0xFFD1A681),
         automaticallyImplyLeading: false, //gets rid of auto back arrow
         title: Builder(
           builder: (BuildContext context) {

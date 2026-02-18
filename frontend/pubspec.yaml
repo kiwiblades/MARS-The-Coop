@@ -63,7 +63,42 @@ flutter:
   assets:
     - .env
     - images/skyProfileBG.png
-    - images/nicobarPigeon.png
+    - images/woodGrainTexture.png
+    #Side view of pigeons (for journal)
+    # - images/pigeonSide/nicobarPigeonSide.png
+    # - images/pigeonSide/thickBilledPigeonSide.png
+    - images/pigeonSide/showRacingHomerSide.png
+    - images/pigeonSide/amStrasserSide.png
+    - images/pigeonSide/ancientPigeonSide.png
+    - images/pigeonSide/berneLarkSide.png
+    - images/pigeonSide/chineseOwlChampionSide.png
+    - images/pigeonSide/egyptianSwiftSide.png
+    - images/pigeonSide/indianFantailSide.png
+    - images/pigeonSide/magpiePigeonSide.png
+    - images/pigeonSide/mourningDoveSide.png
+    - images/pigeonSide/pinkNeckedGreenPigeonSide.png
+    #coop view of pigeons (for "my coop")
+    - images/pigeonCoop/showRacingHomerCoop.png
+    - images/pigeonCoop/amStrasserCoop.png
+    - images/pigeonCoop/ancientPigeonCoop.png
+    - images/pigeonCoop/berneLarkCoop.png
+    - images/pigeonCoop/chineseOwlChampionCoop.png
+    - images/pigeonCoop/egyptianSwiftCoop.png
+    - images/pigeonCoop/indianFantailCoop.png
+    - images/pigeonCoop/magpiePigeonCoop.png
+    - images/pigeonCoop/mourningDoveCoop.png
+    - images/pigeonCoop/pinkNeckedGreenPigeonCoop.png
+    #profile view of pigeons (for "my coop")
+    - images/pigeonProfile/showRacingHomerProfile.png
+    - images/pigeonProfile/amStrasserProfile.png
+    - images/pigeonProfile/ancientPigeonProfile.png
+    - images/pigeonProfile/berneLarkProfile.png
+    - images/pigeonProfile/chineseOwlChampionProfile.png
+    - images/pigeonProfile/egyptianSwiftProfile.png
+    - images/pigeonProfile/indianFantailProfile.png
+    - images/pigeonProfile/magpiePigeonProfile.png
+    - images/pigeonProfile/mourningDoveProfile.png
+    - images/pigeonProfile/pinkNeckedGreenPigeonProfile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
