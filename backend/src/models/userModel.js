@@ -8,10 +8,6 @@
 ---> beforeCreate hook in the model automatically hashes the password before saving to database
  */
 
-const db = require('../db/pool'); // Import database connection pool
-import { sequelize } from '../db/sequelize.js'; // Import the established connection
-const bcrypt = require('bcrypt'); // Import bcrypt for hashing
-
 import { DataTypes } from 'sequelize'; // Import data types for the schema
 import { sequelize } from '../db/sequelize.js'; // Import the established connection
 import bcrypt from 'bcrypt'; // Import bcrypt for hashing

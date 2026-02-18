@@ -7,7 +7,6 @@
 -> send 201 response to frontend with the new user's unique ID
  */
 
-const userModel = require('../models/userModel'); // Import the user model
 import User from '../models/userModel.js'; // Import the Sequelize User model
 import { Op } from 'sequelize'; // Import Operators for complex queries
 

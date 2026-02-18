@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
 import Healthcheck from './src/models/Healthcheck.js';
+import authRoutes from './src/routes/authRoutes.js'; // 1. IMPORT ROUTES
 
 /*
     The server consists of multiple parts:
@@ -19,6 +20,8 @@ const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
 
 // TODO: attach API routes here
+// 2. MOUNT ROUTES
+app.use('/api/auth', authRoutes); // All routes in authRoutes.js start with /api/auth
 
 // route for server healthcheck
 app.get('/health', async (req, res) => {
