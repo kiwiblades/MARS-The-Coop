@@ -38,6 +38,7 @@ export const config = {
     verify_email_secret: process.env.VERIFY_EMAIL_SECRET,
     access_expires_in: process.env.ACCESS_EXPIRES_IN || '15m',
     refresh_expires_in: process.env.REFRESH_EXPIRES_IN || '30d',
-    verify_email_expires_in: process.env.VERIFY_EMAIL_EXPIRES_IN || "1h"
+    verify_email_expires_in: process.env.VERIFY_EMAIL_EXPIRES_IN || "1h",
+    token_hash_secret: process.env.TOKEN_HASH_SECRET,
   },
 };

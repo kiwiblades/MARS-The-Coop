@@ -7,7 +7,7 @@ import { config } from "../config.js";
 
 export function tokenFingerprint(token) {
     return crypto
-        .createHmac("sha256", config.security.token_hash_secret)
+        .createHmac("sha256", config.jwt.token_hash_secret)
         .update(token)
         .digest("hex");
 }

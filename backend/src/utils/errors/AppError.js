@@ -5,6 +5,9 @@
 
     Use like:
         throw AppError.badRequest(...);
+
+    If inside a callback ((...) => {}), inside an event handler (.on(...)) or inside a timer (timeout), 
+    errors must be passed with next(err). Otherwise, throw the error and Express will route it accordingly.
 */
 
 export default class AppError extends Error {
