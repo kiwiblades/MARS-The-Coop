@@ -1,3 +1,13 @@
+/*
+3. check for duplicates
+-> controller calls User.findOne on sequelize model to scan database
+-> looks for existing user where username OR email matches the new one
+--> if found, return error to frontend
+
+4. --> if not found, proceed to create user
+---> beforeCreate hook in the model automatically hashes the password before saving to database
+ */
+
 const db = require('../db/pool'); // Import database connection pool
 import { sequelize } from '../db/sequelize.js'; // Import the established connection
 const bcrypt = require('bcrypt'); // Import bcrypt for hashing
