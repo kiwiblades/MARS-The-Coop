@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const { signup } = require('../controllers/authController');
+import express from 'express'; // Import express using ES Modules
+import { signup } from '../controllers/authController.js'; // Import the signup controller
 
-// Define the POST route for signup
-router.post('/signup', signup);
+const router = express.Router(); // Create a new router instance
 
-module.exports = router;
+// Define a POST route for registration
+router.post('/signup', signup); // Connect /signup to the signup controller
+
+export default router; // Export the router
