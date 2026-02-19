@@ -22,6 +22,7 @@ import healthRoutes from './src/routes/healthRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
+app.use('/api/auth', authRouter); // alias
 
 // for testing only; delete later
 import devRoutes from './src/dev/devRoutes.js';
