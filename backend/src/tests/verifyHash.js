@@ -1,4 +1,3 @@
-// Change these to match your actual file paths
 import User from '../models/userModel.js'; 
 import { sequelize } from '../db/sequelize.js';
 
