@@ -16,9 +16,9 @@ async function checkUserHash() {
       
       // 3. Check if it's a bcrypt hash
       if (user.password_hash.startsWith('$2b$')) {
-        console.log('✅ Hashing Verified: This is a valid bcrypt hash.');
+        console.log('Hashing Verified: This is a valid bcrypt hash.');
       } else {
-        console.log('❌ Hashing Failed: This appears to be plain text or a different format.');
+        console.log('Hashing Failed: This appears to be plain text or a different format.');
       }
     } else {
       console.log('User not found.');
