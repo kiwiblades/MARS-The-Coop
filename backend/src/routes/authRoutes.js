@@ -5,12 +5,14 @@
 -> authController.signup checks if username/email already exists in DB
 */
 
-import express from 'express'; // Import express using ES Modules
-import { signup } from '../controllers/authController.js'; // Import the signup controller
+import { Router } from "express";
+import { signup, refresh, verifyEmail } from "../controllers/authController.js"
 
-const router = express.Router(); // Create a new router instance
+const router = Router();
 
 // Define a POST route for registration
 router.post('/signup', signup); // Connect /signup to the signup controller
+router.post("/refresh", refresh);
+router.get("/verify-email", verifyEmail);
 
-export default router; // Export the router
+export default router;

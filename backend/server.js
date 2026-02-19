@@ -3,8 +3,6 @@ import express from 'express'; // http framework
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
-import Healthcheck from './src/models/Healthcheck.js';
-import authRoutes from './src/routes/authRoutes.js'; // 1. IMPORT ROUTES
 
 /*
     The server consists of multiple parts:
@@ -14,45 +12,33 @@ import authRoutes from './src/routes/authRoutes.js'; // 1. IMPORT ROUTES
 */
 
 const app = express(); // create a request handler via Express
-app.use(express.json()); // attach general middleware
+app.use(express.json()); // attach json parsing middleware
 
 const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
 
 // TODO: attach API routes here
-// 2. MOUNT ROUTES
-app.use('/api/auth', authRoutes); // All routes in authRoutes.js start with /api/auth
+import healthRoutes from './src/routes/healthRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
+app.use('/health', healthRoutes);
+app.use('/auth', authRoutes);
+app.use('/api/auth', authRouter); // alias
 
-// route for server healthcheck
-app.get('/health', async (req, res) => {
-    try {
-        res.json({ ok: true, message: 'backend reachable' });
-    } catch(e) {
-        console.error(e);
-        res.status(500).json({ ok: false, error: "db healthcheck failed" });
-    }
-})
+// for testing only; delete later
+import devRoutes from './src/dev/devRoutes.js';
+app.use('/dev', devRoutes);
 
-// route for db healthcheck
-app.get('/health/db', async (req, res) => {
-    try {
-        const row = await Healthcheck.create({});
-        const count = await Healthcheck.count();
-        res.json({ ok: true, insertedId: row.id, totalRows: count });
-    } catch(e) {
-        console.error(e);
-        res.status(500).json({ ok: false, error: "db healthcheck failed" });
-    }
-});
-
-// TODO: attach custom error handling middleware
-// error-handling middleware muist be attached last.
+// error-handling middleware muist be attached last
+import AppError from './src/utils/errors/AppError.js';
+import errorHandler from './src/middleware/errorHandler.js';
+app.use((req, res, next) => next(AppError.notFound('Route not found'))); // 404 for unknown routes
+app.use(errorHandler);
 
 await sequelize.authenticate();
 console.log("Database connected");
 
 // dev only: sync models with database (create tables if they don't exist)
-await sequelize.sync({ alter: true });
+await sequelize.sync({ alter: true }); // alter: true modifies tables to match if the model has changed
 console.log("Database models synced");
 
 // listen on connection events for the incoming socket
