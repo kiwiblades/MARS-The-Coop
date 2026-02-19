@@ -14,6 +14,15 @@ class Pigeon {
     required this.coop,
     required this.name,
   });
+
+  //helper function to get pigeon by id (for rendering purposes)
+  static Pigeon? getById(int id) {
+    try {
+      return allPigeons.firstWhere((p) => p.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 List<Pigeon> allPigeons = [

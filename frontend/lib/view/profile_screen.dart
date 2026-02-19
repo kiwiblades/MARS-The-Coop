@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/view/profilePicSelection_screen.dart';
+import 'package:frontend/controller/profile_controller.dart';
+import 'package:frontend/model/pigeon.dart';
+import 'package:frontend/model/profile_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   static const String routeName = '/profileScreen';
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key}); 
 
   @override
   State<StatefulWidget> createState() {
@@ -12,18 +14,28 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class ProfileScreenState extends State<ProfileScreen> {
+  late ProfileController controller;
+  // final User user; //this holds the users information TODO
+  // const ProfileScreen(this.user, {super.key}); //TODO idk if this is needed
+  // var pigeon = Pigeon.getById(user.pigeonId); //TODO: this should get the associated pigeon from the pigeon list, var is bad practice but idk if "final" will work in this case
+  
+  @override
+  void initState() {
+    super.initState();
+    controller = ProfileController(this); //link controller
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: const BoxDecoration( //background wood text
         image: DecorationImage(
           image: AssetImage('images/woodGrainTexture.png'),
           fit: BoxFit.cover,
         ),
       ),
       child: Scaffold(
-        // backgroundColor: Color(0xFFD1A681),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, //make sure wood texture can be seen
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -58,13 +70,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                               width: 200,
                               height: 200,
                               decoration: BoxDecoration(
-                                color: Color(0xFFCBFCFC),
+                                color: Color(0xFFCBFCFC), //blue background of pfp
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 5),
+                                border: Border.all(color: Colors.white, width: 5), //white outline for pfp
                               ),
                               child: ClipOval(
                                 child: Image.asset(
-                                  'images/pigeonProfile/magpiePigeonProfile.png', //this will be the users profile pic for their selected pigeon
+                                  'images/pigeonProfile/magpiePigeonProfile.png', //TODO this will be the users profile pic for their selected pigeon
+                                  //pigeon?.profile?? //default (i need to draw the default really quick) //TODO
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -80,14 +93,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   shape: BoxShape.circle,
                                   border: Border.all(color: Color(0xFF93633A), width: 3),
                                 ),
-                                child: IconButton(
+                                child: IconButton( //pfp edit button
                                   icon: const Icon(Icons.edit, color: Color(0xFF93633A)),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      ProfilePicSelectionScreen.routeName,
-                                    );
-                                  },
+                                  onPressed: controller.onPressedProfilePicEdit,
                                 ),
                               ),
                             ),
@@ -99,11 +107,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
       
-              const SizedBox(height: 25),
+              const SizedBox(height: 25), //spacer
       
-              const Text(
+              const Text( //username "title"
                 //Profile 'label' meaning the users username
-                "Username", //should be the person's username
+                "Username", //TODO: should be the person's username
+                //user.username,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
       
@@ -120,13 +129,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: () {},
+                        IconButton( //email edit button
+                          onPressed: controller.onPressedEditEmail,
                           icon: const Icon(Icons.edit),
                         ),
                         const SizedBox(width: 5),
-                        Text(
-                          '<Email>', //this should be the actual email from database
+                        Text( //email
+                          '<Email>', //TODO: this should be the actual email from database
+                          //user.email ?? 'No email',
                           style: TextStyle(fontSize: 20),
                         ),
                       ],
@@ -140,13 +150,14 @@ class ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 5), //spacer
                     Row(
                       children: [
-                        IconButton(
-                          onPressed: () {},
+                        IconButton( //username edit button
+                          onPressed: controller.onPressedEditUsername,
                           icon: const Icon(Icons.edit),
                         ),
                         const SizedBox(width: 5),
-                        Text(
-                          '<Username>', //this should be the actual email from database
+                        Text( //username
+                          '<Username>', //TODO: this should be the actual email from database
+                          //user.username,
                           style: TextStyle(fontSize: 20),
                         ),
                       ],
@@ -157,8 +168,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(fontSize: 16),
                       textAlign: TextAlign.left,
                     ),
-                    ElevatedButton(
-                      onPressed: () {},
+                    ElevatedButton( //reset password button
+                      onPressed: controller.onPressedPasswordReset,
                       child: Text('Reset Password'),
                     ),
                     const SizedBox(height: 10.0), //spacer
@@ -168,13 +179,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                     Row(
                       children: [
                         Text('or checkout this '),
-                        TextButton(
+                        TextButton( //info button 
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          onPressed: () {},
+                          onPressed: controller.onPressedInfo,
                           child: Text(
                             'info',
                             style: TextStyle(

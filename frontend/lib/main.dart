@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       routes: {
         MailScreen.routeName: (BuildContext context) => const AppShell(child: MailScreen()),
         MyCoopScreen.routeName: (BuildContext context) => const AppShell(child: MyCoopScreen()),
-        ProfileScreen.routeName: (BuildContext context) => const AppShell(child: ProfileScreen()),
+        ProfileScreen.routeName: (BuildContext context) => const AppShell(child: ProfileScreen()), //TODO: user must be passed i.e. ProfileScreen(user)
         ProfilePicSelectionScreen.routeName: (BuildContext context) => const ProfilePicSelectionScreen(),
       },
     );
