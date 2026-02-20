@@ -39,7 +39,7 @@ export async function getProfile(req, res) {
     const uid = req.user.uid; // no need to check this; auth middleware handles that
 
     const user = await User.findByPk(uid, {
-        attributes: ["uid", "username", "email", "emailVerified", "emailVerifiedAt"],
+        attributes: ["uid", "username", "email", "emailVerified", "emailVerifiedAt", "pigeonId"],
     });
     if (!user) throw AppError.notFound("User not found", { code: "USER_NOT_FOUND" });
 
@@ -49,12 +49,13 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
     const uid = req.user.uid;
 
-    let { username, email } = req.body || {};
+    let { username, email, pigeonId } = req.body || {};
 
     if (username !== undefined) username = String(username).trim();
     if (email !== undefined) email = String(email).trim().toLowerCase();
+    if (pigeonId !== undefined) pigeonId = Number(pigeonId);
 
-    if (username === undefined && email === undefined) {
+    if (username === undefined && email === undefined && pigeonId === undefined) {
         throw AppError.badRequest("No fields to update", { code: "NO_UPDATES" });
     }
 
@@ -71,8 +72,9 @@ export async function updateProfile(req, res) {
     // if neither fields actually changed, return current profile
     const usernameChanged = username !== undefined && username !== user.username;
     const emailChanged = email !== undefined && email !== user.email;
+    const pigeonIdChanged = pigeonId !== undefined && pigeonId !== user.pigeonId;
 
-    if (!usernameChanged && !emailChanged) {
+    if (!usernameChanged && !emailChanged && !pigeonIdChanged) {
         return res.status(200).json({
             user: {
                 uid: user.uid,
@@ -80,16 +82,18 @@ export async function updateProfile(req, res) {
                 email: user.email,
                 emailVerified: user.emailVerified,
                 emailVerifiedAt: user.emailVerifiedAt,
+                pigeonId: user.pigeonId,
             },
             message: "No changes detected",
         });
     }
 
     // check duplicate only for fields that are changing
-    if (usernameChanged || emailChanged) {
+    if (usernameChanged || emailChanged || pigeonIdChanged) {
         const where = [];
         if (usernameChanged) where.push({ username });
         if (emailChanged) where.push({ email });
+        if (pigeonIdChanged) where.push({ pigeonId });
 
         const existing = await User.findOne({
             where: {
@@ -107,6 +111,7 @@ export async function updateProfile(req, res) {
 
     // apply the updates
     if (usernameChanged) user.username = username;
+    if (pigeonIdChanged) user.pigeonId = pigeonId;
 
     let verificationUrl;
     if (emailChanged) {
@@ -148,6 +153,7 @@ export async function updateProfile(req, res) {
             email: user.email,
             emailVerified: user.emailVerified,
             emailVerifiedAt: user.emailVerifiedAt,
+            pigeonId: user.pigeonId,
         },
         ...(verificationUrl ? { verificationUrl } : {}), // for testing
     });

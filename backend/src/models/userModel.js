@@ -46,6 +46,11 @@ const User = sequelize.define('User', {
     emailVerifiedAt: {
         type: DataTypes.DATE,
         allowNull: true,
+    }, // id to indicate which of the default profile pictures the user has chosen
+    pigeonId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
     }
 }, {
     // Hooks run automatically at certain points
