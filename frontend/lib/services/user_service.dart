@@ -1,0 +1,43 @@
+/*
+  UserService calls backend /user endpoints.
+  This service depends on ApiClient rather than http.Client directly so that
+  the authorization header is automatically attached, and the 401 response triggers
+  refresh and retry one time.
+*/
+
+import 'package:frontend/services/api_client.dart';
+import '../model/profile_model.dart';
+
+class UserService {
+  final ApiClient api;
+  UserService({required this.api});
+
+  // get /user
+  // returns: { user: { uid, username, email, emailVerified, emailVerifiedAt, pigeonId }}
+  Future<User> getProfile() async {
+    final data = await api.getJson('/user');
+    final userJson = data['user'] as Map<String, dynamic>;
+    return User.fromJson(userJson);
+  }
+
+  // patch /user
+  // updates user and/or email and/or pigeonid (pfp)
+  Future<User> updateProfile({
+    String? username,
+    String? email,
+    int? pigeonId,
+  }) async {
+    final body = <String, dynamic>{};
+    if (username != null) body['username'] = username;
+    if (email != null) body['email'] = email;
+    if (pigeonId != null) body['pigeonId'] = pigeonId;
+
+    if (body.isEmpty) {
+      throw Exception('No fields to update');
+    }
+
+    final data = await api.patchJson('/user', body);
+    final userJson = data['user'] as Map<String, dynamic>;
+    return User.fromJson(userJson);
+  }
+}

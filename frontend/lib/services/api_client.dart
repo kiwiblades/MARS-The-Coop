@@ -12,12 +12,13 @@ import '../config/env.dart';
 class ApiClient {
   final http.Client _client;
   final TokenManager tokens;
-  final AuthService auth;
+  late final AuthService auth;
 
   ApiClient({http.Client? client, TokenManager? tokenManager, AuthService? authService}) 
     : _client = client ?? http.Client(),
-      tokens = tokenManager ?? TokenManager.instance,
-      auth = authService ?? AuthService(client: client, tokenManager: tokenManager);
+      tokens = tokenManager ?? TokenManager.instance {
+        auth = AuthService(client: _client, tokenManager: tokens); // pass the new instances directly to auth service
+      }
 
   // // compose the full url from apiBaseUrl + path
   // Future<Map<String, dynamic>> getJson(String path) async {
@@ -39,6 +40,10 @@ class ApiClient {
       return _sendJson('POST', path, body: body);
     }
 
+    Future<Map<String, dynamic>> patchJson(String path, Map<String, dynamic> body) {
+      return _sendJson('PATCH', path, body: body);
+    }
+
     Future<Map<String, dynamic>> _sendJson(String method, String path, {Map<String, dynamic>? body}) async {
       final uri = Uri.parse('${Env.apiBaseUrl}$path');
 
@@ -56,6 +61,10 @@ class ApiClient {
             return _client.get(uri, headers: headers).timeout(const Duration(seconds: 5));
           case 'POST':
             return _client.post(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(const Duration(seconds: 5));
+          case 'PATCH':
+            return _client.patch(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(const Duration(seconds: 5));
+          case 'DELETE':
+            return _client.delete(uri, headers: headers).timeout(const Duration(seconds: 5));
           default:
             throw Exception('Unsupported method: $method');
         }
@@ -81,6 +90,7 @@ class ApiClient {
       }
 
       // parse the json from the response
+      if (res.body.isEmpty) return <String, dynamic>{}; // return if empty, otherwise jsonDecode will throw
       final decoded = jsonDecode(res.body);
       if (decoded is Map<String, dynamic>) return decoded;
       throw Exception('Expected JSON object response');
