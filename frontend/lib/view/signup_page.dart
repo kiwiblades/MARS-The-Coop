@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
+import '../services/api_client.dart';
 import 'signin_page.dart';
+import '../controller/auth_controller.dart';
+import "../model/user.dart";
 
 class SignupPage extends StatefulWidget {
   const SignupPage({Key? key}) : super(key: key);
@@ -15,9 +18,16 @@ class _SignupPageState extends State<SignupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _verifyPasswordController = TextEditingController();
+  late final AuthController _authController;
 
   bool _obscurePassword = true;
   bool _obscureVerifyPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _authController = AuthController(ApiClient());
+  }
 
   @override
   void dispose() {
@@ -28,10 +38,21 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void _onSignup() {
+  Future<void> _onSignup() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: authentication
-      print('Signup attempted with username: ${_usernameController.text}');
+      final result = await _authController.signup(
+        username: _usernameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      
+      if (result['success']) {
+        print('Signup successful!');
+        // Navigate to home or show success
+      } else {
+        print('Signup failed: ${result['error']}');
+        // Show error message to user
+      }
     }
   }
 

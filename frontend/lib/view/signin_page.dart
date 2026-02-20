@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
+import '../services/api_client.dart';
 import 'signup_page.dart';
+import '../controller/auth_controller.dart';
+import "../model/user.dart";
 
 class SigninPage extends StatefulWidget {
   const SigninPage({Key? key}) : super(key: key);
@@ -16,6 +19,14 @@ class _SigninPageState extends State<SigninPage> {
 
   bool _obscurePassword = true;
 
+  late final AuthController _authController;
+
+  @override
+  void initState() {
+    super.initState();
+    _authController = AuthController(ApiClient());
+  }
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -23,10 +34,20 @@ class _SigninPageState extends State<SigninPage> {
     super.dispose();
   }
 
-  void _onSignin() {
+  Future<void> _onSignin() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: authentication
-      print('Signin attempted with username: ${_usernameController.text}');
+      final result = await _authController.signin(
+        username: _usernameController.text,
+        password: _passwordController.text,
+      );
+
+      if (result['success']) {
+        print('Signin successful!');
+        // Navigate to home or show success
+      } else {
+        print('Signin failed: ${result['error']}');
+        // Show error message to user
+      }
     }
   }
 
