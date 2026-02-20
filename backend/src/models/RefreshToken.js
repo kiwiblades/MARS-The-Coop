@@ -7,10 +7,15 @@ const RefreshToken = sequelize.define('RefreshToken', {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
+    // the user assigned to the token
     userId: {
-        type: DataTypes.UUID, // assuming id for user is uuid
+        type: DataTypes.UUID,
         allowNull: false,
+        references: { model: "user", key: "uid" },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
     },
+    // the actual token value is stored as a hash rather than plaintext
     tokenHash: {
         type: DataTypes.STRING(128),
         allowNull: false,

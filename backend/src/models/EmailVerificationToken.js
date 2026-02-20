@@ -10,6 +10,9 @@ const EmailVerificationToken = sequelize.define('EmailVerificationToken', {
     userId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: { model: "user", key: "uid" },
+        onDelete: "CASCADE",
+        onUpdate: "CASCADE",
     },
     tokenHash: {
         type: DataTypes.STRING(128),
