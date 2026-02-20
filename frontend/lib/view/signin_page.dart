@@ -1,37 +1,32 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
-import 'signin_page.dart';
+import 'signup_page.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+class SigninPage extends StatefulWidget {
+  const SigninPage({Key? key}) : super(key: key);
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<SigninPage> createState() => _SigninPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _SigninPageState extends State<SigninPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _verifyPasswordController = TextEditingController();
 
   bool _obscurePassword = true;
-  bool _obscureVerifyPassword = true;
 
   @override
   void dispose() {
     _usernameController.dispose();
-    _emailController.dispose();
     _passwordController.dispose();
-    _verifyPasswordController.dispose();
     super.dispose();
   }
 
-  void _onSignup() {
+  void _onSignin() {
     if (_formKey.currentState!.validate()) {
       // TODO: authentication
-      print('Signup attempted with username: ${_usernameController.text}');
+      print('Signin attempted with username: ${_usernameController.text}');
     }
   }
 
@@ -79,7 +74,7 @@ class _SignupPageState extends State<SignupPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Find Your Flock',
+                            'Welcome Back',
                             style: AppTextStyles.heading.copyWith(
                               color: AppColors.textPrimary,
                             ),
@@ -117,55 +112,7 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter a username';
-                              }
-                              if (value.length < 3 || value.length > 20) {
-                                return 'Username must be 3-20 characters';
-                              }
-                              if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-                                return 'Only letters, numbers, and underscores allowed';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: AppSpacing.md),
-
-                          // email field
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              labelStyle: AppTextStyles.label,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppBorderRadius.md,
-                                ),
-                                borderSide: BorderSide(color: AppColors.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppBorderRadius.md,
-                                ),
-                                borderSide: BorderSide(color: AppColors.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppBorderRadius.md,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.primary,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter an email';
-                              }
-                              if (!RegExp(
-                                r'^[^@]+@[^@]+\.[^@]+$',
-                              ).hasMatch(value)) {
-                                return 'Please enter a valid email';
+                                return 'Please enter your username';
                               }
                               return null;
                             },
@@ -216,86 +163,16 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter a password';
-                              }
-                              if (value.length < 8) {
-                                return 'Password must be at least 8 characters';
-                              }
-                              if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                return 'Must contain an uppercase letter';
-                              }
-                              if (!RegExp(r'[a-z]').hasMatch(value)) {
-                                return 'Must contain a lowercase letter';
-                              }
-                              if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                return 'Must contain a number';
-                              }
-                              if (!RegExp(r'[@$!%*?&]').hasMatch(value)) {
-                                return 'Must contain a special character (@\$!%*?&)';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: AppSpacing.md),
-
-                          // verify password field
-                          TextFormField(
-                            controller: _verifyPasswordController,
-                            obscureText: _obscureVerifyPassword,
-                            decoration: InputDecoration(
-                              labelText: 'Verify Password',
-                              labelStyle: AppTextStyles.label,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppBorderRadius.md,
-                                ),
-                                borderSide: BorderSide(color: AppColors.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppBorderRadius.md,
-                                ),
-                                borderSide: BorderSide(color: AppColors.border),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppBorderRadius.md,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.primary,
-                                  width: 2,
-                                ),
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureVerifyPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: AppColors.textSecondary,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureVerifyPassword =
-                                        !_obscureVerifyPassword;
-                                  });
-                                },
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please verify your password';
-                              }
-                              if (value != _passwordController.text) {
-                                return 'Passwords do not match';
+                                return 'Please enter your password';
                               }
                               return null;
                             },
                           ),
                           SizedBox(height: AppSpacing.lg),
 
-                          // signup button
+                          // signin button
                           ElevatedButton(
-                            onPressed: _onSignup,
+                            onPressed: _onSignin,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: AppColors.background,
@@ -308,17 +185,16 @@ class _SignupPageState extends State<SignupPage> {
                                 ),
                               ),
                             ),
-                            child: Text('Sign Up', style: AppTextStyles.button),
+                            child: Text('Sign In', style: AppTextStyles.button),
                           ),
+                          SizedBox(height: AppSpacing.lg),
 
-                          SizedBox(height: AppSpacing.md),
-
-                          // Sign in link
+                          // signup link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Already have an account? ',
+                                'New to The Coop? ',
                                 style: AppTextStyles.body,
                               ),
                               GestureDetector(
@@ -326,12 +202,12 @@ class _SignupPageState extends State<SignupPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const SigninPage(),
+                                      builder: (context) => const SignupPage(),
                                     ),
                                   );
                                 },
                                 child: Text(
-                                  'Sign In',
+                                  'Sign Up',
                                   style: AppTextStyles.body.copyWith(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.bold,
