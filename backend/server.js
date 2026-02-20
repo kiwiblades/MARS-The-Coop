@@ -3,6 +3,7 @@ import express from 'express'; // http framework
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
+import { initModels } from './src/models/index.js';
 
 /*
     The server consists of multiple parts:
@@ -22,7 +23,7 @@ import healthRoutes from './src/routes/healthRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
-app.use('/api/auth', authRouter); // alias
+app.use('/api/auth', authRoutes); // alias
 
 // for testing only; delete later
 import devRoutes from './src/dev/devRoutes.js';
@@ -38,6 +39,7 @@ await sequelize.authenticate();
 console.log("Database connected");
 
 // dev only: sync models with database (create tables if they don't exist)
+initModels();
 await sequelize.sync({ alter: true }); // alter: true modifies tables to match if the model has changed
 console.log("Database models synced");
 

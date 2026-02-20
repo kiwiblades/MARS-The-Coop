@@ -6,12 +6,13 @@
 */
 
 import { Router } from "express";
-import { signup, refresh, verifyEmail } from "../controllers/authController.js"
+import { signup, signin, refresh, verifyEmail } from "../controllers/authController.js"
 
 const router = Router();
 
 // Define a POST route for registration
 router.post('/signup', signup); // Connect /signup to the signup controller
+router.post('/signin', signin);
 router.post("/refresh", refresh);
 router.get("/verify-email", verifyEmail);
 

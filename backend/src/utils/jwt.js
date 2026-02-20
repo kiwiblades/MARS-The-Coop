@@ -12,7 +12,7 @@ import AppError from './errors/AppError.js';
 */
 export function generateAccessToken(user) {
     return jwt.sign(
-        { id: user.id, email: user.email },
+        { uid: user.uid, username: user.username },
         config.jwt.access_secret,
         { expiresIn: config.jwt.access_expires_in || "15m" }
     );
@@ -24,7 +24,7 @@ export function generateAccessToken(user) {
 */
 export function generateRefreshToken(user) {
     return jwt.sign(
-        { id: user.id, email: user.email },
+        { uid: user.uid, username: user.username },
         config.jwt.refresh_secret,
         { expiresIn: config.jwt.refresh_expires_in || "30d" }
     );
@@ -33,7 +33,7 @@ export function generateRefreshToken(user) {
 /* */
 export function generateEmailVerificationToken(user) {
     return jwt.sign(
-        { id: user.id, email: user.email, purpose: "verify_email" },
+        { uid: user.uid, email: user.email, purpose: "verify_email" },
         config.jwt.verify_email_secret,
         { expiresIn: config.jwt.verify_email_expires_in || "1h" }
     );
