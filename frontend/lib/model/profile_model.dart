@@ -11,3 +11,8 @@ class User {
     required this.pigeonId,
   });
 }
+
+class ProfileModel {
+  bool isEditingUsername = false;
+  bool isEditingEmail= false;
+}

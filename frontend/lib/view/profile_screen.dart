@@ -15,16 +15,24 @@ class ProfileScreen extends StatefulWidget {
 
 class ProfileScreenState extends State<ProfileScreen> {
   late ProfileController controller;
+  late ProfileModel model;
   // final User user; //this holds the users information TODO
   // const ProfileScreen(this.user, {super.key}); //TODO idk if this is needed
   // var pigeon = Pigeon.getById(user.pigeonId); //TODO: this should get the associated pigeon from the pigeon list, var is bad practice but idk if "final" will work in this case
-  
+  // bool isEditingUsername = false;
+  // bool isEditingEmail= false;
+  final GlobalKey<FormState> formKeyUsername = GlobalKey<FormState>();
+  final GlobalKey<FormState> formKeyEmail = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
     controller = ProfileController(this); //link controller
+    model = ProfileModel();
     //TODO: I believe this is where you could load stuff? idk like user info i.e. controller.loadUser();
   }
+
+  void callSetState(fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {
@@ -107,16 +115,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-      
+              
               const SizedBox(height: 25), //spacer
-      
+              
               const Text( //username "title"
                 //Profile 'label' meaning the users username
                 "Username", //TODO: should be the person's username
                 //user.username,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-      
+              
               Padding(
                 //All text
                 padding: const EdgeInsets.all(20.0),
@@ -128,19 +136,50 @@ class ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(fontSize: 16),
                       textAlign: TextAlign.left,
                     ),
-                    Row(
-                      children: [
-                        IconButton( //email edit button
-                          onPressed: controller.onPressedEditEmail,
-                          icon: const Icon(Icons.edit),
-                        ),
-                        const SizedBox(width: 5),
+                    Form(
+                      key: formKeyEmail,
+                      child: Row(
+                        children: model.isEditingEmail ? [ //conditionally render based on if the email is being edited or not
+                          // Text( //email
+                          //   '<Email>', //TODO: this should be the actual email from database
+                          //   //user.email ?? 'No email',
+                          //   style: TextStyle(fontSize: 20),
+                          // ),
+                          Expanded(
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                border: OutlineInputBorder(),
+                              ),
+                              // initialValue: user.email, //TODO: this should be the email from the DB once it is fetched
+                              validator: controller.emailValidator,
+                              onSaved: controller.onSaveEmail,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          IconButton( //edit email save
+                            onPressed: controller.onPressedEditEmailSave,
+                            icon: const Icon(Icons.check),
+                          ),
+                          IconButton( //edit email cancel
+                            onPressed: controller.onPressedEditEmailCancel,
+                            icon: const Icon(Icons.close),
+                          ),
+                        ] 
+                        :
+                        [
                         Text( //email
-                          '<Email>', //TODO: this should be the actual email from database
-                          //user.email ?? 'No email',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                      ],
+                            '<Email>', //TODO: this should be the actual email from database
+                            //user.email ?? 'No email',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          const SizedBox(width: 5),
+                          IconButton( //email edit button
+                            onPressed: controller.onPressedEditEmail,
+                            icon: const Icon(Icons.edit),
+                          ),
+                        ] ,
+                      ),
                     ),
                     const SizedBox(height: 5), //spacer
                     const Text(
@@ -149,19 +188,51 @@ class ProfileScreenState extends State<ProfileScreen> {
                       textAlign: TextAlign.left,
                     ),
                     const SizedBox(height: 5), //spacer
-                    Row(
-                      children: [
-                        IconButton( //username edit button
-                          onPressed: controller.onPressedEditUsername,
-                          icon: const Icon(Icons.edit),
-                        ),
-                        const SizedBox(width: 5),
-                        Text( //username
-                          '<Username>', //TODO: this should be the actual email from database
-                          //user.username,
-                          style: TextStyle(fontSize: 20),
-                        ),
-                      ],
+                    Form(
+                      key: formKeyUsername,
+                      child: Row(
+                        children: model.isEditingUsername ? 
+                        [
+                          // Text( //username
+                          //   '<Username>', //TODO: this should be the actual email from database
+                          //   //user.username,
+                          //   style: TextStyle(fontSize: 20),
+                          // ),
+                          Expanded(
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                border: OutlineInputBorder(),
+                              ),
+                              // initialValue: user.username, //TODO: this should be the username from the DB once it is fetched
+                              validator: controller.usernameValidator,
+                              onSaved: controller.onSaveUsername,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          IconButton( //email edit save
+                            onPressed: controller.onPressedEditUsernameSave,
+                            icon: const Icon(Icons.check),
+                          ),
+                          IconButton( //email cancel
+                            onPressed: controller.onPressedEditUsernameCancel,
+                            icon: const Icon(Icons.close),
+                          ),
+                        ]
+                        :
+                        [
+                          Text( //username
+                            '<Username>', //TODO: this should be the actual email from database
+                            //user.username,
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          const SizedBox(width: 5),
+                          IconButton( //username edit button
+                            onPressed: controller.onPressedEditUsername,
+                            icon: const Icon(Icons.edit),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 5), //spacer
                     const Text(
