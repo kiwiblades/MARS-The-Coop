@@ -65,6 +65,9 @@ export async function updateProfile(req, res) {
     if (email !== undefined && email.length === 0) {
         throw AppError.badRequest("Email cannot be empty", { code: "EMAIL_INVALID" });
     }
+    if (pigeonId !== undefined && Number.isNaN(pigeonId)) {
+        throw AppError.badRequest("Invalid pigeonId", { code: "PIGEON_INVALID" });
+    }
 
     const user = await User.findByPk(uid);
     if (!user) throw AppError.notFound("User not found", { code: "USER_NOT_FOUND" });
@@ -89,11 +92,10 @@ export async function updateProfile(req, res) {
     }
 
     // check duplicate only for fields that are changing
-    if (usernameChanged || emailChanged || pigeonIdChanged) {
+    if (usernameChanged || emailChanged) {
         const where = [];
         if (usernameChanged) where.push({ username });
         if (emailChanged) where.push({ email });
-        if (pigeonIdChanged) where.push({ pigeonId });
 
         const existing = await User.findOne({
             where: {
