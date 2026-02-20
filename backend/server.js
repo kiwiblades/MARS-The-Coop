@@ -32,6 +32,8 @@ app.use('/dev', devRoutes);
 // error-handling middleware muist be attached last
 import AppError from './src/utils/errors/AppError.js';
 import errorHandler from './src/middleware/errorHandler.js';
+
+app.get("/favicon.ico", (req, res) => res.status(204).end()); // ignore browser favicon request
 app.use((req, res, next) => next(AppError.notFound('Route not found'))); // 404 for unknown routes
 app.use(errorHandler);
 
