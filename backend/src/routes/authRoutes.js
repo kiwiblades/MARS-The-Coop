@@ -6,7 +6,7 @@
 */
 
 import { Router } from "express";
-import { signup, signin, signout, refresh, verifyEmail } from "../controllers/authController.js"
+import { signup, signin, signout, refresh, verifyEmail, resendVerification } from "../controllers/authController.js"
 
 const router = Router();
 
@@ -16,5 +16,6 @@ router.post('/signin', signin);
 router.post('/signout', signout);
 router.post("/refresh", refresh);
 router.get("/verify-email", verifyEmail);
+router.post("/resend-verification", resendVerification);
 
 export default router;

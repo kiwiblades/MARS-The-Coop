@@ -81,7 +81,6 @@ export async function signup(req, res) {
             expiresAt: verifyExpiresAt,
         });
 
-        // TODO: send email verification here
         const baseUrl = `http://localhost:${config.SV_PORT}`;
         const verificationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(verifyToken)}`;
 
@@ -145,7 +144,7 @@ export async function signout(req, res) {
     }
 
     // revoke the current active refresh token (thereby revoking the user's session)
-    await row.update(
+    await RefreshToken.update(
         { revokedAt: new Date() },
         { where: { tokenHash: tokenFingerprint(refreshToken), revokedAt: null } });
     // always succeed
@@ -213,4 +212,38 @@ export async function verifyEmail(req, res) {
     await row.update({ usedAt: new Date() });
 
     return res.status(200).send(`<h2>Email verified</h2><p>You can safely close this tab and return to the app.</p>`);
+}
+
+export async function resendVerification(req, res) {
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    if (!email) throw AppError.badRequest("Missing email", { code: "EMAIL_MISSING" });
+
+    const user = await User.findOne({ where: { email } });
+    // don't reveal whether email exists (duplicate) for privacy
+    if (!user) return res.status(204).end();
+
+    // if already verified, no need to resend verification
+    if (user.emailVerified) return res.status(204).end();
+
+    const verifyToken = generateEmailVerificationToken({ uid: user.uid, email: user.email });
+    const verifyExpiresAt = expiresAtFrom(config.jwt.verify_email_expires_in, 60*60*1000);
+
+    await EmailVerificationToken.create({
+        userId: user.uid,
+        tokenHash: tokenFingerprint(verifyToken),
+        expiresAt: verifyExpiresAt,
+    });
+
+    const baseUrl = `http://localhost:${config.SV_PORT}`;
+    const verificationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(verifyToken)}`;
+
+    // send the verification email
+    try {
+        await sendVerifyEmail(newUser.email, verificationUrl);
+    } catch(e) {
+        console.error("[ResendVerification] failed to send verification email:", e);
+        // just continue after an error in dev
+    }
+
+    return res.status(200).json({ message: "A verification email was sent.", verificationUrl });
 }
