@@ -138,6 +138,20 @@ export async function signin(req, res) {
     return res.status(200).json({ accessToken, refreshToken, uid: user.uid });
 }
 
+export async function signout(req, res) {
+    const refreshToken = String(req.body?.refreshToken || "");
+    if (!refreshToken) {
+        throw AppError.badRequest("Refresh token missing", { code: "REFRESH_MISSING" });
+    }
+
+    // revoke the current active refresh token (thereby revoking the user's session)
+    await row.update(
+        { revokedAt: new Date() },
+        { where: { tokenHash: tokenFingerprint(refreshToken), revokedAt: null } });
+    // always succeed
+    return res.status(204).end();
+}
+
 export async function refresh(req, res) {
     const refreshToken = String(req.body?.refreshToken || "");
     if (!refreshToken) throw AppError.unauthorized("Refresh token missing", { code: "REFRESH_MISSING" });
