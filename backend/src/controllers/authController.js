@@ -12,10 +12,37 @@ import { Op } from 'sequelize'; // Import Operators for complex queries
 import EmailVerificationToken from "../models/EmailVerificationToken.js";
 import RefreshToken from "../models/RefreshToken.js";
 import AppError from "../utils/errors/AppError.js";
-import { generateAccessToken, verifyEmailVerificationToken, verifyRefreshToken } from "../utils/jwt.js";
+import { generateAccessToken, generateEmailVerificationToken, generateRefreshToken, verifyEmailVerificationToken, verifyRefreshToken } from "../utils/jwt.js";
 import { tokenFingerprint } from "../utils/tokenFingerprint.js";
+import bcrypt from "bcrypt";
+import { config } from "../config.js";
+import { sendVerifyEmail } from '../utils/mailer.js';
 
-export const signup = async (req, res) => {
+/* 
+    Helper function for calculating expiry of tokens.
+    "fallback" is in ms. If the provided duration cannot be parsed, fallback is used instead.
+    The function only supports expires_in format of minute (15m), hour (24h), or day (30d)
+*/
+function expiresAtFrom(duration, fallback) {
+    if (typeof duration !== "string") return new Date(Date.now() + fallback);
+
+    // match() returns an array where m[0] is the full match, m[1] is the first group (\d+), etc.
+    const m = duration.trim().match(/^(\d+)\s*([mhd])$/i); // regex literal is used to understand the string duration
+    if (!m) return new Date(Date.now() + fallback); // if it cannot be parsed, use ms fallback
+
+    // e.g., "15m"
+    const n = Number(m[1]); // "15"
+    const unit = m[2].toLowerCase(); // "m"
+
+    // identify the number of ms corresponding to minute, hour, or day
+    // 60_000 == 60000, js supports underscore for readability
+    const mult = unit === "m" ? 60_000 : unit === "h" ? 3_600_000 : unit === "d" ? 86_400_000 :
+        fallback;
+
+    return new Date(Date.now() + n*mult); // add the expiry length to the current time
+}
+
+export async function signup(req, res) {
     try {
         const { username, email, password } = req.body; // Destructure the request
 
@@ -43,10 +70,34 @@ export const signup = async (req, res) => {
             password_hash: password 
         });
 
+        // generate the token used to verify the user's email
+        const verifyToken = generateEmailVerificationToken({ uid: newUser.uid, email: newUser.email });
+        const verifyExpiresAt = expiresAtFrom(config.jwt.verify_email_expires_in, 60*60*1000); // fallback = 1h
+
+        // store a hash of the generated token in the database
+        await EmailVerificationToken.create({
+            userId: newUser.uid,
+            tokenHash: tokenFingerprint(verifyToken),
+            expiresAt: verifyExpiresAt,
+        });
+
+        // TODO: send email verification here
+        const baseUrl = `http://localhost:${config.SV_PORT}`;
+        const verificationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(verifyToken)}`;
+
+        // send the verification email
+        try {
+            await sendVerifyEmail(newUser.email, verificationUrl);
+        } catch(e) {
+            console.error("[Signup] failed to send verification email:", e);
+            // just continue after an error in dev
+        }
+
         // 3. Return Success with Unique ID
         return res.status(201).json({
             message: "User created successfully",
-            userId: newUser.uid 
+            userId: newUser.uid, 
+            verificationUrl, // for testing purposes only
         });
 
     } catch (error) {
@@ -54,6 +105,38 @@ export const signup = async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+export async function signin(req, res) {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+        throw AppError.badRequest("Missing credentials", { code: "CREDENTIALS_MISSING" });
+    }
+
+    // return the same error for invalid username and invalid password to prevent revealing info
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+        throw AppError.unauthorized("Invalid username or password", { code: "INVALID_LOGIN" });
+    }
+
+    // hash the given password and compare to what's stored in the database
+    const passwordVerified = await bcrypt.compare(password, user.password_hash);
+    if (!passwordVerified) {
+        throw AppError.unauthorized("Invalid username or password", { code: "INVALID_LOGIN" });
+    }
+
+    const accessToken = generateAccessToken({ uid: user.uid, email: user.email });
+    const refreshToken = generateRefreshToken({ uid: user.uid, email: user.email });
+
+    const refreshExpiresAt = expiresAtFrom(config.jwt.refresh_expires_in, 30*24*60*60*1000); // fallback = 30d
+
+    await RefreshToken.create({
+        userId: user.uid,
+        tokenHash: tokenFingerprint(refreshToken),
+        expiresAt: refreshExpiresAt,
+    });
+
+    return res.status(200).json({ accessToken, refreshToken, uid: user.uid });
+}
 
 export async function refresh(req, res) {
     const refreshToken = String(req.body?.refreshToken || "");
@@ -64,7 +147,7 @@ export async function refresh(req, res) {
     // compare the hashed token to the one stored in the database
     const row = await RefreshToken.findOne({
         where: {
-            userId: payload.id,
+            userId: payload.uid,
             tokenHash: tokenFingerprint(refreshToken),
             revokedAt: null,
         },
@@ -80,7 +163,7 @@ export async function refresh(req, res) {
     }
 
     // issue a new access token
-    const accessToken = generateAccessToken({ id: payload.id, email: payload.email });
+    const accessToken = generateAccessToken({ uid: payload.uid, email: payload.email });
 
     return res.status(200).json({ accessToken });
 }
@@ -93,7 +176,7 @@ export async function verifyEmail(req, res) {
     const payload = verifyEmailVerificationToken(token); // check the attached token, verify signature, expiry, etc
     const row = await EmailVerificationToken.findOne({
         where: {
-            userId: payload.id,
+            userId: payload.uid,
             tokenHash: tokenFingerprint(token), // tokenFingerprint computes the hash to check against the stored one; only store hash, not raw token
             usedAt: null,
         },
@@ -107,12 +190,12 @@ export async function verifyEmail(req, res) {
         throw AppError.unauthorized("Verification link expired", { code: "VERIFY_EXPIRED" });
     }
 
-    // mark user account as verified
-    // await User.update(
-    //     { emailVerified: true, emailVerifiedAt: new Date() },
-    //     { where: { id: payload.id }}
-    // );
-
+    // update the user's email verification flag in the database
+    await User.update(
+        { emailVerified: true, emailVerifiedAt: new Date() },
+        { where: { uid: payload.uid }}
+    );
+    // mark the email verification token as used
     await row.update({ usedAt: new Date() });
 
     return res.status(200).send(`<h2>Email verified</h2><p>You can safely close this tab and return to the app.</p>`);
