@@ -14,6 +14,7 @@ class ProfilePicSelectionController {
 
   void onPressedSave() {
     //TODO: update user to have the pigeonId that is the selected Pigeon Index
+    //state.model.selectedPigeonIndex corresponds to the pigeonId
     Navigator.pushNamed(state.context, '/profileScreen');
   }
 }
