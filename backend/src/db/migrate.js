@@ -1,6 +1,8 @@
 /*
     This file acts as script to generate migrations, which are schemas.
     You can run the file using "npm run db:migrate" from backend/.
+
+    Not necessary for now since we're using sequelize.sync() in server.js
 */
 
 import { migrator } from './migrator';

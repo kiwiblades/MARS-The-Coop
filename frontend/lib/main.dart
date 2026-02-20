@@ -3,6 +3,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/api_client.dart';
 import 'services/health_service.dart';
 import 'view/signup_page.dart';
+import 'package:frontend/view/app_shell.dart';
+import 'package:frontend/view/mail_screen.dart';
+import 'package:frontend/view/mycoop_screen.dart';
+import 'package:frontend/view/profilepicselection_screen.dart';
+import 'package:frontend/view/profile_screen.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,14 +32,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'The Coop',
       home: SignupPage(), 
+      debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
+      initialRoute: MailScreen.routeName, //no home page, Mail will be initial
+      //can have theme
+      routes: {
+        MailScreen.routeName: (BuildContext context) => AppShell(child: MailScreen()),
+        MyCoopScreen.routeName: (BuildContext context) => AppShell(child: MyCoopScreen()),
+        ProfileScreen.routeName: (BuildContext context) => AppShell(child: ProfileScreen()), //TODO: user must be passed i.e. ProfileScreen(user)
+        ProfilePicSelectionScreen.routeName: (BuildContext context) => const ProfilePicSelectionScreen(),
+      },
     );
   }
 }
 
-// // entry point to prove the mobile app can reach the backend -- feel free to remove/comment out
+// entry point to prove the mobile app can reach the backend -- feel free to remove/comment out
 // class HealthPage extends StatefulWidget {
 //   const HealthPage({super.key});
 //   @override
