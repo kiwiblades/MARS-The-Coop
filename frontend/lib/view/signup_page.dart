@@ -221,18 +221,21 @@ class _SignupPageState extends State<SignupPage> {
                               if (value.length < 8) {
                                 return 'Password must be at least 8 characters';
                               }
-                              if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                return 'Must contain an uppercase letter';
+
+                              bool hasUpper = RegExp(r'[A-Z]').hasMatch(value);
+                              bool hasLower = RegExp(r'[a-z]').hasMatch(value);
+                              bool hasDigit = RegExp(r'[0-9]').hasMatch(value);
+                              bool hasSpecial = RegExp(
+                                r'[@$!%*?&]',
+                              ).hasMatch(value);
+
+                              if (!hasUpper ||
+                                  !hasLower ||
+                                  !hasDigit ||
+                                  !hasSpecial) {
+                                return 'Must contain: A-Z, a-z, 0-9, @\$!%*?&';
                               }
-                              if (!RegExp(r'[a-z]').hasMatch(value)) {
-                                return 'Must contain a lowercase letter';
-                              }
-                              if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                return 'Must contain a number';
-                              }
-                              if (!RegExp(r'[@$!%*?&]').hasMatch(value)) {
-                                return 'Must contain a special character (@\$!%*?&)';
-                              }
+
                               return null;
                             },
                           ),
