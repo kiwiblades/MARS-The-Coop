@@ -21,9 +21,11 @@ const io = new Server(server); // attach socket.io to the server object
 // TODO: attach API routes here
 import healthRoutes from './src/routes/healthRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
+import userRoutes from './src/routes/userRoutes.js';
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes); // alias
+app.use('/user', userRoutes);
 
 // for testing only; delete later
 import devRoutes from './src/dev/devRoutes.js';

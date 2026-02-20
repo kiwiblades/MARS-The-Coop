@@ -21,7 +21,7 @@ export function authenticateToken(req, res, next) {
         const payload = verifyAccessToken(token);
 
         // attach identity for the controller to use
-        req.user = { id: payload.id, email: payload?.email };
+        req.user = { uid: payload.uid, email: payload?.email };
 
         return next();
     } catch(e) {
