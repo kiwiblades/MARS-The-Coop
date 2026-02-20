@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/controller/profile_controller.dart';
 import 'package:frontend/model/pigeon.dart';
 import 'package:frontend/model/profile_model.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/user_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   static const String routeName = '/profileScreen';
@@ -16,26 +18,34 @@ class ProfileScreen extends StatefulWidget {
 class ProfileScreenState extends State<ProfileScreen> {
   late ProfileController controller;
   late ProfileModel model;
-  // final User user; //this holds the users information TODO
-  // const ProfileScreen(this.user, {super.key}); //TODO idk if this is needed
-  // var pigeon = Pigeon.getById(user.pigeonId); //TODO: this should get the associated pigeon from the pigeon list, var is bad practice but idk if "final" will work in this case
-  // bool isEditingUsername = false;
-  // bool isEditingEmail= false;
+  late final UserService users;
+
+  User? currentUser;
+  bool isLoading = true;
+  String? loadError;
   final GlobalKey<FormState> formKeyUsername = GlobalKey<FormState>();
   final GlobalKey<FormState> formKeyEmail = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    controller = ProfileController(this); //link controller
     model = ProfileModel();
-    //TODO: I believe this is where you could load stuff? idk like user info i.e. controller.loadUser();
+
+    final api = ApiClient();
+    users = UserService(api: api);
+
+    controller = ProfileController(this, users: users); //link controller
+    controller.loadUser(); // fetch /user
   }
 
   void callSetState(fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {
+    final pigeonId = currentUser?.pigeonId ?? 0;
+    final pigeon = Pigeon.getById(pigeonId);
+    final profileImagePath = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+
     return Container(
       decoration: const BoxDecoration( //background wood text
         image: DecorationImage(
@@ -85,7 +95,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                               ),
                               child: ClipOval(
                                 child: Image.asset(
-                                  'images/pigeonProfile/defaultPigeonProfile.png', //TODO this will be the users profile pic for their selected pigeon
+                                  profileImagePath,
                                   //pigeon?.profile?? //default (i need to draw the default really quick) //TODO
                                   fit: BoxFit.cover,
                                 ),
@@ -118,10 +128,9 @@ class ProfileScreenState extends State<ProfileScreen> {
               
               const SizedBox(height: 25), //spacer
               
-              const Text( //username "title"
+              Text( //username "title"
                 //Profile 'label' meaning the users username
-                "Username", //TODO: should be the person's username
-                //user.username,
+                currentUser?.username ?? '<Username>',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               
@@ -140,18 +149,17 @@ class ProfileScreenState extends State<ProfileScreen> {
                       key: formKeyEmail,
                       child: Row(
                         children: model.isEditingEmail ? [ //conditionally render based on if the email is being edited or not
-                          // Text( //email
-                          //   '<Email>', //TODO: this should be the actual email from database
-                          //   //user.email ?? 'No email',
-                          //   style: TextStyle(fontSize: 20),
-                          // ),
+                          Text( //email
+                            currentUser?.email ?? '<Email>',
+                            style: TextStyle(fontSize: 20),
+                          ),
                           Expanded(
                             child: TextFormField(
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 border: OutlineInputBorder(),
                               ),
-                              // initialValue: user.email, //TODO: this should be the email from the DB once it is fetched
+                              initialValue: currentUser?.email ?? '',
                               validator: controller.emailValidator,
                               onSaved: controller.onSaveEmail,
                             ),
@@ -169,8 +177,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                         :
                         [
                         Text( //email
-                            '<Email>', //TODO: this should be the actual email from database
-                            //user.email ?? 'No email',
+                            currentUser?.email ?? '<Email>',
                             style: TextStyle(fontSize: 20),
                           ),
                           const SizedBox(width: 5),
@@ -193,18 +200,17 @@ class ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         children: model.isEditingUsername ? 
                         [
-                          // Text( //username
-                          //   '<Username>', //TODO: this should be the actual email from database
-                          //   //user.username,
-                          //   style: TextStyle(fontSize: 20),
-                          // ),
+                          Text( //username
+                            currentUser?.username ?? '<Username>',
+                            style: TextStyle(fontSize: 20),
+                          ),
                           Expanded(
                             child: TextFormField(
                               decoration: InputDecoration(
-                                labelText: 'Username',
+                                labelText: '<Username>',
                                 border: OutlineInputBorder(),
                               ),
-                              // initialValue: user.username, //TODO: this should be the username from the DB once it is fetched
+                              initialValue: currentUser?.username ?? '',
                               validator: controller.usernameValidator,
                               onSaved: controller.onSaveUsername,
                             ),
@@ -222,8 +228,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                         :
                         [
                           Text( //username
-                            '<Username>', //TODO: this should be the actual email from database
-                            //user.username,
+                            currentUser?.username ?? '<Username>',
                             style: TextStyle(fontSize: 20),
                           ),
                           const SizedBox(width: 5),
@@ -246,7 +251,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 10.0), //spacer
                     const Text(
-                      'Questions about the app? Contact the coopmobileapp@gmail.com',
+                      'Questions about the app? Contact thecoopmobileapp@gmail.com',
                     ),
                     Row(
                       children: [

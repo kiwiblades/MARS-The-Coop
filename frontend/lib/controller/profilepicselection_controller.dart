@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/view/profilepicselection_screen.dart';
+import 'package:frontend/services/user_service.dart';
+import 'package:frontend/view/profilePicSelection_screen.dart';
 
 class ProfilePicSelectionController {
   final ProfilePicSelectionScreenState state;
-  ProfilePicSelectionController(this.state);
+  final UserService users;
+  ProfilePicSelectionController(this.state, {required this.users});
+
+  // internal fcn to show errors
+  void _showError(String msg) {
+    ScaffoldMessenger.of(state.context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
 
   void onTapPigeon(int index) {
     state.callSetState(() {
@@ -12,9 +21,14 @@ class ProfilePicSelectionController {
     // print(index);
   }
 
-  void onPressedSave() {
-    //TODO: update user to have the pigeonId that is the selected Pigeon Index
-    //state.model.selectedPigeonIndex corresponds to the pigeonId
-    Navigator.pushNamed(state.context, '/profileScreen');
+  Future<void> onPressedSave() async {
+    final pigeonId = state.model.selectedPigeonIndex;
+
+    try {
+      await users.updateProfile(pigeonId: pigeonId);
+      Navigator.pushNamed(state.context, '/profileScreen');
+    } catch(e) {
+      _showError('Failed to update profile picture');
+    }
   }
 }

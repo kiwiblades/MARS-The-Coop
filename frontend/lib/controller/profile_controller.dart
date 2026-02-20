@@ -1,14 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/profilepicselection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
 
 class ProfileController {
   ProfileScreenState state;
-  ProfileController(this.state);
+  final UserService users;
+  ProfileController(this.state, {required this.users});
+
+  Future<void> loadUser() async {
+    state.callSetState(() {
+      state.isLoading = true;
+      state.loadError = null;
+    });
+
+    try {
+      final user = await users.getProfile();
+      state.callSetState(() {
+        state.currentUser = user;
+        state.isLoading = false;
+      });
+    } catch(e) {
+      state.callSetState(() {
+        state.loadError = 'Failed to load profile';
+        state.isLoading = false;
+      });
+    }
+  }
+
+  // internal fcn to show errors
+  void _showError(String msg) {
+    ScaffoldMessenger.of(state.context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
 
   //profile pic edit click
-  void onPressedProfilePicEdit() {
-    Navigator.pushNamed(state.context, ProfilePicSelectionScreen.routeName);
+  Future<void> onPressedProfilePicEdit() async {
+    final result = await Navigator.pushNamed(state.context, ProfilePicSelectionScreen.routeName);
+
+    if (result is int) {
+      state.callSetState(() {
+        // update local cached user
+        state.currentUser!.pigeonId = result;
+      });
+    } else {
+      // do nothing if no change
+    }
+    
   }
 
   //EMAIL:
@@ -31,12 +70,20 @@ class ProfileController {
     print('email save clicked');
   }
 
-  void onSaveEmail(String? value) {
-    //TODO: logic for updating email in db
+  Future<void> onSaveEmail(String? value) async {
+    final newEmail = value?.trim().toLowerCase();
+    if (newEmail == null || newEmail.isEmpty) return;
 
-    state.callSetState(() {
-      state.model.isEditingEmail = false;
-    });
+    try {
+      final updated = await users.updateProfile(email: newEmail);
+
+      state.callSetState(() {
+        state.currentUser = updated;
+        state.model.isEditingEmail = false;
+      });
+    } catch(e) {
+      _showError('Failed to update email');
+    }
 
     print(value);
     print('FORM: email save clicked');
@@ -77,8 +124,20 @@ class ProfileController {
     print('username save clicked');
   }
 
-  void onSaveUsername(String? value) {
-    //TODO: logic for updating username in db
+  Future<void> onSaveUsername(String? value) async {
+    final newUsername = value?.trim();
+    if (newUsername == null || newUsername.isEmpty) return;
+
+    try {
+      final updated = await users.updateProfile(username: newUsername);
+
+      state.callSetState(() {
+        state.currentUser = updated;
+        state.model.isEditingEmail = false;
+      });
+    } catch(e) {
+      _showError('Failed to update username');
+    }
 
     state.callSetState(() {
       state.model.isEditingUsername = false;

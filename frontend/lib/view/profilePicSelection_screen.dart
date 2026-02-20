@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/controller/profilepicselection_controller.dart';
 import 'package:frontend/model/profilePicSelection_model.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/user_service.dart';
 
 class ProfilePicSelectionScreen extends StatefulWidget {
   static const String routeName = '/profilePicSelectionScreen';
@@ -14,12 +16,16 @@ class ProfilePicSelectionScreen extends StatefulWidget {
 class ProfilePicSelectionScreenState extends State<ProfilePicSelectionScreen> {
   late final ProfilePicSelectionController controller;
   late final ProfilePicSelectionModel model;
+  late final UserService users;
 
   @override
   void initState() {
     super.initState();
-    controller = ProfilePicSelectionController(this);
     model = ProfilePicSelectionModel();
+    final api = ApiClient();
+    users = UserService(api: api);
+
+    controller = ProfilePicSelectionController(this, users: users);
   }
 
   void callSetState(fn) => setState(fn);
