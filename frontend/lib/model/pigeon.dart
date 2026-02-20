@@ -27,6 +27,13 @@ class Pigeon {
 
 List<Pigeon> allPigeons = [
   Pigeon(
+    id: 0,
+    side: 'images/pigeonSide/defaultPigeonSide.png',
+    profile: 'images/pigeonProfile/defaultPigeonProfile.png',
+    coop: 'images/pigeonCoop/defaultPigeonCoop.png',
+    name: '####',
+  ),
+  Pigeon(
     id: 1,
     side: 'images/pigeonSide/showRacingHomerSide.png',
     profile: 'images/pigeonProfile/showRacingHomerProfile.png',

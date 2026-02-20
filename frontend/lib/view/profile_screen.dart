@@ -23,6 +23,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     controller = ProfileController(this); //link controller
+    //TODO: I believe this is where you could load stuff? idk like user info i.e. controller.loadUser();
   }
 
   @override
@@ -76,7 +77,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                               ),
                               child: ClipOval(
                                 child: Image.asset(
-                                  'images/pigeonProfile/magpiePigeonProfile.png', //TODO this will be the users profile pic for their selected pigeon
+                                  'images/pigeonProfile/defaultPigeonProfile.png', //TODO this will be the users profile pic for their selected pigeon
                                   //pigeon?.profile?? //default (i need to draw the default really quick) //TODO
                                   fit: BoxFit.cover,
                                 ),

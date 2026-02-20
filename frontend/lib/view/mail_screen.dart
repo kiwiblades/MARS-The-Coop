@@ -11,8 +11,6 @@ class MailScreen extends StatefulWidget {
 }
 
 class MailScreenState extends State<MailScreen> {
-  // late MailScreenController controller; //controller to be linked
-
   @override
   Widget build(BuildContext context) {
     return const Center(

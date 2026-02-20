@@ -11,8 +11,6 @@ class MyCoopScreen extends StatefulWidget {
 }
 
 class MyCoopScreenState extends State<MyCoopScreen> {
-  // late MyCoopScreenController controller; //controller to be linked
-
   @override
   Widget build(BuildContext context) {
     return const Center(

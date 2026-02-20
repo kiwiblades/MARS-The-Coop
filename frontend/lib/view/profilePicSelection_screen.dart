@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/controller/profilepicselection_controller.dart';
 import 'package:frontend/model/profilePicSelection_model.dart';
 
 class ProfilePicSelectionScreen extends StatefulWidget {
@@ -11,13 +12,17 @@ class ProfilePicSelectionScreen extends StatefulWidget {
 }
 
 class ProfilePicSelectionScreenState extends State<ProfilePicSelectionScreen> {
+  late final ProfilePicSelectionController controller;
   late final ProfilePicSelectionModel model;
 
   @override
   void initState() {
     super.initState();
+    controller = ProfilePicSelectionController(this);
     model = ProfilePicSelectionModel();
   }
+
+  void callSetState(fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +47,7 @@ class ProfilePicSelectionScreenState extends State<ProfilePicSelectionScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // save logic
-                },
+                onPressed: controller.onPressedSave,
                 child: const Text('Save'),
               ),
             ),
@@ -70,15 +73,12 @@ class ProfilePicSelectionScreenState extends State<ProfilePicSelectionScreen> {
         final isSelected = model.selectedPigeonIndex == index;
 
         return GestureDetector(
-          onTap: () {
-            setState(() {
-              model.selectedPigeonIndex = index;
-            });
-          },
+          onTap: () => controller.onTapPigeon(index),
           child: Container(
             decoration: BoxDecoration(
+              color: isSelected ? Color(0xFFC0936D) : Colors.transparent,
               border: Border.all(
-                color: isSelected ? Colors.brown.shade100 : Colors.transparent,
+                color: isSelected ? Color(0xFFC0936D) : Colors.transparent,
                 width: isSelected ? 3 : 1,
               ),
               borderRadius: BorderRadius.circular(12),

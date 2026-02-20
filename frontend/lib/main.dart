@@ -27,9 +27,9 @@ class MyApp extends StatelessWidget {
       initialRoute: MailScreen.routeName, //no home page, Mail will be initial
       //can have theme
       routes: {
-        MailScreen.routeName: (BuildContext context) => const AppShell(child: MailScreen()),
-        MyCoopScreen.routeName: (BuildContext context) => const AppShell(child: MyCoopScreen()),
-        ProfileScreen.routeName: (BuildContext context) => const AppShell(child: ProfileScreen()), //TODO: user must be passed i.e. ProfileScreen(user)
+        MailScreen.routeName: (BuildContext context) => AppShell(child: MailScreen()),
+        MyCoopScreen.routeName: (BuildContext context) => AppShell(child: MyCoopScreen()),
+        ProfileScreen.routeName: (BuildContext context) => AppShell(child: ProfileScreen()), //TODO: user must be passed i.e. ProfileScreen(user)
         ProfilePicSelectionScreen.routeName: (BuildContext context) => const ProfilePicSelectionScreen(),
       },
     );

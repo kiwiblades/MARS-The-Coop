@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/controller/appshell_controller.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
-  const AppShell({super.key, required this.child});
+  final AppShellController controller;
+  AppShell({super.key, required this.child}) : controller = AppShellController();
   
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
       backgroundColor: Color(0xFFD1A681),
       appBar: AppBar(
@@ -16,12 +17,8 @@ class AppShell extends StatelessWidget {
           builder: (BuildContext context) {
             return Row(
               children: [
-                TextButton(onPressed: () { //Mail Button
-                  Navigator.pushNamed(context, '/mailScreen'); //routes to mail screen when clicked
-                }, child: const Text('Mail')),
-                TextButton(onPressed: () { //My Coop Button
-                  Navigator.pushNamed(context, '/myCoopScreen'); //navigates to my coop screen when clicked
-                }, child: const Text('My Coop')),
+                TextButton(onPressed: () => controller.onPressedMail(context), child: const Text('Mail')),
+                TextButton(onPressed: () => controller.onPressedMyCoop(context), child: const Text('My Coop')),
               ],
             );
           },
@@ -29,9 +26,7 @@ class AppShell extends StatelessWidget {
         actions: [
           IconButton(
           icon: const Icon(Icons.person),
-          onPressed: () {
-            Navigator.pushNamed(context, '/profileScreen');
-          },
+          onPressed: () => controller.onPressedProfile(context),
         ),
         ],
       ),
