@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/api_client.dart';
+import 'services/health_service.dart';
+import 'view/signup_page.dart';
 import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/mycoop_screen.dart';
 import 'package:frontend/view/profilepicselection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
-// import 'services/api_client.dart';
-// import 'services/health_service.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,11 +20,21 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+//   // This widget is the root of your application.
+//   @override
+//   Widget build(BuildContext context) {
+//     return const MaterialApp(
+//       title: 'Backend test',
+//       home: HealthPage(), // TODO: replace HealthPage once other screens exist
+//     );
+//   }
+// }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // title: 'Backend test',
+      title: 'The Coop',
+      home: SignupPage(), 
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
       initialRoute: MailScreen.routeName, //no home page, Mail will be initial
       //can have theme
