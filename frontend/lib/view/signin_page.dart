@@ -4,6 +4,7 @@ import '../services/api_client.dart';
 import 'signup_page.dart';
 import '../controller/auth_controller.dart';
 import "../model/user.dart";
+import '../view/profile_screen.dart';
 
 class SigninPage extends StatefulWidget {
   const SigninPage({Key? key}) : super(key: key);
@@ -42,11 +43,17 @@ class _SigninPageState extends State<SigninPage> {
       );
 
       if (result['success']) {
-        print('Signin successful!');
-        // Navigate to home or show success
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Welcome back!')));
       } else {
-        print('Signin failed: ${result['error']}');
-        // Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Signin failed: ${result['error']}')),
+        );
       }
     }
   }

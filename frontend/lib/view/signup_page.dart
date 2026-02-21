@@ -47,11 +47,17 @@ class _SignupPageState extends State<SignupPage> {
       );
       
       if (result['success']) {
-        print('Signup successful!');
-        // Navigate to home or show success
+              Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SigninPage()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Account created! Please sign in.')),
+      );
       } else {
-        print('Signup failed: ${result['error']}');
-        // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed: ${result['error']}')),
+      );
       }
     }
   }

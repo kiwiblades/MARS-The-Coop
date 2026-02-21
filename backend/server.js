@@ -3,7 +3,8 @@ import express from 'express'; // http framework
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
-import Healthcheck from './src/models/Healthcheck.js';
+import { initModels } from './src/models/index.js';
+import cors from 'cors';
 
 /*
     The server consists of multiple parts:
@@ -13,7 +14,7 @@ import Healthcheck from './src/models/Healthcheck.js';
 */
 
 const app = express(); // create a request handler via Express
-app.use(express.json()); // attach general middleware
+app.use(express.json()); // attach json parsing middleware
 
 const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
