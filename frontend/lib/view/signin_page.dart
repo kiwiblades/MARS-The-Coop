@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/token_manager.dart';
+import 'package:frontend/view/profile_screen.dart';
 import '../constants.dart';
-import '../services/api_client.dart';
 import 'signup_page.dart';
 import '../controller/auth_controller.dart';
-import "../model/user.dart";
 
 class SigninPage extends StatefulWidget {
+  static const String routeName = '/signinScreen';
   const SigninPage({Key? key}) : super(key: key);
 
   @override
@@ -16,15 +18,18 @@ class _SigninPageState extends State<SigninPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  late final AuthController _authController;
 
   bool _obscurePassword = true;
-
-  late final AuthController _authController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController(ApiClient());
+    final authService = AuthService(
+      tokenManager: TokenManager.instance,
+    );
+
+    _authController = AuthController(auth: authService);
   }
 
   @override
@@ -44,6 +49,7 @@ class _SigninPageState extends State<SigninPage> {
       if (result['success']) {
         print('Signin successful!');
         // Navigate to home or show success
+        Navigator.pushReplacementNamed(context, ProfileScreen.routeName);
       } else {
         print('Signin failed: ${result['error']}');
         // Show error message to user

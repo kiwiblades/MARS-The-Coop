@@ -28,7 +28,7 @@ class ProfilePicSelectionController {
       await users.updateProfile(pigeonId: pigeonId);
       Navigator.pushNamed(state.context, '/profileScreen');
     } catch(e) {
-      _showError('Failed to update profile picture');
+      _showError('Failed to update profile picture. Please make sure a pigeon is selected.');
     }
   }
 }
