@@ -1,38 +1,30 @@
-import '../services/api_client.dart';
-import '../model/user.dart';
+import 'package:frontend/services/auth_service.dart';
 
 class AuthController {
-  final ApiClient _apiClient;
+  final AuthService auth;
   
-  AuthController(this._apiClient);
+  AuthController({required this.auth});
   
   Future<Map<String, dynamic>> signup({
     required String username,
     required String email,
     required String password,
   }) async {
-    // API call
     try {
-      final response = await _apiClient.post('/auth/signup', {
-        'username': username,
-        'email': email,
-        'password': password,
-      });
-      return {'success': true, 'user': User.fromJson(response)};
+      final data = await auth.signup(username: username, email: email, password: password);
+      return {'success': true, 'data': data};
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
   }
+
   Future<Map<String, dynamic>> signin({
     required String username,
     required String password,
   }) async {
     try {
-      final response = await _apiClient.post('/auth/signin', {
-        'username': username,
-        'password': password,
-      });
-      return {'success': true, 'user': User.fromJson(response)};
+      await auth.signin(username: username, password: password);
+      return {'success': true}; // tokens are saved locally inside AuthService
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }

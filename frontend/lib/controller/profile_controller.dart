@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/user_service.dart';
-import 'package:frontend/view/profilepicselection_screen.dart';
+import 'package:frontend/view/profilePicSelection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
 
 class ProfileController {
