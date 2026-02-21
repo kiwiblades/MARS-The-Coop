@@ -4,7 +4,10 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
 import { initModels } from './src/models/index.js';
+<<<<<<< HEAD
 import cors from 'cors';
+=======
+>>>>>>> ba5d8ba3a13ebae53acdcb12bf5be7b6a605e72c
 
 /*
     The server consists of multiple parts:
@@ -20,37 +23,32 @@ const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
 
 // TODO: attach API routes here
+import healthRoutes from './src/routes/healthRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
+import userRoutes from './src/routes/userRoutes.js';
+app.use('/health', healthRoutes);
+app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes); // alias
+app.use('/user', userRoutes);
 
-// route for server healthcheck
-app.get('/health', async (req, res) => {
-    try {
-        res.json({ ok: true, message: 'backend reachable' });
-    } catch(e) {
-        console.error(e);
-        res.status(500).json({ ok: false, error: "db healthcheck failed" });
-    }
-})
+// for testing only; delete later
+import devRoutes from './src/dev/devRoutes.js';
+app.use('/dev', devRoutes);
 
-// route for db healthcheck
-app.get('/health/db', async (req, res) => {
-    try {
-        const row = await Healthcheck.create({});
-        const count = await Healthcheck.count();
-        res.json({ ok: true, insertedId: row.id, totalRows: count });
-    } catch(e) {
-        console.error(e);
-        res.status(500).json({ ok: false, error: "db healthcheck failed" });
-    }
-});
+// error-handling middleware muist be attached last
+import AppError from './src/utils/errors/AppError.js';
+import errorHandler from './src/middleware/errorHandler.js';
 
-// TODO: attach custom error handling middleware
-// error-handling middleware muist be attached last.
+app.get("/favicon.ico", (req, res) => res.status(204).end()); // ignore browser favicon request
+app.use((req, res, next) => next(AppError.notFound('Route not found'))); // 404 for unknown routes
+app.use(errorHandler);
 
 await sequelize.authenticate();
 console.log("Database connected");
 
 // dev only: sync models with database (create tables if they don't exist)
-await sequelize.sync({ alter: true });
+initModels();
+await sequelize.sync({ alter: true }); // alter: true modifies tables to match if the model has changed
 console.log("Database models synced");
 
 // listen on connection events for the incoming socket
