@@ -4,6 +4,10 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
 import { initModels } from './src/models/index.js';
+<<<<<<< HEAD
+import cors from 'cors';
+=======
+>>>>>>> ba5d8ba3a13ebae53acdcb12bf5be7b6a605e72c
 
 /*
     The server consists of multiple parts:

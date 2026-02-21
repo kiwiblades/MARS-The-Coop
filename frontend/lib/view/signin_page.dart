@@ -5,6 +5,8 @@ import 'package:frontend/view/profile_screen.dart';
 import '../constants.dart';
 import 'signup_page.dart';
 import '../controller/auth_controller.dart';
+import "../model/user.dart";
+import '../view/profile_screen.dart';
 
 class SigninPage extends StatefulWidget {
   static const String routeName = '/signinScreen';
@@ -47,12 +49,17 @@ class _SigninPageState extends State<SigninPage> {
       );
 
       if (result['success']) {
-        print('Signin successful!');
-        // Navigate to home or show success
-        Navigator.pushReplacementNamed(context, ProfileScreen.routeName);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Welcome back!')));
       } else {
-        print('Signin failed: ${result['error']}');
-        // Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Signin failed: ${result['error']}')),
+        );
       }
     }
   }
