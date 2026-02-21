@@ -27,6 +27,11 @@ class TokenManager {
   Future<String?> getAccessToken() => _secureStorage.read(key: _accessTokenKey);
   Future<String?> getRefreshToken() => _secureStorage.read(key: _refreshTokenKey);
 
+  Future<bool> hasSession() async {
+    final refresh = await getRefreshToken();
+    return refresh != null && refresh.isNotEmpty;
+  }
+
   // set an access token, but refresh tokens are only set on login
   Future<void> saveTokens({required String accessToken, String? refreshToken}) async {
     await _secureStorage.write(key: _accessTokenKey, value: accessToken);

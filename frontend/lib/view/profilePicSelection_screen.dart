@@ -77,6 +77,7 @@ class ProfilePicSelectionScreenState extends State<ProfilePicSelectionScreen> {
         final pigeon = model.pigeonList![index];
 
         final isSelected = model.selectedPigeonIndex == index;
+        // final isSelected = state.currentUser!.pigeonId
 
         return GestureDetector(
           onTap: () => controller.onTapPigeon(index),

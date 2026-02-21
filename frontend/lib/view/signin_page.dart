@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/token_manager.dart';
+import 'package:frontend/view/profile_screen.dart';
 import '../constants.dart';
-import '../services/api_client.dart';
 import 'signup_page.dart';
 import '../controller/auth_controller.dart';
 import "../model/user.dart";
 import '../view/profile_screen.dart';
 
 class SigninPage extends StatefulWidget {
+  static const String routeName = '/signinScreen';
   const SigninPage({Key? key}) : super(key: key);
 
   @override
@@ -17,15 +20,18 @@ class _SigninPageState extends State<SigninPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  late final AuthController _authController;
 
   bool _obscurePassword = true;
-
-  late final AuthController _authController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController(ApiClient());
+    final authService = AuthService(
+      tokenManager: TokenManager.instance,
+    );
+
+    _authController = AuthController(auth: authService);
   }
 
   @override
