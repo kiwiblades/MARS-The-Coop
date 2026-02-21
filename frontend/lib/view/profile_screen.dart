@@ -149,10 +149,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                       key: formKeyEmail,
                       child: Row(
                         children: model.isEditingEmail ? [ //conditionally render based on if the email is being edited or not
-                          Text( //email
-                            currentUser?.email ?? '<Email>',
-                            style: TextStyle(fontSize: 20),
-                          ),
                           Expanded(
                             child: TextFormField(
                               decoration: InputDecoration(
@@ -200,10 +196,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         children: model.isEditingUsername ? 
                         [
-                          Text( //username
-                            currentUser?.username ?? '<Username>',
-                            style: TextStyle(fontSize: 20),
-                          ),
                           Expanded(
                             child: TextFormField(
                               decoration: InputDecoration(
