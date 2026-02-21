@@ -133,17 +133,11 @@ class ProfileController {
 
       state.callSetState(() {
         state.currentUser = updated;
-        state.model.isEditingEmail = false;
+        state.model.isEditingUsername = false;
       });
     } catch(e) {
       _showError('Failed to update username');
     }
-
-    state.callSetState(() {
-      state.model.isEditingUsername = false;
-    });
-    print(value);
-    print('FORM: username save clicked');
   }
 
   void onPressedEditUsernameCancel() {
