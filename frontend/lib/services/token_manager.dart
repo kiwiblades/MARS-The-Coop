@@ -29,15 +29,18 @@ class TokenManager {
 
   Future<bool> hasSession() async {
     final refresh = await getRefreshToken();
+    print('User has active session?: ${refresh != null && refresh.isNotEmpty}');
     return refresh != null && refresh.isNotEmpty;
   }
 
   // set an access token, but refresh tokens are only set on login
   Future<void> saveTokens({required String accessToken, String? refreshToken}) async {
     await _secureStorage.write(key: _accessTokenKey, value: accessToken);
+    print('Saved access token locally');
 
     if (refreshToken != null && refreshToken.isNotEmpty) {
       await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
+      print('Saved refresh token locally');
     }
   }
 

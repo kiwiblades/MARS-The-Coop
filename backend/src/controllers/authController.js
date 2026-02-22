@@ -92,6 +92,9 @@ export async function signup(req, res) {
             // just continue after an error in dev
         }
 
+        const test = await User.findByPk(newUser.uid);
+        console.log("New user signed up:", test);
+
         // 3. Return Success with Unique ID
         return res.status(201).json({
             message: "User created successfully",
@@ -155,6 +158,7 @@ export async function refresh(req, res) {
     const refreshToken = String(req.body?.refreshToken || "");
     if (!refreshToken) throw AppError.unauthorized("Refresh token missing", { code: "REFRESH_MISSING" });
 
+    console.log("Access token expired, performing refresh");
     const payload = verifyRefreshToken(refreshToken); // verify jwt signature
 
     // compare the hashed token to the one stored in the database
@@ -213,6 +217,8 @@ export async function verifyEmail(req, res) {
     await row.update({ usedAt: new Date() });
 
     console.log("User email verified successfully");
+    const test = await User.findByPk(payload.uid);
+    console.log("Updated user details:", test);
     return res.status(200).send(`<h2>Email verified</h2><p>You can safely close this tab and return to the app.</p>`);
 }
 

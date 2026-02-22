@@ -47,13 +47,16 @@ class _SigninPageState extends State<SigninPage> {
       );
 
       if (result['success']) {
-        Navigator.pushReplacement(
+        if (!mounted) return;
+
+        Navigator.pushNamedAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+          ProfileScreen.routeName,
+          (_) => false,
         );
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Welcome back!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Welcome back!')),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Signin failed: ${result['error']}')),

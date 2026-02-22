@@ -105,6 +105,7 @@ class AuthService {
   // client sends the refresh token and backend returns a new access token
   // called automatically by ApiClient whenever it receives a 401
   Future<void> refresh() async {
+    print('Access token expired, calling refresh to generate new token');
     final refreshToken = await tokens.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       throw Exception('No refresh token available'); // indicates the session has expired or is invalid
