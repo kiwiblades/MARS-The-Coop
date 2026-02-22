@@ -5,8 +5,6 @@ import 'package:frontend/view/profile_screen.dart';
 import '../constants.dart';
 import 'signup_page.dart';
 import '../controller/auth_controller.dart';
-import "../model/user.dart";
-import '../view/profile_screen.dart';
 
 class SigninPage extends StatefulWidget {
   static const String routeName = '/signinScreen';

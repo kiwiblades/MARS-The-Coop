@@ -178,6 +178,7 @@ export async function refresh(req, res) {
     // issue a new access token
     const accessToken = generateAccessToken({ uid: payload.uid, email: payload.email });
 
+    console.log("Access token refreshed with refresh token");
     return res.status(200).json({ accessToken });
 }
 
@@ -211,6 +212,7 @@ export async function verifyEmail(req, res) {
     // mark the email verification token as used
     await row.update({ usedAt: new Date() });
 
+    console.log("User email verified successfully");
     return res.status(200).send(`<h2>Email verified</h2><p>You can safely close this tab and return to the app.</p>`);
 }
 
@@ -239,7 +241,8 @@ export async function resendVerification(req, res) {
 
     // send the verification email
     try {
-        await sendVerifyEmail(newUser.email, verificationUrl);
+        await sendVerifyEmail(user.email, verificationUrl);
+        console.log("Send verification email successfully");
     } catch(e) {
         console.error("[ResendVerification] failed to send verification email:", e);
         // just continue after an error in dev
