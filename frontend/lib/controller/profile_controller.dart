@@ -164,11 +164,18 @@ class ProfileController {
   void onPressedPasswordReset() {
     print('password reset clicked');
     //navigate to password reset page
+    Navigator.pushNamed(state.context, '/resetPasswordScreen');
   }
 
   //info click
   void onPressedInfo() {
     print('info clicked');
     //navigate to info page
+  }
+
+  void onPressedSignOutButton() {
+    print('sign out button pressed');
+    //TODO: sign out logic
+    // Navigator.pushNamed(state.context, '/signinScreen'); //navigate to sign in page
   }
 }

@@ -199,7 +199,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           Expanded(
                             child: TextFormField(
                               decoration: InputDecoration(
-                                labelText: '<Username>',
+                                labelText: 'Username',
                                 border: OutlineInputBorder(),
                               ),
                               initialValue: currentUser?.username ?? '',
@@ -237,11 +237,21 @@ class ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(fontSize: 16),
                       textAlign: TextAlign.left,
                     ),
-                    ElevatedButton( //reset password button
-                      onPressed: controller.onPressedPasswordReset,
-                      child: Text('Reset Password'),
+                    const SizedBox(height: 10), //spacer
+                    InkWell(
+                      onTap: controller.onPressedPasswordReset,
+                      child: Row(
+                        children: [
+                          Text(
+                            'Reset Password',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.chevron_right, size: 30),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 10.0), //spacer
+                    SizedBox(height: 10.0),
                     const Text(
                       'Questions about the app? Contact thecoopmobileapp@gmail.com',
                     ),
@@ -263,6 +273,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ],
+                    ),
+                    SizedBox(height: 7.0),
+                    ElevatedButton( //reset password button
+                      onPressed: controller.onPressedSignOutButton,
+                      child: Text('Sign Out'),
                     ),
                   ],
                 ),
