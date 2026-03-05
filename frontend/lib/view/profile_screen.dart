@@ -131,7 +131,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               Text( //username "title"
                 //Profile 'label' meaning the users username
                 currentUser?.username ?? '<Username>',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               
               Padding(
@@ -252,7 +252,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     SizedBox(height: 10.0),
-                    const Text(
+                    Text(
                       'Questions about the app? Contact thecoopmobileapp@gmail.com',
                     ),
                     Row(
@@ -267,9 +267,10 @@ class ProfileScreenState extends State<ProfileScreen> {
                           onPressed: controller.onPressedInfo,
                           child: Text(
                             'info',
-                            style: TextStyle(
-                              decoration: TextDecoration.underline,
-                            ),
+                            style: 
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                decoration: TextDecoration.underline,
+                              ),
                           ),
                         ),
                       ],

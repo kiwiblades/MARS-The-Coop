@@ -37,6 +37,7 @@ dependencies:
   http: ^1.6.0
   flutter_dotenv: ^6.0.0
   flutter_secure_storage: ^10.0.0
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -125,6 +126,7 @@ flutter:
       - family: Zalando Sans
         fonts:
           - asset: assets/fonts/ZalandoSans-Bold.ttf
+          - asset: assets/fonts/ZalandoSans-Regular.ttf
             weight: 700
   #   - family: Trajan Pro
   #     fonts:
