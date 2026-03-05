@@ -22,12 +22,14 @@ const io = new Server(server); // attach socket.io to the server object
 import healthRoutes from './src/routes/healthRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
+import chatroomRoutes from './src/routes/chatroomRoutes.js';
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes); // alias
 app.use('/user', userRoutes);
+app.use('/chatroom', chatroomRoutes);
 
-// for testing only; delete later
+// for testing only
 import devRoutes from './src/dev/devRoutes.js';
 app.use('/dev', devRoutes);
 
