@@ -179,3 +179,29 @@ export async function deleteChatroom(req, res) {
         throw e;
     }
 }
+
+// rather than making both an unpin and pin, just flip the state when the function is called
+export async function togglePin(req, res) {
+    const uid = req.user.uid;
+    const { chatroomId } = req.body;
+    if (!chatroomId) {
+        throw AppError.badRequest("chatroomId is required for pinning/unpinning a chatroom");
+    }
+
+    const membership = await ChatMembership.findOne({
+        where: {
+            chatId: chatroomId,
+            userId: uid
+        }
+    });
+    if (!membership) {
+        throw AppError.notFound("User isn't a member of the designated chatroom");
+    }
+
+    console.log(membership.pinned);
+    membership.pinned = !membership.pinned; // toggle the pinned state
+    await membership.save(); // save the changes
+    console.log(membership.pinned);
+
+    return res.status(204).end();
+}
