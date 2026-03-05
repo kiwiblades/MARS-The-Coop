@@ -4,17 +4,17 @@ import AppError from '../utils/errors/AppError.js';
 export const sendMessage = async (req, res, next) => {
     try {
         const { content, chat_id } = req.body;
-        const sender_id = req.user.id; // From authMiddleware
+        const sender_id = req.user.uid; // From authMiddleware
 
-        // Validate sender membership before saving
-        // Note: Replace 'ChatMember' with your actual membership model name
-        const isMember = await req.models.ChatMember.findOne({ 
-            where: { user_id: sender_id, chat_id } 
-        });
+        // // Validate sender membership before saving
+        // // Note: Replace 'ChatMember' with your actual membership model name
+        // const isMember = await req.models.ChatMember.findOne({ 
+        //     where: { user_id: sender_id, chat_id } 
+        // });
 
-        if (!isMember) {
-            throw AppError.forbidden('You are not a member of this chat');
-        }
+        // if (!isMember) {
+        //     throw AppError.forbidden('You are not a member of this chat');
+        // }
 
         // Save to database
         const newMessage = await Message.create({ content, sender_id, chat_id });
