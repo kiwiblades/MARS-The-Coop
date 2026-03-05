@@ -24,7 +24,7 @@ const ChatRoom = sequelize.define('ChatRoom', {
     hooks: {
         // when the chatroom is created, generate an invite code
         beforeValidate: (chatroom, options) => {
-            chatroom.inviteCode = crypto.randomBytes(6).toString('hex').toUpperCase();
+            chatroom.inviteCode = crypto.randomBytes(3).toString('hex').toUpperCase();
         },
     }
 });
