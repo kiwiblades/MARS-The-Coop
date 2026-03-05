@@ -103,6 +103,11 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     // onSaved: controller.onSave,
                   ),
                   SizedBox(height: 10.0),
+                  Text(
+                    'After password is reset successfully, you will be signed out and must sign back in with your new password.',
+                    style: TextStyle(fontSize: 12)
+                  ),
+                  SizedBox(height: 10.0),
                   Row(
                     children: [
                       Expanded(

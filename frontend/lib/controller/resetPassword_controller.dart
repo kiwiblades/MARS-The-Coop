@@ -47,6 +47,9 @@ class ResetPasswordController {
     if (form != null && form.validate()) {
       print('Validation passed'); //validation only for new password
       //TODO: add password reset backend functionality
+      //check that current password is correct and then do update
+      //catch error if the password does not match (idk if this should be frontend or backend)
+      //sign out and direct to sign in page
     }
 
     print('password save clicked'); //test print out
