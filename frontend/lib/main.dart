@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
+    const darkBrown = Color(0xFF93633A);
     return MaterialApp(
       title: 'The Coop',
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
