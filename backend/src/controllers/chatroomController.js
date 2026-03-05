@@ -109,10 +109,73 @@ export async function joinChatroom(req, res) {
     return res.json(chatroom);
 }
 
-export async function deleteChatroom(req, res) {
+export async function leaveChatroom(req, res) {
+    const uid = req.user.uid;
+    const { chatroomId } = req.body; // the request should indicate which chatroom the user wants to leave
+    if (!chatroomId) {
+        throw AppError.badRequest("chatroomId is required for leaving a chatroom");
+    }
 
+    // for the query, first use the uid and chatroomId to pull the ChatMembership
+    const membership = await ChatMembership.findOne({
+        where: {
+            userId: uid,
+            chatId: chatroomId
+        }
+    });
+    if (!membership) {
+        throw AppError.notFound("User isn't a member of the designated chatroom");
+    }
+
+    try {
+        membership.destroy(); // deletes the row corresponding to the fetched instance
+        console.log("User successfully left the room, uid:", uid);
+        return res.status(204).end(); // success w/ no content
+    } catch(e) {
+        throw e;
+    }
 }
 
-export async function leaveChatroom(req, res) {
-    
+export async function deleteChatroom(req, res) {
+    const uid = req.user.uid;
+    const { chatroomId } = req.body;
+    if (!chatroomId) {
+        throw AppError.badRequest("chatroomId is required for deleting a chatroom");
+    }
+
+    // fetch the specific user's membership first to check the owner status
+    const membership = await ChatMembership.findOne({
+        where: {
+            userId: uid,
+            chatId: chatroomId
+        }
+    });
+    if (membership.role !== "owner") {
+        throw AppError.forbidden("Only the owner of the chatroom can delete it");
+    }
+
+    // once their permissions are verified, must delete both the ChatRoom row and the ChatMemberships
+    const t = await sequelize.transaction();
+    try {
+        // delete all rows in one transaction, so if it fails there are no orphan rows
+        await ChatMembership.destroy({
+            where: {
+                chatId: chatroomId,
+            },
+            transaction: t
+        });
+
+        await ChatRoom.destroy({
+            where: {
+                id: chatroomId,
+            },
+            transaction: t
+        });
+
+        await t.commit();
+        return res.status(204).end();
+    } catch(e) {
+        await t.rollback();
+        throw e;
+    }
 }
