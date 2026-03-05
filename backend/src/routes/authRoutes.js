@@ -6,7 +6,8 @@
 */
 
 import { Router } from "express";
-import { signup, signin, signout, refresh, verifyEmail, resendVerification } from "../controllers/authController.js"
+import { signup, signin, signout, refresh, verifyEmail, resendVerification, changePassword } from "../controllers/authController.js"
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -16,6 +17,10 @@ router.post('/signin', signin);
 router.post('/signout', signout);
 router.post("/refresh", refresh);
 router.get("/verify-email", verifyEmail);
+
+// from here, endpoints require uid+verification
+router.use(authenticateToken);
 router.post("/resend-verification", resendVerification);
+router.patch("/change-password", changePassword);
 
 export default router;

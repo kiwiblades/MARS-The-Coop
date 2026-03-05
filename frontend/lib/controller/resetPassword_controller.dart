@@ -1,8 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/view/resetPassword_screen.dart';
+import 'package:frontend/view/signin_page.dart';
 
 class ResetPasswordController {
   ResetPasswordScreenState state;
-  ResetPasswordController(this.state);
+  final AuthService auth;
+  ResetPasswordController(this.state, {required this.auth});
 
   //new password validator
   String? newPasswordValidator(String? value) {
@@ -41,14 +45,33 @@ class ResetPasswordController {
     return null;
   }
 
-  void onPressedSave() {
+  // internal fcn to show errors
+  void _showError(String msg) {
+    ScaffoldMessenger.of(state.context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
+
+  void onPressedSave() async {
     final form = state.formKey.currentState;
 
     if (form != null && form.validate()) {
       print('Validation passed'); //validation only for new password
-      //TODO: add password reset backend functionality
-      //check that current password is correct and then do update
-      //catch error if the password does not match (idk if this should be frontend or backend)
+      final currentPassword = state.currentPasswordController.text;
+      final newPassword = state.newPasswordController.text;
+      
+      try {
+        await auth.changePassword(currentPassword: currentPassword, newPassword: newPassword);
+        print('Password changed successfully');
+        await auth.logout();
+        Navigator.of(state.context).pushNamedAndRemoveUntil(
+          SigninPage.routeName,
+          (route) => false,
+        );
+      } catch(e) {
+        print('Error changing password: $e');
+        _showError('Failed to update password');
+      }
       //sign out and direct to sign in page
     }
 

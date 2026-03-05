@@ -256,3 +256,39 @@ export async function resendVerification(req, res) {
 
     return res.status(200).json({ message: "A verification email was sent.", verificationUrl });
 }
+
+export async function changePassword(req, res) {
+    const uid = req.user.uid;
+    const { currentPassword, newPassword } = req.body
+    if (!currentPassword || !newPassword) {
+        throw AppError.badRequest("Both current and new password are required for changing password");
+    }
+    // console.log(currentPassword);
+    // console.log(newPassword);
+
+    // fetch the user instance for the attached uid
+    const user = await User.findOne({ where: { uid } });
+    if (!user) {
+        throw AppError.notFound("User was not found during password reset");
+    }
+
+    // check that the current password matches what's stored in the database
+    const passwordVerified = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!passwordVerified) {
+        throw AppError.unauthorized("Invalid credentials");
+    }
+
+    // continue with the password update: generate the hash for the new password, then update the field
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(newPassword, salt);
+    await user.update({ password_hash: newHash }); // replace the stored password with the new hash
+    await user.save(); // save the changes
+
+    // delete the user's refresh token, they need to sign in again
+    await RefreshToken.update(
+        { revokedAt: new Date() },
+        { where: { userId: uid } },
+    );
+
+    return res.status(204).end();
+}
