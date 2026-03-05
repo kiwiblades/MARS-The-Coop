@@ -10,7 +10,6 @@ import 'package:frontend/view/profile_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
 import 'package:frontend/view/chat_page.dart';
-import 'theme.dart';
 
 
 Future<void> main() async {
@@ -35,7 +34,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'The Coop',
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
-      theme: buildAppTheme(), 
       home: const AuthCheck(),
 
       routes: {
