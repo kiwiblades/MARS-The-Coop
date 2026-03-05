@@ -9,6 +9,8 @@ import 'package:frontend/view/profilePicSelection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
+import 'package:frontend/view/chat_page.dart';
+import 'theme.dart';
 
 
 Future<void> main() async {
@@ -33,6 +35,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'The Coop',
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
+      theme: buildAppTheme(), 
       home: const AuthCheck(),
 
       routes: {
@@ -45,6 +48,11 @@ class MyApp extends StatelessWidget {
         MyCoopScreen.routeName: (_) => RequireAuth(child: AppShell(child: MyCoopScreen())),
         ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen())),
         ProfilePicSelectionScreen.routeName: (_) => RequireAuth(child: const ProfilePicSelectionScreen()),
+        ChatPage.routeName: (_) => RequireAuth(
+          child: AppShell(
+            child: ChatPage(chatId: 1, currentUserId: 123),  // Hardcoded test values
+          ),
+        ),
       },
     );
   }
