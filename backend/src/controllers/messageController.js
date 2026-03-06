@@ -1,10 +1,16 @@
 import Message from '../models/Message.js';
+import User from '../models/userModel.js';
 import AppError from '../utils/errors/AppError.js';
 
 export const sendMessage = async (req, res, next) => {
     try {
         const { content, chat_id } = req.body;
         const sender_id = req.user.uid; // From authMiddleware
+
+		// Membership Validation Replacement
+        if (!chat_id || !sender_id) {
+            throw AppError.badRequest('Missing chat_id or sender identity');
+        }
 
         // // Validate sender membership before saving
         // // Note: Replace 'ChatMember' with your actual membership model name
@@ -39,7 +45,7 @@ export const getChatHistory = async (req, res, next) => {
             where: { chat_id: id },
             order: [['createdAt', 'ASC']], // Oldest to newest
             include: [{ 
-                model: req.models.User, 
+                model: User, 
                 as: 'sender', 
                 attributes: ['username'] // Include username join
             }]
