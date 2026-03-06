@@ -27,6 +27,8 @@ class MailScreenState extends State<MailScreen> {
     controller = MailController(this);
   }
 
+  void callSetState(fn) => setState(fn);
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -60,6 +62,7 @@ class MailScreenState extends State<MailScreen> {
   }
 
   Widget bodyView() {
+    final isSelected = model.selectedChatroom;
     if (model.chatroomList!.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
@@ -156,70 +159,105 @@ class MailScreenState extends State<MailScreen> {
     }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start, //makes pinned icon in top right
-        children: [
-          //chat image
-          CircleAvatar(
-            backgroundColor: AppColors.darkBrown,
-            radius: 20,
-            child: ClipOval(child: Image.asset(chatImage)),
-          ),
-          const SizedBox(width: 10), //spacer
-          Expanded(
-            //text info
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  //chat name/title
-                  chat.name,
-                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                    fontSize: 14,
-                    color: AppColors.darkBrown,
+      child: GestureDetector(
+        onLongPress: () => controller.onLongPressChat(context, chat),
+        child: Row(
+          crossAxisAlignment:
+              CrossAxisAlignment.start, //makes pinned icon in top right
+          children: [
+            //chat image
+            CircleAvatar(
+              backgroundColor: AppColors.darkBrown,
+              radius: 20,
+              child: ClipOval(child: Image.asset(chatImage)),
+            ),
+            const SizedBox(width: 10), //spacer
+            Expanded(
+              //text info
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    //chat name/title
+                    chat.name,
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                      fontSize: 14,
+                      color: AppColors.darkBrown,
+                    ),
                   ),
-                ),
-                Row(
-                  //most recent message info
-                  children: [
-                    Expanded(
-                      child: Text(
-                        //last message text
-                        chat.lastSentMessage,
-                        overflow: TextOverflow.ellipsis,
+                  Row(
+                    //most recent message info
+                    children: [
+                      Expanded(
+                        child: Text(
+                          //last message text
+                          chat.lastSentMessage,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                            fontSize: 14,
+                            color: AppColors.darkBrown,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 5.0),
+                      Text(
+                        //last message time
+                        chat.lastSentTime,
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           fontSize: 14,
                           color: AppColors.darkBrown,
                         ),
                       ),
-                    ),
-                    SizedBox(width: 5.0),
-                    Text(
-                      //last message time
-                      chat.lastSentTime,
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        fontSize: 14,
-                        color: AppColors.darkBrown,
-                      ),
-                    ),
-                    if (chat.pinned) SizedBox(width: 10.0),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (chat.pinned) //pinned icon
-            Transform.rotate(
-              angle: 45 * math.pi / 180,
-              child: const Icon(
-                Icons.push_pin,
-                color: AppColors.darkBrown,
-                size: 20.0,
+                      if (chat.pinned) SizedBox(width: 10.0),
+                    ],
+                  ),
+                ],
               ),
             ),
-        ],
+            if (chat.pinned) //pinned icon
+              Transform.rotate(
+                angle: 45 * math.pi / 180,
+                child: const Icon(
+                  Icons.push_pin,
+                  color: AppColors.darkBrown,
+                  size: 20.0,
+                ),
+              ),
+          ],
+        ),
       ),
+    );
+  }
+
+  //pin chat dialog box
+  Future<void> showPinModal(BuildContext context) {
+    final chat = model.selectedChatroom;
+
+    return showModalBottomSheet(
+      context: context, 
+      backgroundColor: const Color(0xFFE6C7A8),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                chat?.name?? "",
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    color: AppColors.darkBrown,
+                    fontSize: 18,
+                  ),
+              ),
+            ]
+            //if selected chat is pinned, ask if user wants to unpin it (show chat name then unpin text button underneath)
+            //if selected chat isn't pinned, show chat name and text button to pin chat
+          ),
+        );
+      }
     );
   }
 }
