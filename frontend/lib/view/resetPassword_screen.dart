@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/controller/resetPassword_controller.dart';
+import 'package:frontend/services/auth_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   static const String routeName = '/resetPasswordScreen';
@@ -22,7 +23,10 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    controller = ResetPasswordController(this);
+
+    final auth = AuthService();
+
+    controller = ResetPasswordController(this, auth: auth);
   }
 
   @override
