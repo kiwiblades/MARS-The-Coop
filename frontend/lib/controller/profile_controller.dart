@@ -175,35 +175,36 @@ class ProfileController {
     //navigate to info page
   }
 
-  void onPressedSignOutButton() async { // The 'async' keyword marks this as a background-compatible function
+  void onPressedSignOutButton() async {
+    // The 'async' keyword marks this as a background-compatible function
     print('sign out button pressed');
     //sign out logic
     // Navigator.pushNamed(state.context, '/signinScreen'); //navigate to sign in page
 
-      try {
-        // Call backend to invalidate the session/token
-        await users.logout();
+    try {
+      // Call backend to invalidate the session/token
+      await users.signout();
 
-        // Confirm status and redirect
-        // Using pushNamedAndRemoveUntil ensures the user cannot hit 'back' to return to the profile
-        Navigator.pushNamedAndRemoveUntil(
-          state.context, 
-          '/signinScreen', // Assuming this is your route name for login
-          (route) => false, 
-        );
-        
-        _showSuccess('Successfully signed out');
-      } catch (e) {
-        // Even if the network call fails, we usually clear local storage and redirect
-        print('Logout error: $e');
-        _showError('Sign out failed. Please try again.');
-      }
+      // Confirm status and redirect
+      // Using pushNamedAndRemoveUntil ensures the user cannot hit 'back' to return to the profile
+      Navigator.pushNamedAndRemoveUntil(
+        state.context,
+        '/signinScreen', // route name for sign in page
+        (route) => false,
+      );
+
+      _showSuccess('Successfully signed out');
+    } catch (e) {
+      // Even if the network call fails, we usually clear local storage and redirect
+      print('Logout error: $e');
+      _showError('Sign out failed. Please try again.');
     }
-
-    // Helper for success messages 
-    void _showSuccess(String msg) {
-    ScaffoldMessenger.of(state.context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.green),
-    );
   }
 
+  // Helper for success messages
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(
+      state.context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.green));
+  }
+}
