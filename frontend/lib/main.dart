@@ -7,6 +7,7 @@ import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/mycoop_screen.dart';
 import 'package:frontend/view/profilePicSelection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
+import 'package:frontend/view/resetPassword_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
 
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         MyCoopScreen.routeName: (_) => RequireAuth(child: AppShell(child: MyCoopScreen())),
         ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen())),
         ProfilePicSelectionScreen.routeName: (_) => RequireAuth(child: const ProfilePicSelectionScreen()),
+        ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),
       },
     );
   }
