@@ -47,14 +47,13 @@ class MailScreenState extends State<MailScreen> {
               bodyView(), //conditionally render a message if there are no chatrooms
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.darkBrown,
-            onPressed: () {},
+            onPressed: controller.onPressAddChatButton,
             shape: const CircleBorder(),
             elevation: 2.0,
             child: const Icon(
               Icons.add,
               color: Color(0xFFD1A681), // lighter brown icon
             ),
-            
           ),
         ),
       ),
@@ -62,8 +61,7 @@ class MailScreenState extends State<MailScreen> {
   }
 
   Widget bodyView() {
-    final isSelected = model.selectedChatroom;
-    if (model.chatroomList!.isEmpty) {
+    if (model.chatroomList!.isEmpty) { //if user does not have any chats yet
       return Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
@@ -77,23 +75,23 @@ class MailScreenState extends State<MailScreen> {
         ),
       );
     }
+    //filter a list to contain only pinned chats
     List<Chatroom> pinnedChats = model.chatroomList!
         .where((chat) => chat.pinned)
         .toList();
+    //filter a list to contain only unpinned chats
     List<Chatroom> unpinnedChats = model.chatroomList!
         .where((chat) => !chat.pinned)
         .toList();
     return SingleChildScrollView(
       child: Column(
-        // mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             decoration: BoxDecoration(
-              // color: Color(0xFFC0936D),
               border: Border.all(color: AppColors.darkBrown, width: 2.5),
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BorderRadius.circular(12.0), //round corners
             ),
-            child: ListView.separated(
+            child: ListView.separated( //list for pinned chats
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -111,11 +109,10 @@ class MailScreenState extends State<MailScreen> {
           SizedBox(height: 10.0),
           Container(
             decoration: BoxDecoration(
-              // color: Color(0xFFC0936D),
               border: Border.all(color: AppColors.darkBrown, width: 2.5),
               borderRadius: BorderRadius.circular(12.0),
             ),
-            child: ListView.separated(
+            child: ListView.separated( //list for unpinned chats
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -161,6 +158,7 @@ class MailScreenState extends State<MailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: GestureDetector(
         onLongPress: () => controller.onLongPressChat(context, chat),
+        onTap: () => controller.onTapChat(context,chat),
         child: Row(
           crossAxisAlignment:
               CrossAxisAlignment.start, //makes pinned icon in top right
@@ -193,10 +191,11 @@ class MailScreenState extends State<MailScreen> {
                           //last message text
                           chat.lastSentMessage,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                            fontSize: 14,
-                            color: AppColors.darkBrown,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall!
+                              .copyWith(
+                                fontSize: 14,
+                                color: AppColors.darkBrown,
+                              ),
                         ),
                       ),
                       SizedBox(width: 5.0),
@@ -229,35 +228,76 @@ class MailScreenState extends State<MailScreen> {
     );
   }
 
-  //pin chat dialog box
+  //pin chat dialog box, shows up when user presses and holds on chat
   Future<void> showPinModal(BuildContext context) {
     final chat = model.selectedChatroom;
 
     return showModalBottomSheet(
-      context: context, 
+      context: context,
       backgroundColor: const Color(0xFFE6C7A8),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
+        return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                chat?.name?? "",
-                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                    color: AppColors.darkBrown,
-                    fontSize: 18,
+              // Drag handle decor
+              Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 10),
+                child: Container(
+                  width: 80,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkBrown.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
+                ),
               ),
-            ]
-            //if selected chat is pinned, ask if user wants to unpin it (show chat name then unpin text button underneath)
-            //if selected chat isn't pinned, show chat name and text button to pin chat
+
+              // content
+              Padding(
+                padding: const EdgeInsets.fromLTRB(70, 10, 20, 50),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text( //name of selected chat
+                      chat?.name ?? "",
+                      style: Theme.of(context).textTheme.headlineSmall!
+                          .copyWith(color: AppColors.darkBrown, fontSize: 18),
+                    ),
+                    const SizedBox(height: 10), //spacer
+                    InkWell( //for pin/unpin action
+                      onTap: () => controller.onPressPin(context), //same function, just reverses value
+                      child: Row(
+                        children: [
+                          Text( //conditionally render "button" label
+                            model.selectedChatroom!.pinned
+                                ? 'Unpin chat'
+                                : 'Pin chat to top',
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(
+                                  color: AppColors.darkBrown,
+                                  fontSize: 16,
+                                ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.chevron_right,
+                            size: 30,
+                            color: AppColors.darkBrown,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
-      }
+      },
     );
   }
 }

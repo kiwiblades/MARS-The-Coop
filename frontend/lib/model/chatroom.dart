@@ -5,7 +5,7 @@ class Chatroom {
   final String name;
   // final List<User> participants;
   final List<String> participants; //test
-  final bool pinned;
+  bool pinned;
   final String membership;
   final String lastSentMessage;
   final String lastSentTime;

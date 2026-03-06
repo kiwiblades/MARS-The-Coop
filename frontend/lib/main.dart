@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/services/token_manager.dart';
+import 'package:frontend/view/addChat_screen.dart';
 import 'package:frontend/view/auth_check.dart';
 import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/mail_screen.dart';
@@ -60,6 +61,7 @@ class MyApp extends StatelessWidget {
         ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen(), currentRoute: ProfileScreen.routeName)),
         ProfilePicSelectionScreen.routeName: (_) => RequireAuth(child: const ProfilePicSelectionScreen()),
         ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),
+        AddChatScreen.routeName: (_) => RequireAuth(child: const AddChatScreen()),
       },
     );
   }
