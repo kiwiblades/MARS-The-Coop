@@ -11,6 +11,7 @@ import RefreshToken from "./RefreshToken.js";
 import EmailVerificationToken from "./EmailVerificationToken.js";
 import ChatRoom from "./ChatRoom.js";
 import ChatMembership from "./ChatMembership.js";
+import Message from "./Message.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -27,6 +28,7 @@ export function initModels() {
         otherKey: "chatId",
         as: 'chatrooms'
     });
+  
     ChatRoom.belongsToMany(User, {
         through: ChatMembership,
         foreignKey: "chatId",
@@ -37,6 +39,7 @@ export function initModels() {
     ChatRoom.hasMany(ChatMembership, {
         foreignKey: "chatId",
     });
+  
     ChatMembership.belongsTo(ChatRoom, {
         foreignKey: "chatId",
     });
@@ -44,7 +47,12 @@ export function initModels() {
     User.hasMany(ChatMembership, {
         foreignKey: "userId",
     });
+  
     ChatMembership.belongsTo(User, {
         foreignKey: "userId",
     });
+
+    User.hasMany(Message, { foreignKey: "sender_id" });
+    Message.belongsTo(User, { foreignKey: "sender_id", as: 'sender' });
 }
+

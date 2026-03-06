@@ -1,7 +1,7 @@
 /*
   AuthService calls backend /auth endpoints.
   This service uses http.Client directly rather than ApiClient because these endpoints
-  aren't protected. ApiClient retries 401 responses using refresh(), so if AuthService
+  aren't protected (other than changePassword). ApiClient retries 401 responses using refresh(), so if AuthService
   used ApiClient, it would cause a circular loop. AuthService is the "lowest level" for auth endpoints.
 */
 
@@ -115,7 +115,7 @@ class AuthService {
 
     final res = await _client.post(uri, 
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refreshToken' : refreshToken}),
+      body: jsonEncode({'refreshToken': refreshToken}),
     ).timeout(const Duration(seconds: 5));
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -130,5 +130,48 @@ class AuthService {
 
     // only access tokens rotate on refresh; refresh token stays the same
     await tokens.saveTokens(accessToken: newAccess);
+  }
+
+  // patch auth/change-password: validate current password, then update with new password
+  // this endpoint is protected, hence the fetch of access token
+  // returns 204 on success
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final uri = Uri.parse('${Env.apiBaseUrl}/auth/change-password');
+
+    Future<http.Response> doRequest() async {
+      final access = await tokens.getAccessToken();
+      return _client.patch(uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (access != null && access.isNotEmpty) 'Authorization': 'Bearer $access',
+        },
+        body: jsonEncode({
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 5));
+    }
+
+    // try request normally
+    var res = await doRequest();
+
+    // if unauthorized, refresh and retry a single time
+    if (res.statusCode == 401) {
+      try {
+        await tokens.refreshOnce(() => refresh());
+        res = await doRequest();
+      } catch(e) {
+        await tokens.clearTokens();
+        throw Exception("SESSION_EXPIRED");
+      }
+    }
+
+    // if still not ok, throw
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('HTTP ${res.statusCode}: ${res.body}');
+    }
   }
 }
