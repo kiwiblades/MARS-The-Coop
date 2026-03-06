@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/controller/createChat_controller.dart';
 import 'package:frontend/services/token_manager.dart';
+import 'package:frontend/view/addChat_screen.dart';
 import 'package:frontend/view/auth_check.dart';
 import 'package:frontend/view/app_shell.dart';
+import 'package:frontend/view/createChat_screen.dart';
 import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/mycoop_screen.dart';
 import 'package:frontend/view/profilePicSelection_screen.dart';
@@ -11,6 +14,7 @@ import 'package:frontend/view/resetPassword_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
 
+import 'package:google_fonts/google_fonts.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +35,22 @@ class MyApp extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
+    const darkBrown = Color(0xFF93633A);
     return MaterialApp(
       title: 'The Coop',
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
       home: const AuthCheck(),
+
+      //styling
+      theme: ThemeData(
+        fontFamily: 'Zalando Sans', 
+
+        textTheme: GoogleFonts.seymourOneTextTheme().copyWith(
+          bodyLarge: const TextStyle(fontFamily: 'Zalando Sans'),
+          bodyMedium: const TextStyle(fontFamily: 'Zalando Sans'),
+          bodySmall: const TextStyle(fontFamily: 'Zalando Sans'),
+        ),
+      ),
 
       routes: {
         // public
@@ -42,11 +58,13 @@ class MyApp extends StatelessWidget {
         SigninPage.routeName: (_) => const SigninPage(),
 
         // protected
-        MailScreen.routeName: (_) => RequireAuth(child: AppShell(child: MailScreen())),
-        MyCoopScreen.routeName: (_) => RequireAuth(child: AppShell(child: MyCoopScreen())),
-        ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen())),
+        MailScreen.routeName: (_) => RequireAuth(child: AppShell(child: MailScreen(), currentRoute: MailScreen.routeName)),
+        MyCoopScreen.routeName: (_) => RequireAuth(child: AppShell(child: MyCoopScreen(), currentRoute: MyCoopScreen.routeName)),
+        ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen(), currentRoute: ProfileScreen.routeName)),
         ProfilePicSelectionScreen.routeName: (_) => RequireAuth(child: const ProfilePicSelectionScreen()),
         ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),
+        AddChatScreen.routeName: (_) => RequireAuth(child: const AddChatScreen()),
+        CreateChatScreen.routeName: (_) => RequireAuth(child: const CreateChatScreen()),
       },
     );
   }
