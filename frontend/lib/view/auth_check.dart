@@ -24,7 +24,7 @@ class AuthCheck extends StatelessWidget {
 
         // If session exists, go straight to "home" (just mail for now)
         if (loggedIn) {
-          return AppShell(child: MailScreen());
+          return AppShell(child: MailScreen(), currentRoute: MailScreen.routeName);
         }
 
         return const SignupPage();

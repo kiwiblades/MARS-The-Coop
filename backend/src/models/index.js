@@ -9,6 +9,7 @@
 import User from "./userModel.js";
 import RefreshToken from "./RefreshToken.js";
 import EmailVerificationToken from "./EmailVerificationToken.js";
+import Message from "./Message.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -17,4 +18,7 @@ export function initModels() {
 
     User.hasMany(EmailVerificationToken, { foreignKey: "userId" });
     EmailVerificationToken.belongsTo(User, { foreignKey: "userId" });
+
+    User.hasMany(Message, { foreignKey: "sender_id" });
+    Message.belongsTo(User, { foreignKey: "sender_id", as: 'sender' });
 }
