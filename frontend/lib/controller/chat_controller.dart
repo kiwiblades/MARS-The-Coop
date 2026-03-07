@@ -1,12 +1,10 @@
-// frontend/lib/controller/chat_controller.dart
-
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import '../model/chat_model.dart';
 
 class ChatController {
   final ApiClient _apiClient;
-  final int chatId;
+  final dynamic chatId;
   final int currentUserId;
 
   ChatController(this._apiClient, this.chatId, this.currentUserId);
@@ -14,6 +12,7 @@ class ChatController {
   // load chat messages
   Future<Map<String, dynamic>> loadMessages({int offset = 0, int limit = 50}) async {
     try {
+      //TODO: API
       final response = await _apiClient.getJson('/chat/$chatId/messages?offset=$offset&limit=$limit');
       
       final messages = (response['messages'] as List)
@@ -36,6 +35,7 @@ class ChatController {
   // load chat group info
   Future<Map<String, dynamic>> loadChatInfo() async {
     try {
+      //TODO: API
       final response = await _apiClient.getJson('/chat/$chatId');
       final chatGroup = ChatGroup.fromJson(response);
       
@@ -54,7 +54,7 @@ class ChatController {
   // send a message
   Future<Map<String, dynamic>> sendMessage(String content) async {
     try {
-
+      //TODO: API
       final response = await _apiClient.postJson('/chat/$chatId/messages', {
         'content': content,
       });
@@ -76,6 +76,7 @@ class ChatController {
   // leave chat
   Future<Map<String, dynamic>> leaveChat() async {
     try {
+      //TODO: API
       await _apiClient.postJson('/chat/$chatId/leave', {});
       
       return {
@@ -92,6 +93,7 @@ class ChatController {
   // typing indicator
   Future<void> sendTypingIndicator(bool isTyping) async {
     try {
+      //TODO: API
       await _apiClient.postJson('/chat/$chatId/typing', {
         'isTyping': isTyping,
       });

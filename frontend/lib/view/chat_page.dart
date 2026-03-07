@@ -11,11 +11,8 @@ class ChatPage extends StatefulWidget {
   final dynamic chatId;
   final int currentUserId;
 
-  const ChatPage({
-    Key? key,
-    required this.chatId,
-    required this.currentUserId,
-  }) : super(key: key);
+  const ChatPage({Key? key, required this.chatId, required this.currentUserId})
+    : super(key: key);
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -39,78 +36,80 @@ class _ChatPageState extends State<ChatPage> {
       widget.chatId,
       widget.currentUserId,
     );
-  
+
     // TEMP: mock data for testing
-    _useMockData();
-  
-    // commented while using mock data:
-    // _loadChatData();
-    // _setupScrollListener();
+    // _useMockData();
+
+    // comment while using mock data:
+    _loadChatData();
+    _setupScrollListener();
   }
 
-  void _useMockData() {
-    setState(() {
-      _chatGroup = ChatGroup(
-        id: 1,
-        name: 'Test Group Chat',
-        memberCount: 3,
-        memberAvatars: [],
-      );
-    
-      _messages = [
-        Message(
-          id: 1,
-          content: 'hey',
-          senderUsername: 'TestUser1',
-          senderId: 999,
-          timestamp: DateTime.now().subtract(Duration(hours: 2)),
-          isSentByCurrentUser: false,
-          senderPigeonId: 1,
-        ),
-                Message(
-          id: 2,
-          content: 'everyone',
-          senderUsername: 'TestUser1',
-          senderId: 999,
-          timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
-          isSentByCurrentUser: false,
-          senderPigeonId: 1,
-        ),
-                Message(
-          id: 3,
-          content: 'Hey everyone!',
-          senderUsername: 'TestUser1',
-          senderId: 999,
-          timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 58)),
-          isSentByCurrentUser: false,
-          senderPigeonId: 1,
-        ),
-        Message(
-          id: 4,
-          content: 'Hi! How are you?',
-          senderUsername: 'You',
-          senderId: widget.currentUserId,
-          timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 50)),
-          isSentByCurrentUser: true,
-          senderPigeonId: 3,
-        ),
-        Message(
-          id: 5,
-          content: 'This is a longer message to test how the bubble expands when there is more text. This is a longer message to test how the bubble expands when there is more text.',
-          senderUsername: 'TestUser2',
-          senderId: 998,
-          timestamp: DateTime.now().subtract(Duration(minutes: 30)),
-          isSentByCurrentUser: false,
-          senderPigeonId: 5,
-        ),
-      ];
-    });
-  }
+  // void _useMockData() {
+  //   setState(() {
+  //     _chatGroup = ChatGroup(
+  //       id: 1,
+  //       name: 'Test Group Chat',
+  //       memberCount: 3,
+  //       memberAvatars: [],
+  //     );
+
+  //     _messages = [
+  //       Message(
+  //         id: 1,
+  //         content: 'hey',
+  //         senderUsername: 'TestUser1',
+  //         senderId: 999,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 2)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 1,
+  //       ),
+  //               Message(
+  //         id: 2,
+  //         content: 'everyone',
+  //         senderUsername: 'TestUser1',
+  //         senderId: 999,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 1,
+  //       ),
+  //               Message(
+  //         id: 3,
+  //         content: 'Hey everyone!',
+  //         senderUsername: 'TestUser1',
+  //         senderId: 999,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 58)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 1,
+  //       ),
+  //       Message(
+  //         id: 4,
+  //         content: 'Hi! How are you?',
+  //         senderUsername: 'You',
+  //         senderId: widget.currentUserId,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 50)),
+  //         isSentByCurrentUser: true,
+  //         senderPigeonId: 3,
+  //       ),
+  //       Message(
+  //         id: 5,
+  //         content: 'This is a longer message to test how the bubble expands when there is more text. This is a longer message to test how the bubble expands when there is more text.',
+  //         senderUsername: 'TestUser2',
+  //         senderId: 998,
+  //         timestamp: DateTime.now().subtract(Duration(minutes: 30)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 5,
+  //       ),
+  //     ];
+  //   });
+  // }
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
       // load more messages when scrolling to top
-      if (_scrollController.position.pixels == 0 && _hasMore && !_model.isLoading) {
+      if (_scrollController.position.pixels == 0 &&
+          _hasMore &&
+          !_model.isLoading) {
         _loadMoreMessages();
       }
     });
@@ -175,33 +174,33 @@ class _ChatPageState extends State<ChatPage> {
     // clear input field immediately
     _messageController.clear();
 
-    // TEMP: add message directly for mock testing
-    setState(() {
-      _messages.add(Message(
-        id: _messages.length + 1,
-        content: content,
-        senderUsername: 'You',
-        senderId: widget.currentUserId,
-        timestamp: DateTime.now(),
-        isSentByCurrentUser: true,
-        senderPigeonId: 3, 
-      ));
-    });
-    _scrollToBottom();
+    // // TEMP: add message directly for mock testing
+    // setState(() {
+    //   _messages.add(Message(
+    //     id: _messages.length + 1,
+    //     content: content,
+    //     senderUsername: 'You',
+    //     senderId: widget.currentUserId,
+    //     timestamp: DateTime.now(),
+    //     isSentByCurrentUser: true,
+    //     senderPigeonId: 3,
+    //   ));
+    // });
+    // _scrollToBottom();
 
-    // commented while using mock data:
-    // final result = await _chatController.sendMessage(content);
-    // if (result['success']) {
-    //   setState(() {
-    //     _messages.add(result['message']);
-    //   });
-    //   _scrollToBottom();
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Failed to send message: ${result['error']}')),
-    //   );
-    //   _messageController.text = content;
-    // }
+    // comment while using mock data:
+    final result = await _chatController.sendMessage(content);
+    if (result['success']) {
+      setState(() {
+        _messages.add(result['message']);
+      });
+      _scrollToBottom();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message: ${result['error']}')),
+      );
+      _messageController.text = content;
+    }
   }
 
   void _onTypingChanged(String text) {
@@ -245,9 +244,9 @@ class _ChatPageState extends State<ChatPage> {
 
     if (result['success']) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Left chat successfully')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
@@ -283,8 +282,8 @@ class _ChatPageState extends State<ChatPage> {
                 child: _model.isLoading
                     ? Center(child: CircularProgressIndicator())
                     : _model.loadError != null
-                        ? _buildErrorView()
-                        : _buildMessageList(),
+                    ? _buildErrorView()
+                    : _buildMessageList(),
               ),
               _buildInputArea(),
             ],
@@ -302,9 +301,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
       decoration: BoxDecoration(
         color: AppColors.background.withOpacity(0.9),
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
@@ -330,14 +327,13 @@ class _ChatPageState extends State<ChatPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    // _model.showFullGroupName
-                    // TODO: display member names 
-                    // '${_chatGroup?.memberCount ?? 0} members: ${_chatGroup?.memberNames.join(", ")}'
-                    '${_chatGroup?.memberCount ?? 0} members',
+                    _model.showFullGroupName
+                        ? '${_chatGroup?.memberCount ?? 0} members: ${_chatGroup?.memberNames?.join(", ") ?? ""}'
+                        : '${_chatGroup?.memberCount ?? 0} members',
                     style: AppTextStyles.label,
                     maxLines: _model.showFullGroupName ? null : 1,
-                    overflow: _model.showFullGroupName 
-                        ? TextOverflow.visible 
+                    overflow: _model.showFullGroupName
+                        ? TextOverflow.visible
                         : TextOverflow.ellipsis,
                   ),
                 ],
@@ -352,10 +348,7 @@ class _ChatPageState extends State<ChatPage> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'leave',
-                child: Text('Leave Chat'),
-              ),
+              PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
             ],
           ),
         ],
@@ -399,7 +392,9 @@ class _ChatPageState extends State<ChatPage> {
     final currentMessage = _messages[index];
     final nextMessage = _messages[index + 1];
 
-    final timeDifference = nextMessage.timestamp.difference(currentMessage.timestamp);
+    final timeDifference = nextMessage.timestamp.difference(
+      currentMessage.timestamp,
+    );
     return timeDifference.inMinutes >= 1;
   }
 
@@ -413,11 +408,12 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
-    final pigeon = message.senderPigeonId != null 
+    final pigeon = message.senderPigeonId != null
         ? Pigeon.getById(message.senderPigeonId!)
         : null;
-    final profileImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-    
+    final profileImage =
+        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+
     return Align(
       alignment: message.isSentByCurrentUser
           ? Alignment.centerRight
@@ -488,18 +484,18 @@ class _ChatPageState extends State<ChatPage> {
 
     String timeText;
     if (difference.inDays == 0) {
-      timeText = '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText =
+          '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else if (difference.inDays == 1) {
-      timeText = 'Yesterday ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText =
+          'Yesterday ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else {
-      timeText = '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText =
+          '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     }
 
     return Center(
-      child: Text(
-        timeText,
-        style: AppTextStyles.label.copyWith(fontSize: 12),
-      ),
+      child: Text(timeText, style: AppTextStyles.label.copyWith(fontSize: 12)),
     );
   }
 
@@ -508,10 +504,7 @@ class _ChatPageState extends State<ChatPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Failed to load chat',
-            style: AppTextStyles.body,
-          ),
+          Text('Failed to load chat', style: AppTextStyles.body),
           SizedBox(height: AppSpacing.md),
           ElevatedButton(
             onPressed: _loadChatData,
@@ -531,9 +524,7 @@ class _ChatPageState extends State<ChatPage> {
       padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.background.withOpacity(0.9),
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
