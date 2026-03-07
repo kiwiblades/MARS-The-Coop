@@ -17,15 +17,19 @@ app.use(express.json()); // attach json parsing middleware
 
 const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
+app.set('io', io); // Allows controllers to use req.app.get('io')
 
 // TODO: attach API routes here
 import healthRoutes from './src/routes/healthRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
+import messageRoutes from './src/routes/messageRoutes.js';
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes); // alias
 app.use('/user', userRoutes);
+app.use('/api/messages', messageRoutes); //sending
+app.use('/api/chats', messageRoutes); //fetching
 
 // for testing only; delete later
 import devRoutes from './src/dev/devRoutes.js';
