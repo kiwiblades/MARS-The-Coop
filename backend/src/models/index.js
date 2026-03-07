@@ -12,8 +12,6 @@ import EmailVerificationToken from "./EmailVerificationToken.js";
 import ChatRoom from "./ChatRoom.js";
 import ChatMembership from "./ChatMembership.js";
 import Message from "./Message.js";
-app.use('/chat', messageRoutes);   // Handles /chat/:id/messages
-app.use('/chat', chatroomRoutes);  // Handles /chat/:id and /chat/:id/leave
 
 // define associations after all models are imported
 export function initModels() {
