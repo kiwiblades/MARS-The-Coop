@@ -42,11 +42,11 @@ export const sendMessage = async (req, res, next) => {
 
 export const getChatHistory = async (req, res, next) => {
     try {
-        const { id } = req.params; // chat_id from URL
+        const { chatId } = req.params; // chat_id from URL
 
         // Return array in chronological order
         const messages = await Message.findAll({
-            where: { chat_id: id },
+            where: { chat_id: chatId },
             order: [['createdAt', 'ASC']], // Oldest to newest
             include: [{ 
                 model: User, 
@@ -55,7 +55,10 @@ export const getChatHistory = async (req, res, next) => {
             }]
         });
 
-        res.status(200).json(messages);
+        res.status(200).json({
+            success: true,
+            messages: messages
+        });
     } catch (error) {
         next(error);
     }
