@@ -28,8 +28,8 @@ class ChatroomService {
         participants: participants,
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
-        lastSentMessage: '', // TODO: add these values in the endpoint
-        lastSentTime: '',
+        lastSentMessage: entry['lastSentMessage'] as String? ?? '', 
+        lastSentTime: entry['lastSentTime'] as String? ?? '',
       );
     }).toList();
   }

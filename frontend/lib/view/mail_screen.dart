@@ -147,19 +147,15 @@ class MailScreenState extends State<MailScreen> {
   //helper to create each chat room's block
   Widget buildChatroomTile(Chatroom chat) {
     //determine image for chat
-    late final chatImage;
+    late final String chatImage;
     if (chat.participants.isEmpty) {
       final pigeonId = model.currentUser?.pigeonId ?? 0;
       final pigeon = Pigeon.getById(pigeonId);
       chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-      // chatImage =
-      //     'images/pigeonProfile/defaultPigeonProfile.png'; //can be deleted once TODO is done
     } else if (chat.participants.length == 1) {
       final pigeonId = chat.participants[0].pigeonId;
       final pigeon = Pigeon.getById(pigeonId);
       chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-      // chatImage =
-      //     'images/pigeonProfile/magpiePigeonProfile.png'; //can be deleted once TODO is done
     } else {
       //if there are more than 1 participants
       chatImage = 'images/group.png';
@@ -211,7 +207,7 @@ class MailScreenState extends State<MailScreen> {
                       SizedBox(width: 5.0),
                       Text(
                         //last message time
-                        chat.lastSentTime,
+                        controller.formatChatTimestamp(chat.lastSentTime),
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           fontSize: 14,
                           color: AppColors.darkBrown,
