@@ -12,15 +12,19 @@ export const sendMessage = async (req, res, next) => {
             throw AppError.badRequest('Missing chat_id or sender identity');
         }
 
-        // // Validate sender membership before saving
-        // // Note: Replace 'ChatMember' with your actual membership model name
-        // const isMember = await req.models.ChatMember.findOne({ 
-        //     where: { user_id: sender_id, chat_id } 
-        // });
+        // 1. Basic Validation
+        if (!content || !chat_id) {
+            throw AppError.badRequest('Content and chat_id are required');
+        }
 
-        // if (!isMember) {
-        //     throw AppError.forbidden('You are not a member of this chat');
-        // }
+        // 2. membership query to check if sender is part of the chat room
+        const isMember = await ChatMembership.findOne({ 
+            where: { userId: sender_id, chatId: chat_id } 
+        });
+
+        if (!isMember) {
+            throw AppError.forbidden('You are not a member of this chat room.');
+        }
 
         // Save to database
         const newMessage = await Message.create({ content, sender_id, chat_id });
