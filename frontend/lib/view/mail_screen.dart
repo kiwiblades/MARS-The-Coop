@@ -5,6 +5,8 @@ import 'package:frontend/constants.dart';
 import 'package:frontend/controller/mail_controller.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/mail_model.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/chatroom_service.dart';
 
 class MailScreen extends StatefulWidget {
   static const String routeName = '/mailScreen';
@@ -24,7 +26,9 @@ class MailScreenState extends State<MailScreen> {
   void initState() {
     super.initState();
     model = MailModel();
-    controller = MailController(this);
+    final chatroomService = ChatroomService(api: ApiClient());
+    controller = MailController(this, chatroomService: chatroomService);
+    controller.loadChatrooms(); // fetch the user's chatrooms on screen load
   }
 
   void callSetState(fn) => setState(fn);
@@ -61,6 +65,9 @@ class MailScreenState extends State<MailScreen> {
   }
 
   Widget bodyView() {
+    if (model.chatroomList == null) { // still loading
+      return const Center(child: CircularProgressIndicator());
+    }
     if (model.chatroomList!.isEmpty) { //if user does not have any chats yet
       return Padding(
         padding: const EdgeInsets.all(20.0),

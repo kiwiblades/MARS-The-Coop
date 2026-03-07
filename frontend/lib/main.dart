@@ -64,11 +64,11 @@ class MyApp extends StatelessWidget {
         ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen(), currentRoute: ProfileScreen.routeName)),
         ProfilePicSelectionScreen.routeName: (_) => RequireAuth(child: const ProfilePicSelectionScreen()),
 
-        ChatPage.routeName: (_) => RequireAuth(
-          child: AppShell(
-            child: ChatPage(chatId: 1, currentUserId: 123),  // Hardcoded test values
-          ),
-        ),
+        // ChatPage.routeName: (_) => RequireAuth(
+        //   child: AppShell(
+        //     child: ChatPage(chatId: 1, currentUserId: 123),  // Hardcoded test values
+        //   ),
+        // ),
         ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),
         AddChatScreen.routeName: (_) => RequireAuth(child: const AddChatScreen()),
         CreateChatScreen.routeName: (_) => RequireAuth(child: const CreateChatScreen()),

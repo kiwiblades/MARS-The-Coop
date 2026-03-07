@@ -1,8 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/view/createChat_screen.dart';
 
 class CreateChatController {
   CreateChatScreenState state;
-  CreateChatController(this.state);
+  final ChatroomService chatroomService;
+  CreateChatController(this.state, {required this.chatroomService});
 
   //name validator
   String? chatNameValidator(String? value) {
@@ -21,13 +24,19 @@ class CreateChatController {
   }
 
   //create button
-  void onPressCreate() {
+  void onPressCreate() async {
     final form = state.formKey.currentState;
 
     if(form != null && form.validate()) {
       print('validation passed');
-      //TODO: creating chat 
-      //navigate back to mail page once crated, make sure the view updates to show new chat
+      try {
+        await chatroomService.createChatroom(state.chatroomNameController.text);
+        Navigator.pop(state.context); // back to invite screen
+        Navigator.pop(state.context); // back to mail screen
+      } catch (e) {
+        print('failed to create chatroom: $e');
+        // TODO: dispaly error
+      }
     }
 
     print('create pressed');

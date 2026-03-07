@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
+import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/view/chat_page.dart';
 import 'package:frontend/view/mail_screen.dart';
 
 class MailController {
   MailScreenState state;
-  MailController(this.state);
+  final ChatroomService chatroomService;
+  MailController(this.state, {required this.chatroomService});
 
-  //TODO: load chatrooms
+  Future<void> loadChatrooms() async {
+    try {
+      final chatrooms = await chatroomService.getChatrooms();
+      state.callSetState(() {
+        state.model.chatroomList = chatrooms;
+      });
+    } catch (e) {
+      print('failed to load chatrooms: $e');
+      // TODO: display error
+    }
+  }
 
   //onTap chat --> navigate to corresponding chat room
   void onTapChat(BuildContext context, Chatroom chat) {
     print('on tap chat called');
     //TODO: navigate to the chatroom that was clicked on
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(
+      chatId: chat.id,
+    )));
   }
 
   //long tap on chat --> pin
@@ -25,20 +41,26 @@ class MailController {
     state.showPinModal(context); //show the pin chat dialog
   }
 
-  void onPressPin(BuildContext context) {
+  void onPressPin(BuildContext context) async {
     print('pin tapped');
-    print(state.model.selectedChatroom!.pinned); //testing
-    state.callSetState(() {
-      //TODO: logic to pin/unpin chat in database
-      state.model.selectedChatroom!.pinned = !state.model.selectedChatroom!.pinned; //reverse pin bool
-    });
+    final chatroom = state.model.selectedChatroom!;
+    try {
+      await chatroomService.togglePin(chatroom.id);
+      state.callSetState(() {
+        chatroom.pinned = !chatroom.pinned; // reflect the change locally
+      });
+    } catch (e) {
+      print('Failed to toggle pin: $e');
+      // TODO: display error
+    }
     print(state.model.selectedChatroom!.pinned);
     Navigator.pop(context);
   }
 
   //click floating action button
-  void onPressAddChatButton() {
+  void onPressAddChatButton() async {
     print('on press add chat button pressed');
-    Navigator.pushNamed(state.context, '/addChatScreen');
+    await Navigator.pushNamed(state.context, '/addChatScreen');
+    loadChatrooms(); // refresh list when returning from create screen
   }
 }
