@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
+import 'package:frontend/model/profile_model.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/chat_page.dart';
 import 'package:frontend/view/mail_screen.dart';
 
 class MailController {
   MailScreenState state;
   final ChatroomService chatroomService;
-  MailController(this.state, {required this.chatroomService});
+  final UserService userService;
+  MailController(this.state, {required this.chatroomService, required this.userService});
 
   Future<void> loadChatrooms() async {
     try {
-      final chatrooms = await chatroomService.getChatrooms();
+      // fetch both chatrooms and current user at the same time
+      final results = await Future.wait([
+        chatroomService.getChatrooms(),
+        userService.getProfile(),
+      ]);
+      final chatrooms = results[0] as List<Chatroom>;
+      final user = results[1] as User;
       state.callSetState(() {
         state.model.chatroomList = chatrooms;
+        state.model.currentUser = user;
       });
     } catch (e) {
       if (e.toString().contains('404')) {

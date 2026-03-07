@@ -5,8 +5,10 @@ import 'package:frontend/constants.dart';
 import 'package:frontend/controller/mail_controller.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/mail_model.dart';
+import 'package:frontend/model/pigeon.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/user_service.dart';
 
 class MailScreen extends StatefulWidget {
   static const String routeName = '/mailScreen';
@@ -26,8 +28,10 @@ class MailScreenState extends State<MailScreen> {
   void initState() {
     super.initState();
     model = MailModel();
-    final chatroomService = ChatroomService(api: ApiClient());
-    controller = MailController(this, chatroomService: chatroomService);
+    final apiClient = ApiClient();
+    final chatroomService = ChatroomService(api: apiClient);
+    final userService = UserService(api: apiClient);
+    controller = MailController(this, chatroomService: chatroomService, userService: userService);
     controller.loadChatrooms(); // fetch the user's chatrooms on screen load
   }
 
@@ -145,19 +149,17 @@ class MailScreenState extends State<MailScreen> {
     //determine image for chat
     late final chatImage;
     if (chat.participants.isEmpty) {
-      //TODO
-      // final pigeonId = currentUser?.pigeonId ?? 0;
-      // final pigeon = Pigeon.getById(pigeonId);
-      // final chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-      chatImage =
-          'images/pigeonProfile/defaultPigeonProfile.png'; //can be deleted once TODO is done
+      final pigeonId = model.currentUser?.pigeonId ?? 0;
+      final pigeon = Pigeon.getById(pigeonId);
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+      // chatImage =
+      //     'images/pigeonProfile/defaultPigeonProfile.png'; //can be deleted once TODO is done
     } else if (chat.participants.length == 1) {
-      //TODO
-      // final pigeonId = chat.participants[0].pigeonId ?? 0;
-      // final pigeon = Pigeon.getById(pigeonId);
-      // final chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-      chatImage =
-          'images/pigeonProfile/magpiePigeonProfile.png'; //can be deleted once TODO is done
+      final pigeonId = chat.participants[0].pigeonId;
+      final pigeon = Pigeon.getById(pigeonId);
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+      // chatImage =
+      //     'images/pigeonProfile/magpiePigeonProfile.png'; //can be deleted once TODO is done
     } else {
       //if there are more than 1 participants
       chatImage = 'images/group.png';

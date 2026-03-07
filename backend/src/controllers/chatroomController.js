@@ -17,7 +17,7 @@ export async function getChatrooms(req, res) {
             include: [{
                 model: User,
                 as: "participants",
-                attributes: ["uid","username"],
+                attributes: ["uid","username","pigeonId"],
                 through: {
                     // participant membership fields
                     attributes: ["role","joinedAt"],
