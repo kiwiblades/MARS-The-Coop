@@ -6,7 +6,7 @@ class ChatModel {
 }
 
 class Message {
-  final int id;
+  final String id;
   final String content;
   final String senderUsername;
   final int senderId;
@@ -24,7 +24,7 @@ class Message {
     this.senderPigeonId,
   });
 
-  factory Message.fromJson(Map<String, dynamic> json, int currentUserId) {
+  factory Message.fromJson(Map<String, dynamic> json, String currentUserId) {
     return Message(
       id: json['id'],
       content: json['content'],

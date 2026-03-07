@@ -4,17 +4,17 @@ import '../services/api_client.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_model.dart';
 import '../model/pigeon.dart';
+import '../services/user_service.dart';
+import '../model/profile_model.dart';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';
 
   final dynamic chatId;
-  final int currentUserId;
 
   const ChatPage({
     Key? key,
     required this.chatId,
-    required this.currentUserId,
   }) : super(key: key);
 
   @override
@@ -23,6 +23,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   late final ChatController _chatController;
+  late final UserService _userService;
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -30,64 +31,85 @@ class _ChatPageState extends State<ChatPage> {
   List<Message> _messages = [];
   ChatGroup? _chatGroup;
   bool _hasMore = true;
+  User? _currentUser;
 
   @override
   void initState() {
     super.initState();
-    _chatController = ChatController(
-      ApiClient(),
-      widget.chatId,
-      widget.currentUserId,
-    );
+    final apiClient = ApiClient();
+    _userService = UserService(api: apiClient);
   
-    // TEMP: mock data for testing
-    _useMockData();
-  
-    // commented while using mock data:
-    // _loadChatData();
-    // _setupScrollListener();
+    // fetch current user first
+    _loadCurrentUser();
+    _setupScrollListener();
   }
 
-  void _useMockData() {
-    setState(() {
-      _chatGroup = ChatGroup(
-        id: 1,
-        name: 'Test Group Chat',
-        memberCount: 3,
-        memberAvatars: [],
-      );
-    
-      _messages = [
-        Message(
-          id: 1,
-          content: 'Hey everyone!',
-          senderUsername: 'TestUser1',
-          senderId: 999,
-          timestamp: DateTime.now().subtract(Duration(hours: 2)),
-          isSentByCurrentUser: false,
-          senderPigeonId: 1,
-        ),
-        Message(
-          id: 2,
-          content: 'Hi! How are you?',
-          senderUsername: 'You',
-          senderId: widget.currentUserId,
-          timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
-          isSentByCurrentUser: true,
-          senderPigeonId: 3,
-        ),
-        Message(
-          id: 3,
-          content: 'This is a longer message to test how the bubble expands when there is more text. This is a longer message to test how the bubble expands when there is more text.',
-          senderUsername: 'TestUser2',
-          senderId: 998,
-          timestamp: DateTime.now().subtract(Duration(minutes: 30)),
-          isSentByCurrentUser: false,
-          senderPigeonId: 5,
-        ),
-      ];
-    });
+  Future<void> _loadCurrentUser() async {
+    try {
+      final user = await _userService.getProfile();
+      setState(() {
+        _currentUser = user;
+        // initialize controller once here with the loaded user
+        _chatController = ChatController(
+          ApiClient(),
+          widget.chatId,
+          user.uid,
+        );
+      });
+
+      // TEMP: mock data for testing
+      //_useMockData();
+
+      // load chat data with the current user
+      _loadChatData();
+    } catch (e) {
+      print('Failed to load current user: $e');
+      setState(() {
+        _model.loadError = 'Failed to load user info';
+      });
+    }
   }
+
+  // void _useMockData() {
+  //   setState(() {
+  //     _chatGroup = ChatGroup(
+  //       id: 1,
+  //       name: 'Test Group Chat',
+  //       memberCount: 3,
+  //       memberAvatars: [],
+  //     );
+    
+  //     _messages = [
+  //       Message(
+  //         id: 1,
+  //         content: 'Hey everyone!',
+  //         senderUsername: 'TestUser1',
+  //         senderId: 999,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 2)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 1,
+  //       ),
+  //       Message(
+  //         id: 2,
+  //         content: 'Hi! How are you?',
+  //         senderUsername: 'You',
+  //         senderId: widget.currentUserId,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
+  //         isSentByCurrentUser: true,
+  //         senderPigeonId: 3,
+  //       ),
+  //       Message(
+  //         id: 3,
+  //         content: 'This is a longer message to test how the bubble expands when there is more text. This is a longer message to test how the bubble expands when there is more text.',
+  //         senderUsername: 'TestUser2',
+  //         senderId: 998,
+  //         timestamp: DateTime.now().subtract(Duration(minutes: 30)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 5,
+  //       ),
+  //     ];
+  //   });
+  // }
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
@@ -99,6 +121,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadChatData() async {
+    if (_currentUser == null) return;
+
     setState(() {
       _model.isLoading = true;
       _model.loadError = null;
@@ -125,6 +149,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadMoreMessages() async {
+    if (_currentUser == null) return;
+
     final result = await _chatController.loadMessages(
       offset: _messages.length,
       limit: 50,
@@ -151,6 +177,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _sendMessage() async {
+    if (_currentUser == null) return;
+
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
@@ -158,35 +186,36 @@ class _ChatPageState extends State<ChatPage> {
     _messageController.clear();
 
     // TEMP: add message directly for mock testing
-    setState(() {
-      _messages.add(Message(
-        id: _messages.length + 1,
-        content: content,
-        senderUsername: 'You',
-        senderId: widget.currentUserId,
-        timestamp: DateTime.now(),
-        isSentByCurrentUser: true,
-        senderPigeonId: 3, 
-      ));
-    });
+    // setState(() {
+    //   _messages.add(Message(
+    //     id: _messages.length + 1,
+    //     content: content,
+    //     senderUsername: 'You',
+    //     senderId: widget.currentUserId,
+    //     timestamp: DateTime.now(),
+    //     isSentByCurrentUser: true,
+    //     senderPigeonId: 3, 
+    //   ));
+    // });
     _scrollToBottom();
 
-    // commented while using mock data:
-    // final result = await _chatController.sendMessage(content);
-    // if (result['success']) {
-    //   setState(() {
-    //     _messages.add(result['message']);
-    //   });
-    //   _scrollToBottom();
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Failed to send message: ${result['error']}')),
-    //   );
-    //   _messageController.text = content;
-    // }
+    final result = await _chatController.sendMessage(content);
+    if (result['success']) {
+      setState(() {
+        _messages.add(result['message']);
+      });
+      _scrollToBottom();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message: ${result['error']}')),
+      );
+      _messageController.text = content;
+    }
   }
 
   void _onTypingChanged(String text) {
+    if (_currentUser == null) return;
+
     final isTyping = text.isNotEmpty;
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
@@ -223,6 +252,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _leaveChat() async {
+    if (_currentUser == null) return;
+
     final result = await _chatController.leaveChat();
 
     if (result['success']) {
