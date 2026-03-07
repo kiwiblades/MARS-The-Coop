@@ -16,7 +16,16 @@ class MailController {
         state.model.chatroomList = chatrooms;
       });
     } catch (e) {
-      print('failed to load chatrooms: $e');
+      if (e.toString().contains('404')) {
+        print('no chatrooms currently');
+        state.callSetState(() {
+          state.model.chatroomList = [];
+        });
+        
+      } else {
+        print('failed to load chatrooms: $e');
+      }
+      
       // TODO: display error
     }
   }
@@ -24,7 +33,6 @@ class MailController {
   //onTap chat --> navigate to corresponding chat room
   void onTapChat(BuildContext context, Chatroom chat) {
     print('on tap chat called');
-    //TODO: navigate to the chatroom that was clicked on
     Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(
       chatId: chat.id,
     )));

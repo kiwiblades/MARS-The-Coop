@@ -69,6 +69,7 @@ class MailScreenState extends State<MailScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (model.chatroomList!.isEmpty) { //if user does not have any chats yet
+      print('chats empty, view reached');
       return Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
