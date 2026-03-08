@@ -44,8 +44,11 @@ class MailController {
   void onTapChat(BuildContext context, Chatroom chat) {
     print('on tap chat called');
     Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(
+      // pass chat info values
       chatId: chat.id,
       chatName: chat.name,
+      participants: chat.participants,
+      membership: chat.membership,
     )));
   }
 

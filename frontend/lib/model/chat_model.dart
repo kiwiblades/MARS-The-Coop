@@ -32,7 +32,7 @@ class Message {
       senderId: json['sender_id'] as String,
       timestamp: DateTime.parse(json['createdAt'] as String),
       isSentByCurrentUser: json['sender_id'] == currentUserId,
-      senderPigeonId: null, // TODO: need in response
+      senderPigeonId: (json['sender'] as Map<String, dynamic>?)?['pigeonId'] as int?,
     );
   }
 }

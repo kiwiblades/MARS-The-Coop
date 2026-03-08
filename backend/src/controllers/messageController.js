@@ -53,13 +53,13 @@ export const getChatHistory = async (req, res, next) => {
             include: [{ 
                 model: User, 
                 as: 'sender', 
-                attributes: ['username'] // Include username join
+                attributes: ['username', 'pigeonId'] // Include username join
             }]
         });
 
         console.log("chat history fetched, returning");
         console.log(messages);
-        
+
         res.status(200).json({
             success: true,
             messages: messages

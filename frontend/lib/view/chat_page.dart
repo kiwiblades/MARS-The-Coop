@@ -12,11 +12,15 @@ class ChatPage extends StatefulWidget {
 
   final String chatId;
   final String chatName;
+  final List<User> participants;
+  final String membership;
 
   const ChatPage({
     Key? key,
     required this.chatId,
-    required this.chatName
+    required this.chatName,
+    required this.participants,
+    required this.membership,
   }) : super(key: key);
 
   @override
@@ -157,10 +161,14 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         // _chatGroup = infoResult['chatGroup'];
         _chatGroup = ChatGroup( // hardcoded for now
-          id: 0,
+          id: widget.chatId,
           name: widget.chatName,
-          memberCount: 0,
-          memberAvatars: [],
+          memberCount: widget.participants.length+1, // +1 for current user
+          memberAvatars: widget.participants.map((p) {
+            final pigeon = Pigeon.getById(p.pigeonId);
+            return pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+          }).toList(),
+          memberNames: widget.participants.map((p) => p.username).toList(),
         );
         _messages = messagesResult['messages'];
         _hasMore = messagesResult['hasMore'];
