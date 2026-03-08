@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/chatroom_service.dart';
 import '../constants.dart';
 import '../services/api_client.dart';
 import '../controller/chat_controller.dart';
@@ -14,6 +15,7 @@ class ChatPage extends StatefulWidget {
   final String chatName;
   final List<User> participants;
   final String membership;
+  final ChatroomService chatroomService;
 
   const ChatPage({
     Key? key,
@@ -21,6 +23,7 @@ class ChatPage extends StatefulWidget {
     required this.chatName,
     required this.participants,
     required this.membership,
+    required this.chatroomService,
   }) : super(key: key);
 
   @override
@@ -54,7 +57,7 @@ class _ChatPageState extends State<ChatPage> {
     print('_loadCurrentUser started');
     try {
       final user = await _userService.getProfile();
-      _chatController = ChatController(ApiClient(), widget.chatId, user.uid);
+      _chatController = ChatController(ApiClient(), widget.chatId, user.uid, chatroomService: widget.chatroomService);
       print('chatController initialized, chatId: ${widget.chatId}');
       setState(() {
         _currentUser = user;

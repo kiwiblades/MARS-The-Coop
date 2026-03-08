@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/chatroom_service.dart';
 import '../services/api_client.dart';
 import '../model/chat_model.dart';
 
 class ChatController {
   final ApiClient _apiClient;
+  final ChatroomService chatroomService;
   final String chatId;
   final String currentUserId;
 
-  ChatController(this._apiClient, this.chatId, this.currentUserId);
+  ChatController(this._apiClient, this.chatId, this.currentUserId, {required this.chatroomService});
 
   // load chat messages
   Future<Map<String, dynamic>> loadMessages({int offset = 0, int limit = 50}) async {
@@ -80,9 +82,8 @@ class ChatController {
   // leave chat
   Future<Map<String, dynamic>> leaveChat() async {
     try {
-      //TODO: API
-      await _apiClient.postJson('/chat/$chatId/leave', {});
-      
+      await chatroomService.leaveChatroom(chatId);
+
       return {
         'success': true,
       };
