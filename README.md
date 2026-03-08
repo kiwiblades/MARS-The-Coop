@@ -1,7 +1,8 @@
 # The Coop
 
-## Overview (WIP)
-TODO: add some nice descriptive one-liner here about The Coop
+## Overview
+***a mobile app to cultivate human connection***
+
 - **Frontend:** Flutter/Dart
 - **Backend:** Node.js + Express
 - **Database:** PostgreSQL (via Docker)
