@@ -98,7 +98,7 @@ class MailScreenState extends State<MailScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Container(
+        if(pinnedChats.isNotEmpty) ... [Container( //pinned
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.darkBrown, width: 2.5),
               borderRadius: BorderRadius.circular(12.0), //round corners
@@ -118,9 +118,9 @@ class MailScreenState extends State<MailScreen> {
                 color: AppColors.darkBrown,
               ),
             ),
-          ),
-          SizedBox(height: 10.0),
-          Container(
+          ),],
+          if(unpinnedChats.isNotEmpty) ... [ SizedBox(height: 10.0),
+          Container( //unpinned
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.darkBrown, width: 2.5),
               borderRadius: BorderRadius.circular(12.0),
@@ -140,7 +140,7 @@ class MailScreenState extends State<MailScreen> {
                 color: AppColors.darkBrown,
               ),
             ),
-          ),
+          ),]
         ],
       ),
     );

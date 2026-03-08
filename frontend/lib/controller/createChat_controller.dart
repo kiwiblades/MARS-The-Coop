@@ -9,7 +9,7 @@ class CreateChatController {
 
   //name validator
   String? chatNameValidator(String? value) {
-    final RegExp validInput = RegExp(r'^[a-zA-Z0-9@$!%*?&]+$');
+    final RegExp validInput = RegExp(r'^[ a-zA-Z0-9@$!%*?&]+$');
     if(value == null || value.isEmpty) {
       return 'Please enter name';
     }
@@ -17,7 +17,7 @@ class CreateChatController {
       return 'Chat name cannot be greater than 20 characters';
     }
     if(!validInput.hasMatch(value)) {
-      return 'Only letters, numbers, and @\$!%*?& allowed';
+      return 'Only letters, numbers, spaces, and @\$!%*?& allowed';
     }
 
     return null;
@@ -30,9 +30,10 @@ class CreateChatController {
     if(form != null && form.validate()) {
       print('validation passed');
       try {
-        await chatroomService.createChatroom(state.chatroomNameController.text);
+        final chatroom = await chatroomService.createChatroom(state.chatroomNameController.text);
         Navigator.pop(state.context); // back to invite screen
         Navigator.pop(state.context); // back to mail screen
+        showCodePopup(state.context, chatroom.inviteCode);
       } catch (e) {
         print('failed to create chatroom: $e');
         // TODO: dispaly error

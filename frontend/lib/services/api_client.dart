@@ -67,7 +67,7 @@ class ApiClient {
           case 'PATCH':
             return _client.patch(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(const Duration(seconds: 5));
           case 'DELETE':
-            return _client.delete(uri, headers: headers).timeout(const Duration(seconds: 5));
+            return _client.delete(uri, headers: headers, body: jsonEncode(body ?? {})).timeout(const Duration(seconds: 5));
           default:
             throw Exception('Unsupported method: $method');
         }

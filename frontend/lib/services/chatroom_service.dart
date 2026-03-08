@@ -25,6 +25,7 @@ class ChatroomService {
       return Chatroom(
         id: chatroom['id'] as String,
         name: chatroom['name'] as String,
+        inviteCode: chatroom['inviteCode'] as String,
         participants: participants,
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
@@ -36,8 +37,20 @@ class ChatroomService {
 
   // post /chatroom/create
   // returns the new chatroom row, but it doesn't really need to be displayed immediately
-  Future<void> createChatroom(String name) async {
-    await api.postJson('/chatroom/create', {'name': name});
+  // the invite code is immediately provided with the new chatroom, though
+  Future<Chatroom> createChatroom(String name) async {
+    final data = await api.postJson('/chatroom/create', {'name': name});
+    return Chatroom(
+      id: data['id'] as String,
+      name: data['name'] as String,
+      inviteCode: data['inviteCode'] as String,
+      // the values from here aren't really important, they'll be fetched when needed later
+      participants: [],
+      pinned: false,
+      membership: 'owner',
+      lastSentMessage: '',
+      lastSentTime: '',
+    );
   }
 
   // post /chatroom/join
@@ -46,12 +59,12 @@ class ChatroomService {
   }
 
   // delete /chatroom/leave
-  Future<void> leaveChatroom(int chatroomId) async {
+  Future<void> leaveChatroom(String chatroomId) async {
     await api.deleteJson('/chatroom/leave', {'chatroomId': chatroomId});
   }
 
   // delete /chatroom/delete
-  Future<void> deleteChatroom(int chatroomId) async {
+  Future<void> deleteChatroom(String chatroomId) async {
     await api.deleteJson('/chatroom/delete', {'chatroomId': chatroomId});
   }
 

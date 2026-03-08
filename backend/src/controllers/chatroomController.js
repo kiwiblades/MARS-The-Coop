@@ -29,7 +29,7 @@ export async function getChatrooms(req, res) {
         }],
         order: [
             ["pinned","DESC"], // pinned chats first
-            [ChatRoom, "updatedAt","DESC"], // TODO: need to add a different field to reflect thiss
+            [ChatRoom, "lastMsgSent","DESC NULLS LAST"], // then sort by most recent msg
         ],
     });
     if (!chatrooms || chatrooms.length === 0) {
@@ -92,7 +92,10 @@ export async function createChatroom(req, res) {
     const t = await sequelize.transaction();
     try {
         // only name is customizable, everything else is generated
-        const chatroom = await ChatRoom.create({ name }, { transaction: t });
+        const chatroom = await ChatRoom.create({ 
+            name,
+            lastMsgSent: new Date(Date.now() + 60*1000), // set 1 min grace period into future to keep new chat at top
+        }, { transaction: t });
 
         // add the user as the owner of the room
         await ChatMembership.create({
@@ -160,14 +163,20 @@ export async function leaveChatroom(req, res) {
     if (!membership) {
         throw AppError.notFound("User isn't a member of the designated chatroom");
     }
+    // for later implementation
+    // if (membership.role == "owner") {
+    //     throw AppError.unauthorized("The owner cannot leave the chatroom");
+    // }
+    await membership.destroy();
 
-    try {
-        membership.destroy(); // deletes the row corresponding to the fetched instance
-        console.log("User successfully left the room, uid:", uid);
-        return res.status(204).end(); // success w/ no content
-    } catch(e) {
-        throw e;
+    // check if anyone is left in the chatroom
+    const remaining = await ChatMembership.count({ where: { chatId: chatroomId } });
+    if (remaining == 0) {
+        // the last member left, so delete the chatroom
+        await ChatRoom.destroy({ where: { id: chatroomId } });
     }
+
+    return res.status(204).end(); // success w/ no content
 }
 
 export async function deleteChatroom(req, res) {

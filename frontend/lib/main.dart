@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:frontend/controller/createChat_controller.dart';
 import 'package:frontend/services/token_manager.dart';
 import 'package:frontend/view/addChat_screen.dart';
 import 'package:frontend/view/auth_check.dart';
@@ -13,7 +12,6 @@ import 'package:frontend/view/profile_screen.dart';
 import 'package:frontend/view/resetPassword_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
-import 'package:frontend/view/chat_page.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 
@@ -36,7 +34,6 @@ class MyApp extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    const darkBrown = Color(0xFF93633A);
     return MaterialApp(
       title: 'The Coop',
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner

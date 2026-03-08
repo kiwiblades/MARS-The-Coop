@@ -9,7 +9,7 @@ class Message {
   final String id;
   final String content;
   final String senderUsername;
-  final int senderId;
+  final String senderId;
   final DateTime timestamp;
   final bool isSentByCurrentUser;
   final int? senderPigeonId;
@@ -26,13 +26,13 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json, String currentUserId) {
     return Message(
-      id: json['id'],
-      content: json['content'],
-      senderUsername: json['senderUsername'],
-      senderId: json['senderId'],
-      timestamp: DateTime.parse(json['timestamp']),
-      isSentByCurrentUser: json['senderId'] == currentUserId,
-      senderPigeonId: json['pigeonId'],
+      id: json['id'] as String,
+      content: json['content'] as String,
+      senderUsername: (json['sender'] as Map<String, dynamic>?)?['username'] as String? ?? '',
+      senderId: json['sender_id'] as String,
+      timestamp: DateTime.parse(json['createdAt'] as String),
+      isSentByCurrentUser: json['sender_id'] == currentUserId,
+      senderPigeonId: (json['sender'] as Map<String, dynamic>?)?['pigeonId'] as int?,
     );
   }
 }

@@ -41,11 +41,17 @@ class MailController {
   }
 
   //onTap chat --> navigate to corresponding chat room
-  void onTapChat(BuildContext context, Chatroom chat) {
+  void onTapChat(BuildContext context, Chatroom chat) async {
     print('on tap chat called');
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatPage(
+      // pass chat info values
       chatId: chat.id,
+      chatName: chat.name,
+      participants: chat.participants,
+      membership: chat.membership,
+      chatroomService: chatroomService,
     )));
+    loadChatrooms(); // reload chatrooms on return to display the newest message + sort properly
   }
 
   //long tap on chat --> pin

@@ -1,10 +1,13 @@
 import Message from '../models/Message.js';
 import User from '../models/userModel.js';
+import ChatMembership from '../models/ChatMembership.js';
+import ChatRoom from '../models/ChatRoom.js';
 import AppError from '../utils/errors/AppError.js';
 
 export const sendMessage = async (req, res, next) => {
     try {
-        const { content, chat_id } = req.body;
+        const chat_id = req.params.chatId;
+        const { content } = req.body;
         const sender_id = req.user.uid; // From authMiddleware
 
 		// Membership Validation Replacement
@@ -29,6 +32,11 @@ export const sendMessage = async (req, res, next) => {
         // Save to database
         const newMessage = await Message.create({ content, sender_id, chat_id });
 
+        await ChatRoom.update(
+            { lastMsgSent: newMessage.createdAt },
+            { where: { id: chat_id } }
+        );
+
         // Real-time broadcast via Socket.io
         const io = req.app.get('io');
         io.to(chat_id).emit('receive_message', newMessage);
@@ -51,9 +59,12 @@ export const getChatHistory = async (req, res, next) => {
             include: [{ 
                 model: User, 
                 as: 'sender', 
-                attributes: ['username'] // Include username join
+                attributes: ['username', 'pigeonId'] // Include username join
             }]
         });
+
+        console.log("chat history fetched, returning");
+        // console.log(messages);
 
         res.status(200).json({
             success: true,

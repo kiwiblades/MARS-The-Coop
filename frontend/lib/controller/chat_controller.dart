@@ -1,21 +1,25 @@
-import 'package:flutter/material.dart';
+import 'package:frontend/services/chatroom_service.dart';
 import '../services/api_client.dart';
 import '../model/chat_model.dart';
 
 class ChatController {
   final ApiClient _apiClient;
+  final ChatroomService chatroomService;
   final String chatId;
   final String currentUserId;
 
-  ChatController(this._apiClient, this.chatId, this.currentUserId);
+  ChatController(this._apiClient, this.chatId, this.currentUserId, {required this.chatroomService});
 
   // load chat messages
   Future<Map<String, dynamic>> loadMessages({int offset = 0, int limit = 50}) async {
     try {
       //TODO: API
+      print('calling api at: /chat/$chatId/messages');
       final response = await _apiClient.getJson('/chat/$chatId/messages?offset=$offset&limit=$limit');
-      
-      final messages = (response['messages'] as List)
+      print('loadMessages response: $response');
+
+      final messageList = response['messages'] as List? ?? [];
+      final messages = messageList
           .map((msg) => Message.fromJson(msg, currentUserId))
           .toList();
       
@@ -25,6 +29,7 @@ class ChatController {
         'hasMore': response['hasMore'] ?? false,
       };
     } catch (e) {
+      print('loadMessages error: $e');
       return {
         'success': false,
         'error': e.toString(),
@@ -54,7 +59,6 @@ class ChatController {
   // send a message
   Future<Map<String, dynamic>> sendMessage(String content) async {
     try {
-      //TODO: API
       final response = await _apiClient.postJson('/chat/$chatId/messages', {
         'content': content,
       });
@@ -76,9 +80,8 @@ class ChatController {
   // leave chat
   Future<Map<String, dynamic>> leaveChat() async {
     try {
-      //TODO: API
-      await _apiClient.postJson('/chat/$chatId/leave', {});
-      
+      await chatroomService.leaveChatroom(chatId);
+
       return {
         'success': true,
       };

@@ -18,6 +18,11 @@ const ChatRoom = sequelize.define('ChatRoom', {
         allowNull: false,
         unique: true,
     },
+    // to be updated when a message is sent so chatrooms can be ordered by most recent msg
+    lastMsgSent: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    }
 }, {
     tableName: 'chatroom',
     timestamps: true,

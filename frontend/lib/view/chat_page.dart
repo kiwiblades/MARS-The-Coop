@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/chatroom_service.dart';
 import '../constants.dart';
 import '../services/api_client.dart';
 import '../controller/chat_controller.dart';
@@ -10,11 +11,19 @@ import '../model/profile_model.dart';
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';
 
-  final dynamic chatId;
+  final String chatId;
+  final String chatName;
+  final List<User> participants;
+  final String membership;
+  final ChatroomService chatroomService;
 
   const ChatPage({
     Key? key,
     required this.chatId,
+    required this.chatName,
+    required this.participants,
+    required this.membership,
+    required this.chatroomService,
   }) : super(key: key);
 
   @override
@@ -45,16 +54,13 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadCurrentUser() async {
+    print('_loadCurrentUser started');
     try {
       final user = await _userService.getProfile();
+      _chatController = ChatController(ApiClient(), widget.chatId, user.uid, chatroomService: widget.chatroomService);
+      print('chatController initialized, chatId: ${widget.chatId}');
       setState(() {
         _currentUser = user;
-        // initialize controller once here with the loaded user
-        _chatController = ChatController(
-          ApiClient(),
-          widget.chatId,
-          user.uid,
-        );
       });
 
       // TEMP: mock data for testing
@@ -141,6 +147,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadChatData() async {
+    print('_loadChatData started, currentUser: $_currentUser');
     if (_currentUser == null) return;
 
     setState(() {
@@ -149,12 +156,23 @@ class _ChatPageState extends State<ChatPage> {
     });
 
     // load chat info and messages
-    final infoResult = await _chatController.loadChatInfo();
+    // final infoResult = await _chatController.loadChatInfo();
     final messagesResult = await _chatController.loadMessages();
 
-    if (infoResult['success'] && messagesResult['success']) {
+    //if (infoResult['success'] && messagesResult['success']) {
+    if (messagesResult['success']) {
       setState(() {
-        _chatGroup = infoResult['chatGroup'];
+        // _chatGroup = infoResult['chatGroup'];
+        _chatGroup = ChatGroup( // hardcoded for now
+          id: widget.chatId,
+          name: widget.chatName,
+          memberCount: widget.participants.length+1, // +1 for current user
+          memberAvatars: widget.participants.map((p) {
+            final pigeon = Pigeon.getById(p.pigeonId);
+            return pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+          }).toList(),
+          memberNames: widget.participants.map((p) => p.username).toList(),
+        );
         _messages = messagesResult['messages'];
         _hasMore = messagesResult['hasMore'];
         _model.isLoading = false;
@@ -162,7 +180,8 @@ class _ChatPageState extends State<ChatPage> {
       _scrollToBottom();
     } else {
       setState(() {
-        _model.loadError = infoResult['error'] ?? messagesResult['error'];
+        // _model.loadError = infoResult['error'] ?? messagesResult['error'];
+        _model.loadError = messagesResult['error'];
         _model.isLoading = false;
       });
     }
@@ -236,11 +255,11 @@ class _ChatPageState extends State<ChatPage> {
 
   void _onTypingChanged(String text) {
     if (_currentUser == null) return;
-
     final isTyping = text.isNotEmpty;
+    setState(() {});
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
-      _chatController.sendTypingIndicator(isTyping);
+    //   _chatController.sendTypingIndicator(isTyping);
     }
   }
 
