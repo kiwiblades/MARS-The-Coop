@@ -25,6 +25,7 @@ class ChatroomService {
       return Chatroom(
         id: chatroom['id'] as String,
         name: chatroom['name'] as String,
+        inviteCode: chatroom['inviteCode'] as String,
         participants: participants,
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
@@ -46,12 +47,12 @@ class ChatroomService {
   }
 
   // delete /chatroom/leave
-  Future<void> leaveChatroom(int chatroomId) async {
+  Future<void> leaveChatroom(String chatroomId) async {
     await api.deleteJson('/chatroom/leave', {'chatroomId': chatroomId});
   }
 
   // delete /chatroom/delete
-  Future<void> deleteChatroom(int chatroomId) async {
+  Future<void> deleteChatroom(String chatroomId) async {
     await api.deleteJson('/chatroom/delete', {'chatroomId': chatroomId});
   }
 
