@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/constants.dart';
 import 'package:frontend/controller/createChat_controller.dart';
 import 'package:frontend/services/api_client.dart';
@@ -99,6 +100,78 @@ class CreateChatScreenState extends State<CreateChatScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+void showCodePopup(BuildContext context, String code) {
+  //helper function to show code banner
+  showDialog(
+    context: context,
+    builder: (context) {
+      return CodeBannerPopup(code: code);
+    },
+  );
+}
+
+class CodeBannerPopup extends StatelessWidget {
+  //code banner element
+  final String code;
+
+  const CodeBannerPopup({super.key, required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero, // removes side margins
+      child: Stack(
+        clipBehavior: Clip.none, //keeps from overflow error
+        alignment: Alignment.center,
+        children: [
+          Image.asset(
+            'images/codeBanner.png',
+            width: screenWidth,
+            fit: BoxFit.fitWidth,
+          ),
+
+          //code: + <code>
+          Positioned.fill(
+            left: screenWidth * 0.16,
+
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "code: $code", //code text
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontSize: 17.0,
+                      color: AppColors.darkBrown,
+                    ),
+                  ),
+                  IconButton( //copy button
+                    icon: const Icon(
+                      Icons.copy,
+                      size: 20,
+                      color: AppColors.darkBrown,
+                    ),
+                    onPressed: () { //show that the code has been copied
+                      Clipboard.setData(ClipboardData(text: code));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Code copied!")),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
