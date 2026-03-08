@@ -31,8 +31,7 @@ app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes); // alias
 app.use('/user', userRoutes);
 app.use('/chatroom', chatroomRoutes);
-app.use('/api/messages', messageRoutes); //sending
-app.use('/api/chats', messageRoutes); //fetching
+app.use('/chat', messageRoutes); //sending
 
 // for testing only
 import devRoutes from './src/dev/devRoutes.js';

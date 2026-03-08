@@ -78,28 +78,46 @@ class _ChatPageState extends State<ChatPage> {
   //       memberCount: 3,
   //       memberAvatars: [],
   //     );
-    
+
   //     _messages = [
   //       Message(
   //         id: 1,
-  //         content: 'Hey everyone!',
+  //         content: 'hey',
   //         senderUsername: 'TestUser1',
   //         senderId: 999,
   //         timestamp: DateTime.now().subtract(Duration(hours: 2)),
   //         isSentByCurrentUser: false,
   //         senderPigeonId: 1,
   //       ),
-  //       Message(
+  //               Message(
   //         id: 2,
+  //         content: 'everyone',
+  //         senderUsername: 'TestUser1',
+  //         senderId: 999,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 1,
+  //       ),
+  //               Message(
+  //         id: 3,
+  //         content: 'Hey everyone!',
+  //         senderUsername: 'TestUser1',
+  //         senderId: 999,
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 58)),
+  //         isSentByCurrentUser: false,
+  //         senderPigeonId: 1,
+  //       ),
+  //       Message(
+  //         id: 4,
   //         content: 'Hi! How are you?',
   //         senderUsername: 'You',
   //         senderId: widget.currentUserId,
-  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
+  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 50)),
   //         isSentByCurrentUser: true,
   //         senderPigeonId: 3,
   //       ),
   //       Message(
-  //         id: 3,
+  //         id: 5,
   //         content: 'This is a longer message to test how the bubble expands when there is more text. This is a longer message to test how the bubble expands when there is more text.',
   //         senderUsername: 'TestUser2',
   //         senderId: 998,
@@ -114,7 +132,9 @@ class _ChatPageState extends State<ChatPage> {
   void _setupScrollListener() {
     _scrollController.addListener(() {
       // load more messages when scrolling to top
-      if (_scrollController.position.pixels == 0 && _hasMore && !_model.isLoading) {
+      if (_scrollController.position.pixels == 0 &&
+          _hasMore &&
+          !_model.isLoading) {
         _loadMoreMessages();
       }
     });
@@ -194,11 +214,12 @@ class _ChatPageState extends State<ChatPage> {
     //     senderId: widget.currentUserId,
     //     timestamp: DateTime.now(),
     //     isSentByCurrentUser: true,
-    //     senderPigeonId: 3, 
+    //     senderPigeonId: 3,
     //   ));
     // });
-    _scrollToBottom();
+    // _scrollToBottom();
 
+    // comment while using mock data:
     final result = await _chatController.sendMessage(content);
     if (result['success']) {
       setState(() {
@@ -258,9 +279,9 @@ class _ChatPageState extends State<ChatPage> {
 
     if (result['success']) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Left chat successfully')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
@@ -296,8 +317,8 @@ class _ChatPageState extends State<ChatPage> {
                 child: _model.isLoading
                     ? Center(child: CircularProgressIndicator())
                     : _model.loadError != null
-                        ? _buildErrorView()
-                        : _buildMessageList(),
+                    ? _buildErrorView()
+                    : _buildMessageList(),
               ),
               _buildInputArea(),
             ],
@@ -315,9 +336,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
       decoration: BoxDecoration(
         color: AppColors.background.withOpacity(0.9),
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
@@ -344,12 +363,12 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   Text(
                     _model.showFullGroupName
-                        ? '${_chatGroup?.memberCount ?? 0} members: Member1, Member2, Member3'
+                        ? '${_chatGroup?.memberCount ?? 0} members: ${_chatGroup?.memberNames?.join(", ") ?? ""}'
                         : '${_chatGroup?.memberCount ?? 0} members',
                     style: AppTextStyles.label,
                     maxLines: _model.showFullGroupName ? null : 1,
-                    overflow: _model.showFullGroupName 
-                        ? TextOverflow.visible 
+                    overflow: _model.showFullGroupName
+                        ? TextOverflow.visible
                         : TextOverflow.ellipsis,
                   ),
                 ],
@@ -364,10 +383,7 @@ class _ChatPageState extends State<ChatPage> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'leave',
-                child: Text('Leave Chat'),
-              ),
+              PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
             ],
           ),
         ],
@@ -392,10 +408,11 @@ class _ChatPageState extends State<ChatPage> {
       itemBuilder: (context, index) {
         final message = _messages[index];
         final showTimestamp = _shouldShowTimestamp(index);
+        final isFirstInGroup = _isFirstInGroup(index);
 
         return Column(
           children: [
-            _buildMessageBubble(message),
+            _buildMessageBubble(message, isFirstInGroup),
             if (showTimestamp) _buildTimestamp(message.timestamp),
             SizedBox(height: AppSpacing.sm),
           ],
@@ -410,16 +427,28 @@ class _ChatPageState extends State<ChatPage> {
     final currentMessage = _messages[index];
     final nextMessage = _messages[index + 1];
 
-    final timeDifference = nextMessage.timestamp.difference(currentMessage.timestamp);
+    final timeDifference = nextMessage.timestamp.difference(
+      currentMessage.timestamp,
+    );
     return timeDifference.inMinutes >= 1;
   }
 
-  Widget _buildMessageBubble(Message message) {
-    final pigeon = message.senderPigeonId != null 
+  bool _isFirstInGroup(int index) {
+    if (index == 0) return true;
+
+    final currentMessage = _messages[index];
+    final previousMessage = _messages[index - 1];
+
+    return currentMessage.senderId != previousMessage.senderId;
+  }
+
+  Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
+    final pigeon = message.senderPigeonId != null
         ? Pigeon.getById(message.senderPigeonId!)
         : null;
-    final profileImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-    
+    final profileImage =
+        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+
     return Align(
       alignment: message.isSentByCurrentUser
           ? Alignment.centerRight
@@ -429,11 +458,14 @@ class _ChatPageState extends State<ChatPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!message.isSentByCurrentUser) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: AssetImage(profileImage),
-              backgroundColor: Colors.transparent,
-            ),
+            // Show avatar only for first message in group
+            isFirstInGroup
+                ? CircleAvatar(
+                    radius: 16,
+                    backgroundImage: AssetImage(profileImage),
+                    backgroundColor: Colors.transparent,
+                  )
+                : SizedBox(width: 32), // Placeholder space for alignment
             SizedBox(width: AppSpacing.sm),
           ],
           Flexible(
@@ -442,7 +474,8 @@ class _ChatPageState extends State<ChatPage> {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                if (!message.isSentByCurrentUser)
+                // Show username only for first message in group
+                if (!message.isSentByCurrentUser && isFirstInGroup)
                   Padding(
                     padding: EdgeInsets.only(bottom: 4),
                     child: Text(
@@ -486,18 +519,18 @@ class _ChatPageState extends State<ChatPage> {
 
     String timeText;
     if (difference.inDays == 0) {
-      timeText = '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText =
+          '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else if (difference.inDays == 1) {
-      timeText = 'Yesterday ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText =
+          'Yesterday ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else {
-      timeText = '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText =
+          '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     }
 
     return Center(
-      child: Text(
-        timeText,
-        style: AppTextStyles.label.copyWith(fontSize: 12),
-      ),
+      child: Text(timeText, style: AppTextStyles.label.copyWith(fontSize: 12)),
     );
   }
 
@@ -506,10 +539,7 @@ class _ChatPageState extends State<ChatPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Failed to load chat',
-            style: AppTextStyles.body,
-          ),
+          Text('Failed to load chat', style: AppTextStyles.body),
           SizedBox(height: AppSpacing.md),
           ElevatedButton(
             onPressed: _loadChatData,
@@ -529,9 +559,7 @@ class _ChatPageState extends State<ChatPage> {
       padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.background.withOpacity(0.9),
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [

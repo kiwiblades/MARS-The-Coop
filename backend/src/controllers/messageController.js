@@ -12,15 +12,19 @@ export const sendMessage = async (req, res, next) => {
             throw AppError.badRequest('Missing chat_id or sender identity');
         }
 
-        // // Validate sender membership before saving
-        // // Note: Replace 'ChatMember' with your actual membership model name
-        // const isMember = await req.models.ChatMember.findOne({ 
-        //     where: { user_id: sender_id, chat_id } 
-        // });
+        // 1. Basic Validation
+        if (!content || !chat_id) {
+            throw AppError.badRequest('Content and chat_id are required');
+        }
 
-        // if (!isMember) {
-        //     throw AppError.forbidden('You are not a member of this chat');
-        // }
+        // 2. membership query to check if sender is part of the chat room
+        const isMember = await ChatMembership.findOne({ 
+            where: { userId: sender_id, chatId: chat_id } 
+        });
+
+        if (!isMember) {
+            throw AppError.forbidden('You are not a member of this chat room.');
+        }
 
         // Save to database
         const newMessage = await Message.create({ content, sender_id, chat_id });
@@ -38,11 +42,11 @@ export const sendMessage = async (req, res, next) => {
 
 export const getChatHistory = async (req, res, next) => {
     try {
-        const { id } = req.params; // chat_id from URL
+        const { chatId } = req.params; // chat_id from URL
 
         // Return array in chronological order
         const messages = await Message.findAll({
-            where: { chat_id: id },
+            where: { chat_id: chatId },
             order: [['createdAt', 'ASC']], // Oldest to newest
             include: [{ 
                 model: User, 
@@ -51,7 +55,10 @@ export const getChatHistory = async (req, res, next) => {
             }]
         });
 
-        res.status(200).json(messages);
+        res.status(200).json({
+            success: true,
+            messages: messages
+        });
     } catch (error) {
         next(error);
     }

@@ -42,12 +42,14 @@ class ChatGroup {
   final String name;
   final int memberCount;
   final List<String> memberAvatars;
+  final List<String>? memberNames;
 
   ChatGroup({
     required this.id,
     required this.name,
     required this.memberCount,
     required this.memberAvatars,
+    this.memberNames,
   });
 
   factory ChatGroup.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,9 @@ class ChatGroup {
       name: json['name'] ?? 'Unnamed Group',
       memberCount: json['memberCount'] ?? 0,
       memberAvatars: List<String>.from(json['memberAvatars'] ?? []),
+      memberNames: json['memberNames'] != null   
+        ? List<String>.from(json['memberNames'])
+        : null,
     );
   }
 }

@@ -103,7 +103,8 @@ class MailScreenState extends State<MailScreen> {
               border: Border.all(color: AppColors.darkBrown, width: 2.5),
               borderRadius: BorderRadius.circular(12.0), //round corners
             ),
-            child: ListView.separated( //list for pinned chats
+            child: ListView.separated(
+              //list for pinned chats
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -124,7 +125,8 @@ class MailScreenState extends State<MailScreen> {
               border: Border.all(color: AppColors.darkBrown, width: 2.5),
               borderRadius: BorderRadius.circular(12.0),
             ),
-            child: ListView.separated( //list for unpinned chats
+            child: ListView.separated(
+              //list for unpinned chats
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -164,7 +166,7 @@ class MailScreenState extends State<MailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: GestureDetector(
         onLongPress: () => controller.onLongPressChat(context, chat),
-        onTap: () => controller.onTapChat(context,chat),
+        onTap: () => controller.onTapChat(context, chat),
         child: Row(
           crossAxisAlignment:
               CrossAxisAlignment.start, //makes pinned icon in top right
@@ -268,17 +270,22 @@ class MailScreenState extends State<MailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text( //name of selected chat
+                    Text(
+                      //name of selected chat
                       chat?.name ?? "",
                       style: Theme.of(context).textTheme.headlineSmall!
                           .copyWith(color: AppColors.darkBrown, fontSize: 18),
                     ),
                     const SizedBox(height: 10), //spacer
-                    InkWell( //for pin/unpin action
-                      onTap: () => controller.onPressPin(context), //same function, just reverses value
+                    InkWell(
+                      //for pin/unpin action
+                      onTap: () => controller.onPressPin(
+                        context,
+                      ), //same function, just reverses value
                       child: Row(
                         children: [
-                          Text( //conditionally render "button" label
+                          Text(
+                            //conditionally render "button" label
                             model.selectedChatroom!.pinned
                                 ? 'Unpin chat'
                                 : 'Pin chat to top',
