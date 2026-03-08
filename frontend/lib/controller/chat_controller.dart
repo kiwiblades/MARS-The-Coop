@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import '../services/api_client.dart';
 import '../model/chat_model.dart';
@@ -60,7 +59,6 @@ class ChatController {
   // send a message
   Future<Map<String, dynamic>> sendMessage(String content) async {
     try {
-      //TODO: API
       final response = await _apiClient.postJson('/chat/$chatId/messages', {
         'content': content,
       });
