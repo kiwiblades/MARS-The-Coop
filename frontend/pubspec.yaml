@@ -67,6 +67,7 @@ flutter:
     - assets/images/logo.png
     - images/woodGrainTexture.png
     - images/group.png
+    - images/codeBanner.png
   #   - images/a_dot_ham.jpeg
     - images/skyProfileBG.png
     #Side view of pigeons (for journal)
