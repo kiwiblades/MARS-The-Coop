@@ -29,7 +29,7 @@ export async function getChatrooms(req, res) {
         }],
         order: [
             ["pinned","DESC"], // pinned chats first
-            [ChatRoom, "updatedAt","DESC"], // TODO: need to add a different field to reflect thiss
+            [ChatRoom, "lastMsgSent","DESC NULLS LAST"], // then sort by most recent msg
         ],
     });
     if (!chatrooms || chatrooms.length === 0) {

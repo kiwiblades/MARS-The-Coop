@@ -1,6 +1,7 @@
 import Message from '../models/Message.js';
 import User from '../models/userModel.js';
 import ChatMembership from '../models/ChatMembership.js';
+import ChatRoom from '../models/ChatRoom.js';
 import AppError from '../utils/errors/AppError.js';
 
 export const sendMessage = async (req, res, next) => {
@@ -31,6 +32,11 @@ export const sendMessage = async (req, res, next) => {
         // Save to database
         const newMessage = await Message.create({ content, sender_id, chat_id });
 
+        await ChatRoom.update(
+            { lastMsgSent: newMessage.createdAt },
+            { where: { id: chat_id } }
+        );
+
         // Real-time broadcast via Socket.io
         const io = req.app.get('io');
         io.to(chat_id).emit('receive_message', newMessage);
@@ -58,7 +64,7 @@ export const getChatHistory = async (req, res, next) => {
         });
 
         console.log("chat history fetched, returning");
-        console.log(messages);
+        // console.log(messages);
 
         res.status(200).json({
             success: true,
