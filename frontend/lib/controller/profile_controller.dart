@@ -20,7 +20,7 @@ class ProfileController {
         state.currentUser = user;
         state.isLoading = false;
       });
-    } catch(e) {
+    } catch (e) {
       state.callSetState(() {
         state.loadError = 'Failed to load profile';
         state.isLoading = false;
@@ -30,14 +30,17 @@ class ProfileController {
 
   // internal fcn to show errors
   void _showError(String msg) {
-    ScaffoldMessenger.of(state.context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(
+      state.context,
+    ).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   //profile pic edit click
   Future<void> onPressedProfilePicEdit() async {
-    final result = await Navigator.pushNamed(state.context, ProfilePicSelectionScreen.routeName);
+    final result = await Navigator.pushNamed(
+      state.context,
+      ProfilePicSelectionScreen.routeName,
+    );
 
     if (result is int) {
       state.callSetState(() {
@@ -47,7 +50,6 @@ class ProfileController {
     } else {
       // do nothing if no change
     }
-    
   }
 
   //EMAIL:
@@ -64,7 +66,7 @@ class ProfileController {
   void onPressedEditEmailSave() {
     final form = state.formKeyEmail.currentState;
 
-    if (form!= null && form.validate()) {
+    if (form != null && form.validate()) {
       form.save();
     }
     print('email save clicked');
@@ -81,7 +83,7 @@ class ProfileController {
         state.currentUser = updated;
         state.model.isEditingEmail = false;
       });
-    } catch(e) {
+    } catch (e) {
       _showError('Failed to update email');
     }
 
@@ -118,7 +120,7 @@ class ProfileController {
   void onPressedEditUsernameSave() {
     final form = state.formKeyUsername.currentState;
 
-    if (form!= null && form.validate()) {
+    if (form != null && form.validate()) {
       form.save();
     }
     print('username save clicked');
@@ -135,7 +137,7 @@ class ProfileController {
         state.currentUser = updated;
         state.model.isEditingUsername = false;
       });
-    } catch(e) {
+    } catch (e) {
       _showError('Failed to update username');
     }
   }
@@ -164,11 +166,45 @@ class ProfileController {
   void onPressedPasswordReset() {
     print('password reset clicked');
     //navigate to password reset page
+    Navigator.pushNamed(state.context, '/resetPasswordScreen');
   }
 
   //info click
   void onPressedInfo() {
     print('info clicked');
     //navigate to info page
+  }
+
+  void onPressedSignOutButton() async {
+    // The 'async' keyword marks this as a background-compatible function
+    print('sign out button pressed');
+    //sign out logic
+    // Navigator.pushNamed(state.context, '/signinScreen'); //navigate to sign in page
+
+    try {
+      // Call backend to invalidate the session/token
+      await users.signout();
+
+      // Confirm status and redirect
+      // Using pushNamedAndRemoveUntil ensures the user cannot hit 'back' to return to the profile
+      Navigator.pushNamedAndRemoveUntil(
+        state.context,
+        '/signinScreen', // route name for sign in page
+        (route) => false,
+      );
+
+      _showSuccess('Successfully signed out');
+    } catch (e) {
+      // Even if the network call fails, we usually clear local storage and redirect
+      print('Logout error: $e');
+      _showError('Sign out failed. Please try again.');
+    }
+  }
+
+  // Helper for success messages
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(
+      state.context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.green));
   }
 }

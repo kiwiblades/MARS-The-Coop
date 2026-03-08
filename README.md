@@ -1,7 +1,8 @@
 # The Coop
 
-## Overview (WIP)
-TODO: add some nice descriptive one-liner here about The Coop
+## Overview
+***a mobile app to cultivate human connection***
+
 - **Frontend:** Flutter/Dart
 - **Backend:** Node.js + Express
 - **Database:** PostgreSQL (via Docker)
@@ -203,3 +204,40 @@ Run these from `backend/`
 - `docker compose logs -f postgres` -> real-time docker log display in terminal for troubleshooting
 - `docker compose down` -> stops containers but keeps database volume (persists data)
 - `docker compose down -v` -> stops containers **and deletes volumes** (full reset)
+
+## Tools
+
+### pgAdmin 4
+This is a GUI tool for the postgreSQL database. Because the database exists in Docker, you must specify some connection details to connect it to the GUI interface.
+
+In the "Default Workspace" section, right click on the "Servers" drop-down and register a new connection. Give it any name you'd like (e.g., "Docker (coop)"), then move to the "Connection" tab.
+
+This depends on the setup of your database values in .env, so fill in the values corresponding to your .env values, if differing from .env.example.
+- Host name/address: 127.0.0.1 OR localhost
+- Port: `PGPORT` (e.g., 5433)
+- Username: `PGUSER` (e.g., postgres)
+- Password: `PGPASSWORD` (e.g., postgres). You can toggle save password for convenience.
+
+Everything else can be left as default. Register the server.
+
+The named server should now appear under "Servers". Expand the server, and under "Databases" you should see your existing database with the same name as `PGDATABASE` (e.g., the_coop).
+
+Right click the database and select "Query Tool". This brings up a text box where you can type and run queries. To run a query, highlight the text and hit `F5`.
+
+Example queries:
+- `select * from public."user";` -> user is a meta table in postgres, so reference our user table as public."user"
+- `select * from public."user" where email='thecoopmobileapp@gmail.com';`
+- `select * from chatmembership join chatroom on chatmembership."chatId"=chatroom.id;` -> reference fields with mixed casing using double quotes; e.g., chatmembership."chatId", select "emailVerified" from ...
+
+### Postman
+This is an API platform tester, providing an interface to test API endpoints (essentially a GUI tool for curl). This allows you to test edge cases on endpoints you wouldn't be able to access through the application interface. For example, attempting to delete a chatroom as a user who is not the owner. You can evaluate both the returned json and the expanded details printed in your terminal running the backend server.
+
+You can access the current collection here: `https://kiwiblades-3762189.postman.co/workspace/Rye's-Workspace~f49e809d-fb08-4c0b-87ef-8e62851ca9a0/collection/52479941-fe82afae-21ab-4fde-9159-36379689f94a?action=share&creator=52479941`
+
+You can follow a similar format to the endpoints in the collection to create your own, or contact Rye to add more. For most endpoints, they require a json body, and if protected, they require the accessToken pasted into the "Authorization" tab.
+
+Click on a request and check the "Docs" section for details about the information needed on the request. Switch to the "Body" tab, choose "raw" and "JSON", and specify the needed parameters as indicated in the docs.
+
+To access protected endpoints, you can first run the "SIGNIN" request, which outputs refreshToken, accessToken, and UID. Copy the accessToken and navigate to a protected request. Choose the "Authorization" tab, and set Auth Type to "Bearer Token". Add the accessToken into the field, then you should be able to send the request. The accessToken also indicates which signed-in user the request is being called for. If you want to test with multiple users at once, you can sign in another user and copy their accessToken as well. If the accessToken expires, you can either hit the signin endpoint again or generate a new access token in "REFRESH".
+
+For convenience, you can increase or decrease the expiration time of the access and refresh tokens by specifying their lifespan in your .env. The time formats supported are minutes (e.g., "15m"), hours (e.g., "1h"), and days (e.g., "30d").

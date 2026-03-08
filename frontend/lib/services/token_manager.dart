@@ -29,7 +29,7 @@ class TokenManager {
 
   Future<bool> hasSession() async {
     final refresh = await getRefreshToken();
-    print('User has active session?: ${refresh != null && refresh.isNotEmpty}');
+    // print('User has active session?: ${refresh != null && refresh.isNotEmpty}');
     return refresh != null && refresh.isNotEmpty;
   }
 

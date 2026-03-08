@@ -40,4 +40,15 @@ class UserService {
     final userJson = data['user'] as Map<String, dynamic>;
     return User.fromJson(userJson);
   }
+
+  // post /auth/signout
+  // server invalidates the JWT
+  // returns 200 OK
+  Future<void> signout() async {
+    final refreshToken = await api.tokens.getRefreshToken();
+    // We use the api client to hit your backend logout route
+    // Note: ensure the path matches your backend (e.g., '/auth/logout' or '/api/auth/logout')
+    await api.postJson('/auth/signout', {'refreshToken': refreshToken ?? ''});
+    await api.tokens.clearTokens(); // clear local tokens after signout
+  }
 }

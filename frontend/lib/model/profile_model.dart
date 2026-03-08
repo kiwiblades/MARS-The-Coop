@@ -23,8 +23,8 @@ class User {
     return User(
       uid: json['uid'] as String,
       username: json['username'] as String,
-      email: json['email'] as String,
-      pigeonId: (json['pigeonId'] as num).toInt(),
+      email: json['email'] as String? ?? '',
+      pigeonId: (json['pigeonId'] as num?)?.toInt() ?? 0,
       emailVerified: json['emailVerified'] as bool?,
       emailVerifiedAt: json['emailVerifiedAt'] == null 
         ? null : DateTime.tryParse(json['emailVerifiedAt'] as String),
