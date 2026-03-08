@@ -30,10 +30,10 @@ class CreateChatController {
     if(form != null && form.validate()) {
       print('validation passed');
       try {
-        await chatroomService.createChatroom(state.chatroomNameController.text);
+        final chatroom = await chatroomService.createChatroom(state.chatroomNameController.text);
         Navigator.pop(state.context); // back to invite screen
         Navigator.pop(state.context); // back to mail screen
-        showCodePopup(state.context, 'WWWWWW');
+        showCodePopup(state.context, chatroom.inviteCode);
       } catch (e) {
         print('failed to create chatroom: $e');
         // TODO: dispaly error

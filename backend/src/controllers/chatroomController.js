@@ -92,7 +92,10 @@ export async function createChatroom(req, res) {
     const t = await sequelize.transaction();
     try {
         // only name is customizable, everything else is generated
-        const chatroom = await ChatRoom.create({ name }, { transaction: t });
+        const chatroom = await ChatRoom.create({ 
+            name,
+            lastMsgSent: new Date(Date.now() + 60*1000), // set 1 min grace period into future to keep new chat at top
+        }, { transaction: t });
 
         // add the user as the owner of the room
         await ChatMembership.create({
