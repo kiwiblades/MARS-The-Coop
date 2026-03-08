@@ -1,10 +1,12 @@
 import Message from '../models/Message.js';
 import User from '../models/userModel.js';
+import ChatMembership from '../models/ChatMembership.js';
 import AppError from '../utils/errors/AppError.js';
 
 export const sendMessage = async (req, res, next) => {
     try {
-        const { content, chat_id } = req.body;
+        const chat_id = req.params.chatId;
+        const { content } = req.body;
         const sender_id = req.user.uid; // From authMiddleware
 
 		// Membership Validation Replacement
@@ -55,6 +57,9 @@ export const getChatHistory = async (req, res, next) => {
             }]
         });
 
+        console.log("chat history fetched, returning");
+        console.log(messages);
+        
         res.status(200).json({
             success: true,
             messages: messages

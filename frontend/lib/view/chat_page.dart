@@ -10,11 +10,13 @@ import '../model/profile_model.dart';
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';
 
-  final dynamic chatId;
+  final String chatId;
+  final String chatName;
 
   const ChatPage({
     Key? key,
     required this.chatId,
+    required this.chatName
   }) : super(key: key);
 
   @override
@@ -45,16 +47,13 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadCurrentUser() async {
+    print('_loadCurrentUser started');
     try {
       final user = await _userService.getProfile();
+      _chatController = ChatController(ApiClient(), widget.chatId, user.uid);
+      print('chatController initialized, chatId: ${widget.chatId}');
       setState(() {
         _currentUser = user;
-        // initialize controller once here with the loaded user
-        _chatController = ChatController(
-          ApiClient(),
-          widget.chatId,
-          user.uid,
-        );
       });
 
       // TEMP: mock data for testing
@@ -141,6 +140,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadChatData() async {
+    print('_loadChatData started, currentUser: $_currentUser');
     if (_currentUser == null) return;
 
     setState(() {
@@ -149,12 +149,19 @@ class _ChatPageState extends State<ChatPage> {
     });
 
     // load chat info and messages
-    final infoResult = await _chatController.loadChatInfo();
+    // final infoResult = await _chatController.loadChatInfo();
     final messagesResult = await _chatController.loadMessages();
 
-    if (infoResult['success'] && messagesResult['success']) {
+    //if (infoResult['success'] && messagesResult['success']) {
+    if (messagesResult['success']) {
       setState(() {
-        _chatGroup = infoResult['chatGroup'];
+        // _chatGroup = infoResult['chatGroup'];
+        _chatGroup = ChatGroup( // hardcoded for now
+          id: 0,
+          name: widget.chatName,
+          memberCount: 0,
+          memberAvatars: [],
+        );
         _messages = messagesResult['messages'];
         _hasMore = messagesResult['hasMore'];
         _model.isLoading = false;
@@ -162,7 +169,8 @@ class _ChatPageState extends State<ChatPage> {
       _scrollToBottom();
     } else {
       setState(() {
-        _model.loadError = infoResult['error'] ?? messagesResult['error'];
+        // _model.loadError = infoResult['error'] ?? messagesResult['error'];
+        _model.loadError = messagesResult['error'];
         _model.isLoading = false;
       });
     }
@@ -236,11 +244,11 @@ class _ChatPageState extends State<ChatPage> {
 
   void _onTypingChanged(String text) {
     if (_currentUser == null) return;
-
     final isTyping = text.isNotEmpty;
+    setState(() {});
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
-      _chatController.sendTypingIndicator(isTyping);
+    //   _chatController.sendTypingIndicator(isTyping);
     }
   }
 

@@ -13,9 +13,12 @@ class ChatController {
   Future<Map<String, dynamic>> loadMessages({int offset = 0, int limit = 50}) async {
     try {
       //TODO: API
+      print('calling api at: /chat/$chatId/messages');
       final response = await _apiClient.getJson('/chat/$chatId/messages?offset=$offset&limit=$limit');
-      
-      final messages = (response['messages'] as List)
+      print('loadMessages response: $response');
+
+      final messageList = response['messages'] as List? ?? [];
+      final messages = messageList
           .map((msg) => Message.fromJson(msg, currentUserId))
           .toList();
       
@@ -25,6 +28,7 @@ class ChatController {
         'hasMore': response['hasMore'] ?? false,
       };
     } catch (e) {
+      print('loadMessages error: $e');
       return {
         'success': false,
         'error': e.toString(),
