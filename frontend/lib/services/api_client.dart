@@ -32,19 +32,22 @@ class ApiClient {
   //   return jsonDecode(res.body) as Map<String, dynamic>;
   // }
 
-    Future<Map<String, dynamic>> getJson(String path) {
-      return _sendJson('GET', path);
-    }
+    Future<Map<String, dynamic>> getJson(String path) async =>
+      (await _sendJson('GET', path)) as Map<String, dynamic>;
 
-    Future<Map<String, dynamic>> postJson(String path, Map<String, dynamic> body) {
-      return _sendJson('POST', path, body: body);
-    }
+    Future<List<dynamic>> getJsonList(String path) async =>
+      (await _sendJson('GET', path)) as List<dynamic>;
 
-    Future<Map<String, dynamic>> patchJson(String path, Map<String, dynamic> body) {
-      return _sendJson('PATCH', path, body: body);
-    }
+    Future<Map<String, dynamic>> postJson(String path, Map<String, dynamic> body) async =>
+      (await _sendJson('POST', path, body: body)) as Map<String, dynamic>;
+  
+    Future<Map<String, dynamic>> patchJson(String path, Map<String, dynamic> body) async =>
+      (await _sendJson('PATCH', path, body: body)) as Map<String, dynamic>;
 
-    Future<Map<String, dynamic>> _sendJson(String method, String path, {Map<String, dynamic>? body}) async {
+    Future<Map<String, dynamic>> deleteJson(String path, Map<String, dynamic> body) async =>
+      (await _sendJson('DELETE', path, body: body)) as Map<String, dynamic>;
+
+    Future<dynamic> _sendJson(String method, String path, {Map<String, dynamic>? body}) async {
       final uri = Uri.parse('${Env.apiBaseUrl}$path');
 
       Future<http.Response> doRequest() async {
@@ -91,8 +94,6 @@ class ApiClient {
 
       // parse the json from the response
       if (res.body.isEmpty) return <String, dynamic>{}; // return if empty, otherwise jsonDecode will throw
-      final decoded = jsonDecode(res.body);
-      if (decoded is Map<String, dynamic>) return decoded;
-      throw Exception('Expected JSON object response');
+      return jsonDecode(res.body);
     }
 }

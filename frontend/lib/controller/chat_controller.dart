@@ -4,8 +4,8 @@ import '../model/chat_model.dart';
 
 class ChatController {
   final ApiClient _apiClient;
-  final dynamic chatId;
-  final int currentUserId;
+  final String chatId;
+  final String currentUserId;
 
   ChatController(this._apiClient, this.chatId, this.currentUserId);
 

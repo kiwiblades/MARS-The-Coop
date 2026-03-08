@@ -1,7 +1,9 @@
+import { Op } from "sequelize";
 import { sequelize } from "../db/sequelize.js";
 import ChatMembership from "../models/ChatMembership.js";
 import ChatRoom from "../models/ChatRoom.js";
 import User from "../models/userModel.js";
+import Message from "../models/Message.js";
 import AppError from "../utils/errors/AppError.js";
 
 export async function getChatrooms(req, res) {
@@ -14,10 +16,11 @@ export async function getChatrooms(req, res) {
         include: [{
             model: ChatRoom,
             attributes: ["id","name","inviteCode","createdAt","updatedAt"],
+            // fetch details for each user participating in the chat
             include: [{
                 model: User,
                 as: "participants",
-                attributes: ["uid","username"],
+                attributes: ["uid","username","pigeonId"],
                 through: {
                     // participant membership fields
                     attributes: ["role","joinedAt"],
@@ -26,24 +29,55 @@ export async function getChatrooms(req, res) {
         }],
         order: [
             ["pinned","DESC"], // pinned chats first
-            [ChatRoom, "updatedAt","DESC"], // then by last updated chat
+            [ChatRoom, "updatedAt","DESC"], // TODO: need to add a different field to reflect thiss
         ],
     });
     if (!chatrooms || chatrooms.length === 0) {
         throw AppError.notFound('No chatrooms exist for the current user', { code: "CHATROOMS_NOT_FOUND" });
     }
 
+    // collect all chatroom ids the user is in to fetch last msgs in a single query
+    const chatIds = chatrooms.map((m) => m.chatId);
+
+    const lastMessages = await Message.findAll({
+        // get only one per chat_id
+        attributes: ['chat_id', 'content', 'createdAt'],
+        where: {
+            chat_id: chatIds,
+            // for each msg row, only include if its createdAt matches MAX createdAt for that chat_id,
+            // allowing fetching latest msg per chatroom without separate query per room
+            // there is no latest per group feature in sequelize. the subquery runs once per msg row
+            createdAt: {
+                [Op.in]: sequelize.literal(`(
+                    select max("createdAt") from "Messages"
+                    where "chat_id" = "Message"."chat_id"
+                )`)
+            }
+        }
+    });
+
+    // build a lookup map so each chatroom's last message can be easily fetched
+    const lastMessageMap = Object.fromEntries(
+        lastMessages.map((m) => [m.chat_id, m])
+    );
+
     // organize the res payload with necessary fetched info
-    const payload = chatrooms.map((m) => ({
-        chatroom: m.ChatRoom,
-        membership: {
-            pinned: m.pinned,
-            role: m.role,
-            joinedAt: m.joinedAt,
-        },
-        // add participants for each chatroom EXCLUDING the current user
-        participants: (m.ChatRoom?.participants ?? []).filter((u) => u.uid !== uid),
-    }));
+    const payload = chatrooms.map((m) => {
+        // look up the last message for the current chatroom, if one exists
+        const lastMessage = lastMessageMap[m.chatId];
+        return {
+            chatroom: m.ChatRoom,
+            membership: {
+                pinned: m.pinned,
+                role: m.role,
+                joinedAt: m.joinedAt,
+            },
+            // add participants for each chatroom EXCLUDING the current user
+            participants: (m.ChatRoom?.participants ?? []).filter((u) => u.uid !== uid),
+            lastSentMessage: lastMessage?.content ?? '',
+            lastSentTime: lastMessage?.createdAt ?? '',
+        }
+    });
 
     // attach and return the payload w/ res
     return res.json(payload);

@@ -4,15 +4,18 @@ import '../services/api_client.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_model.dart';
 import '../model/pigeon.dart';
+import '../services/user_service.dart';
+import '../model/profile_model.dart';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';
 
   final dynamic chatId;
-  final int currentUserId;
 
-  const ChatPage({Key? key, required this.chatId, required this.currentUserId})
-    : super(key: key);
+  const ChatPage({
+    Key? key,
+    required this.chatId,
+  }) : super(key: key);
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -20,6 +23,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   late final ChatController _chatController;
+  late final UserService _userService;
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -27,22 +31,43 @@ class _ChatPageState extends State<ChatPage> {
   List<Message> _messages = [];
   ChatGroup? _chatGroup;
   bool _hasMore = true;
+  User? _currentUser;
 
   @override
   void initState() {
     super.initState();
-    _chatController = ChatController(
-      ApiClient(),
-      widget.chatId,
-      widget.currentUserId,
-    );
-
-    // TEMP: mock data for testing
-    // _useMockData();
-
-    // comment while using mock data:
-    _loadChatData();
+    final apiClient = ApiClient();
+    _userService = UserService(api: apiClient);
+  
+    // fetch current user first
+    _loadCurrentUser();
     _setupScrollListener();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    try {
+      final user = await _userService.getProfile();
+      setState(() {
+        _currentUser = user;
+        // initialize controller once here with the loaded user
+        _chatController = ChatController(
+          ApiClient(),
+          widget.chatId,
+          user.uid,
+        );
+      });
+
+      // TEMP: mock data for testing
+      //_useMockData();
+
+      // load chat data with the current user
+      _loadChatData();
+    } catch (e) {
+      print('Failed to load current user: $e');
+      setState(() {
+        _model.loadError = 'Failed to load user info';
+      });
+    }
   }
 
   // void _useMockData() {
@@ -116,6 +141,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadChatData() async {
+    if (_currentUser == null) return;
+
     setState(() {
       _model.isLoading = true;
       _model.loadError = null;
@@ -142,6 +169,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _loadMoreMessages() async {
+    if (_currentUser == null) return;
+
     final result = await _chatController.loadMessages(
       offset: _messages.length,
       limit: 50,
@@ -168,13 +197,15 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _sendMessage() async {
+    if (_currentUser == null) return;
+
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
     // clear input field immediately
     _messageController.clear();
 
-    // // TEMP: add message directly for mock testing
+    // TEMP: add message directly for mock testing
     // setState(() {
     //   _messages.add(Message(
     //     id: _messages.length + 1,
@@ -204,6 +235,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _onTypingChanged(String text) {
+    if (_currentUser == null) return;
+
     final isTyping = text.isNotEmpty;
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
@@ -240,6 +273,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _leaveChat() async {
+    if (_currentUser == null) return;
+
     final result = await _chatController.leaveChat();
 
     if (result['success']) {

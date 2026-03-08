@@ -5,6 +5,10 @@ import 'package:frontend/constants.dart';
 import 'package:frontend/controller/mail_controller.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/mail_model.dart';
+import 'package:frontend/model/pigeon.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/user_service.dart';
 
 class MailScreen extends StatefulWidget {
   static const String routeName = '/mailScreen';
@@ -24,7 +28,11 @@ class MailScreenState extends State<MailScreen> {
   void initState() {
     super.initState();
     model = MailModel();
-    controller = MailController(this);
+    final apiClient = ApiClient();
+    final chatroomService = ChatroomService(api: apiClient);
+    final userService = UserService(api: apiClient);
+    controller = MailController(this, chatroomService: chatroomService, userService: userService);
+    controller.loadChatrooms(); // fetch the user's chatrooms on screen load
   }
 
   void callSetState(fn) => setState(fn);
@@ -61,8 +69,11 @@ class MailScreenState extends State<MailScreen> {
   }
 
   Widget bodyView() {
-    if (model.chatroomList!.isEmpty) {
-      //if user does not have any chats yet
+    if (model.chatroomList == null) { // still loading
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (model.chatroomList!.isEmpty) { //if user does not have any chats yet
+      print('chats empty, view reached');
       return Padding(
         padding: const EdgeInsets.all(20.0),
         child: Center(
@@ -138,21 +149,15 @@ class MailScreenState extends State<MailScreen> {
   //helper to create each chat room's block
   Widget buildChatroomTile(Chatroom chat) {
     //determine image for chat
-    late final chatImage;
+    late final String chatImage;
     if (chat.participants.isEmpty) {
-      //TODO
-      // final pigeonId = currentUser?.pigeonId ?? 0;
-      // final pigeon = Pigeon.getById(pigeonId);
-      // final chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-      chatImage =
-          'images/pigeonProfile/defaultPigeonProfile.png'; //can be deleted once TODO is done
+      final pigeonId = model.currentUser?.pigeonId ?? 0;
+      final pigeon = Pigeon.getById(pigeonId);
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
     } else if (chat.participants.length == 1) {
-      //TODO
-      // final pigeonId = chat.participants[0].pigeonId ?? 0;
-      // final pigeon = Pigeon.getById(pigeonId);
-      // final chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-      chatImage =
-          'images/pigeonProfile/magpiePigeonProfile.png'; //can be deleted once TODO is done
+      final pigeonId = chat.participants[0].pigeonId;
+      final pigeon = Pigeon.getById(pigeonId);
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
     } else {
       //if there are more than 1 participants
       chatImage = 'images/group.png';
@@ -204,7 +209,7 @@ class MailScreenState extends State<MailScreen> {
                       SizedBox(width: 5.0),
                       Text(
                         //last message time
-                        chat.lastSentTime,
+                        controller.formatChatTimestamp(chat.lastSentTime),
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           fontSize: 14,
                           color: AppColors.darkBrown,

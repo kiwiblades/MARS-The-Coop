@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants.dart';
 import 'package:frontend/controller/addChat_controller.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/chatroom_service.dart';
 
 class AddChatScreen extends StatefulWidget {
   static const String routeName = '/addChatScreen';
@@ -21,7 +23,8 @@ class AddChatScreenState extends State<AddChatScreen> {
   @override
   void initState() {
     super.initState();
-    controller = AddChatController(this);
+    final chatroomService = ChatroomService(api: ApiClient());
+    controller = AddChatController(this, chatroomService: chatroomService);
   }
 
   @override
