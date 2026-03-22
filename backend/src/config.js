@@ -41,4 +41,10 @@ export const config = {
     verify_email_expires_in: process.env.VERIFY_EMAIL_EXPIRES_IN || "1h",
     token_hash_secret: process.env.TOKEN_HASH_SECRET,
   },
+  sheets: {
+    keyFilePath: process.env.SHEETS_KEY_FILE_PATH ?? './sheet-service.json',
+    spreadsheetId: process.env.SHEETS_SPREADSHEET_ID,
+    sheetName: process.env.SHEETS_SHEET_NAME ?? 'Sheet1',
+    syncIntervalHours: Number(process.env.SHEETS_SYNC_INTERVAL_HOURS ?? '1'),
+  },
 };

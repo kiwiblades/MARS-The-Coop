@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
 import { initModels } from './src/models/index.js';
+import { startScheduler } from './src/utils/sheetSync.js';
 
 /*
     The server consists of multiple parts:
@@ -25,6 +26,7 @@ import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import chatroomRoutes from './src/routes/chatroomRoutes.js';
 import messageRoutes from './src/routes/messageRoutes.js';
+import syncRoutes from './src/routes/syncRoutes.js';
 
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
@@ -32,6 +34,7 @@ app.use('/api/auth', authRoutes); // alias
 app.use('/user', userRoutes);
 app.use('/chatroom', chatroomRoutes);
 app.use('/chat', messageRoutes); //sending
+app.use('/sync', syncRoutes);
 
 // for testing only
 import devRoutes from './src/dev/devRoutes.js';
@@ -65,3 +68,4 @@ io.on('connection', (socket) => {
 // start server once everything is attached
 const port = config.SV_PORT;
 server.listen(port, () => console.log(`Server running on port ${port}`)); // display a server status upon startup
+startScheduler();
