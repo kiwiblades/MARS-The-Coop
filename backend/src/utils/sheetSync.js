@@ -83,7 +83,6 @@ async function upsertRows({ headers, rows: sheetRows }) {
             relationshipType: row[COLUMN_MAP.relationshipType],
             questionType: row[COLUMN_MAP.questionType] ?? null,
             topics: parseTopics(row, headers),
-            syncedAt: new Date(),
         }));
 
     await Question.bulkCreate(records, {
@@ -91,7 +90,6 @@ async function upsertRows({ headers, rows: sheetRows }) {
             'relationshipType',
             'questionType',
             'topics',
-            'syncedAt',
         ],
     });
 

@@ -29,11 +29,6 @@ const Question = sequelize.define('Question', {
         allowNull: true,
         defaultValue: [],
     },
-    // tracks when the row was last synced from the sheet
-    syncedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
 }, {
     tableName: 'question',
     timestamps: true,
