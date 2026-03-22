@@ -29,6 +29,12 @@ const Question = sequelize.define('Question', {
         allowNull: true,
         defaultValue: [],
     },
+    // fingerprint of the row content, used to check if the row has updated during sync
+    // helps avoid unnecessary writes
+    contentHash: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    }
 }, {
     tableName: 'question',
     timestamps: true,

@@ -5,6 +5,7 @@
 */
 
 import { google } from 'googleapis';
+import crypto from 'crypto';
 import { config } from '../config.js'
 import Question from '../models/Question.js';
 
@@ -20,6 +21,9 @@ const COLUMN_MAP = {
     },
 };
 
+// formatted sync result to return after a sync, shows success/error status
+export let lastSyncResult = { status: 'never run', timestamp: null };
+
 // handles both two-column format, and also single topics col separated with commas (if the sheet updates in the future)
 function parseTopics(row, headers) {
     // if the sheet has a single 'Topics' column
@@ -34,8 +38,16 @@ function parseTopics(row, headers) {
     return [primary, secondary].filter(Boolean);
 }
 
-// formatted sync result to return after a sync, shows success/error status
-export let lastSyncResult = { status: 'never run', timestamp: null };
+// generate a hash of the row's field values to fingerprint + check for updated rows
+function hashRecord(record) {
+    const values = JSON.stringify({
+        question: record.question,
+        relationshipType: record.relationshipType,
+        questionType: record.questionType,
+        topics: [...(record.topics ?? [])].sort(), // sort topics for consistency
+    });
+    return crypto.createHash('sha1').update(values).digest('hex');
+}
 
 function getSheetsClient() {
     const auth = new google.auth.GoogleAuth({
@@ -74,26 +86,50 @@ async function fetchSheetRows() {
 
 // update/insert values pulled from the sheet
 async function upsertRows({ headers, rows: sheetRows }) {
-    if (!sheetRows.length) return 0;
+    if (!sheetRows.length) return { upserted: 0, skipped: 0 };
 
-    const records = sheetRows
+    const incoming = sheetRows
         .filter(row => row[COLUMN_MAP.question]) // skip rows with no question text
-        .map(row => ({
-            question: row[COLUMN_MAP.question],
-            relationshipType: row[COLUMN_MAP.relationshipType],
-            questionType: row[COLUMN_MAP.questionType] ?? null,
-            topics: parseTopics(row, headers),
-        }));
+        .map(row => {
+            const record = {
+                question: row[COLUMN_MAP.question],
+                relationshipType: row[COLUMN_MAP.relationshipType],
+                questionType: row[COLUMN_MAP.questionType] ?? null,
+                topics: parseTopics(row, headers),
+            };
+            record.contentHash = hashRecord(record);
+            return record;
+        });
+    
+    // fetch existing hashes from the db to compare
+    const existingQuestions = await Question.findAll({
+        attributes: ['question', 'contentHash'],
+    });
+    const existingHashMap = new Map(
+        existingQuestions.map(q => [q.question, q.contentHash])
+    );
+    
+    // filter to only rows that are new or have changed
+    const toUpsert = incoming.filter(record =>
+        existingHashMap.get(record.question) !== record.contentHash
+    );
+    const skipped = incoming.length - toUpsert.length;
+        
+    if (toUpsert.length === 0) {
+        console.log(`[sheetSync] no changes detected for this sync`);
+        return { upserted: 0, skipped };
+    }
 
-    await Question.bulkCreate(records, {
+    await Question.bulkCreate(toUpsert, {
         updateOnDuplicate: [
             'relationshipType',
             'questionType',
             'topics',
+            'contentHash',
         ],
     });
 
-    return records.length;
+    return { upserted: toUpsert.length, skipped };
 }
 
 // sync the database with the sheet
@@ -102,14 +138,15 @@ export async function runSync() {
     try {
         const { headers, rows } = await fetchSheetRows();
         console.log(`[sheetSync] fetched ${rows.length} rows from the sheet`);
-        const upserted = await upsertRows({ headers, rows });
+        const { upserted, skipped } = await upsertRows({ headers, rows });
         lastSyncResult = {
             status: 'success',
             timestamp: new Date().toISOString(),
             rowsFetched: rows.length,
             rowsUpserted: upserted,
+            rowsSkipped: skipped,
         };
-        console.log(`[sheetSync] upserted ${upserted} rows, done`);
+        console.log(`[sheetSync] ${upserted} upserted, ${skipped} unchanged`);
     } catch(err) {
         lastSyncResult = {
             status: 'error',
