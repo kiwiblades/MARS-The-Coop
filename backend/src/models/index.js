@@ -12,6 +12,9 @@ import EmailVerificationToken from "./EmailVerificationToken.js";
 import ChatRoom from "./ChatRoom.js";
 import ChatMembership from "./ChatMembership.js";
 import Message from "./Message.js";
+import DailyQuestion from "./DailyQuestion.js";
+import UserDailyAnswer from "./UserDailyAnswer.js";
+import Question from "./Question.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -54,5 +57,20 @@ export function initModels() {
 
     User.hasMany(Message, { foreignKey: "sender_id" });
     Message.belongsTo(User, { foreignKey: "sender_id", as: 'sender' });
-}
 
+    // one chatroom has many daily questions (over many days)
+    ChatRoom.hasMany(DailyQuestion, { foreignKey: 'chatId', as: 'dailyQuestions' });
+    DailyQuestion.belongsTo(ChatRoom, { foreignKey: 'chatId', as: 'chatRoom' });
+
+    // a question can be used as many daily questions (across diff rooms/days)
+    Question.hasMany(DailyQuestion, { foreignKey: 'questionId', as: 'dailyQuestions' });
+    DailyQuestion.belongsTo(Question, { foreignKey: 'questionId', as: 'question' });
+
+    // a daily question has many daily answers from users
+    DailyQuestion.hasMany(UserDailyAnswer, { foreignKey: 'dailyQuestionId', as: 'answers' });
+    UserDailyAnswer.belongsTo(DailyQuestion, { foreignKey: 'dailyQuestionId', as: 'dailyQuestion' });
+
+    // a user has many daily answers (over many days)
+    User.hasMany(UserDailyAnswer, { foreignKey: 'userId', as: 'dailyAnswers' });
+    UserDailyAnswer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+}
