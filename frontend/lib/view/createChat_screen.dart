@@ -37,6 +37,7 @@ class CreateChatScreenState extends State<CreateChatScreen> {
   final TextEditingController chatroomNameController = TextEditingController();
   RelationshipType? selectedRelationship; //selected relationship
   String? relationshipError;
+  bool fineGrainControlSwitch = false;
 
   @override
   void initState() {
@@ -109,7 +110,9 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                   ),
                   SizedBox(height: 10.0),
                   DropdownMenu<RelationshipType>(
-                    width: MediaQuery.of(context).size.width - 40, // make width of dropdown and input equal
+                    width:
+                        MediaQuery.of(context).size.width -
+                        40, // make width of dropdown and input equal
                     initialSelection: selectedRelationship,
                     errorText: relationshipError,
                     onSelected: (value) {
@@ -122,7 +125,9 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                       fontSize: 16,
                     ),
                     menuStyle: MenuStyle(
-                      backgroundColor: WidgetStateProperty.all(AppColors.background),
+                      backgroundColor: WidgetStateProperty.all(
+                        AppColors.background,
+                      ),
                       elevation: WidgetStateProperty.all(1),
                       shape: WidgetStateProperty.all(
                         RoundedRectangleBorder(
@@ -146,6 +151,57 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                     }).toList(),
                   ),
                   SizedBox(height: 10.0),
+                  Row(
+                    //fine-grain control toggle switch
+                    children: [
+                      Text(
+                        'Fine-grain Question Control',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 20.0,
+                          color: AppColors.darkBrown,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      Expanded(
+                        child: IconButton(
+                          alignment: Alignment.centerLeft,
+                          icon: Icon(
+                            Icons.info_outline,
+                            color: AppColors.darkBrown,
+                            size: 20.0,
+                          ),
+                          onPressed: () => showFineGrainControlInfoPopUp(
+                            context,
+                          ), //show info
+                        ),
+                      ),
+                      Transform.scale(
+                        scale: 0.75,
+                        child: Switch(
+                          value: fineGrainControlSwitch,
+                          inactiveThumbColor: AppColors.darkBrown,
+                          inactiveTrackColor: AppColors.background,
+                          activeThumbColor: AppColors.darkBrown,
+                          trackOutlineColor: WidgetStateProperty.resolveWith((
+                            states,
+                          ) {
+                            if (states.contains(WidgetState.selected)) {
+                              return Colors.transparent; // active outline
+                            }
+                            return AppColors.darkBrown; // inactive outline
+                          }),
+
+                          trackOutlineWidth: WidgetStateProperty.all(2.0),
+                          onChanged: (bool value) {
+                            setState(() {
+                              fineGrainControlSwitch = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10.0),
                   Center(
                     child: ElevatedButton(
                       onPressed: controller.onPressCreate,
@@ -163,6 +219,46 @@ class CreateChatScreenState extends State<CreateChatScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+//fine grain control info pop up
+void showFineGrainControlInfoPopUp(BuildContext context) {
+  //helper function to show dialog
+  showDialog(
+    context: context,
+    builder: (context) {
+      return FineGrainControlInfo();
+    },
+  );
+}
+
+class FineGrainControlInfo extends StatelessWidget {
+  //pop up element
+  const FineGrainControlInfo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.background,
+      title: Text(
+        'Fine-grain Question Control',
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontSize: 14.0,
+          color: AppColors.darkBrown,
+        ),
+      ),
+      content: Text(
+        '''Turning on fine-grain question control allows you to filter your daily questions by type and topic instead of the default, which is by relationship type.
+Question type corresponds to how a question is formatted or what sort of question is being asked (i.e., an “If you could” question prompts you to imagine a scenario and what you would do within it. For example, “If you could swap bodies with anyone for a day, who would you pick?”). 
+Question topic corresponds to the content of the question (i.e., a question with the topic of personal is going to prompt you to share something about yourself that is a little deeper than surface-level opinions). 
+All unchecked question types and topics will be filtered out of the possible questions you will be asked.''',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 12.5,
+          color: AppColors.darkBrown,
         ),
       ),
     );
