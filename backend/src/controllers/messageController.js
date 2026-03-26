@@ -11,13 +11,8 @@ export const sendMessage = async (req, res, next) => {
         const sender_id = req.user.uid; // From authMiddleware
 
 		// Membership Validation Replacement
-        if (!chat_id || !sender_id) {
-            throw AppError.badRequest('Missing chat_id or sender identity');
-        }
-
-        // 1. Basic Validation
-        if (!content || !chat_id) {
-            throw AppError.badRequest('Content and chat_id are required');
+        if (!chat_id || !sender_id || !content) {
+            throw AppError.badRequest('Missing chat_id, sender identity, or message content');
         }
 
         // 2. membership query to check if sender is part of the chat room
@@ -39,7 +34,19 @@ export const sendMessage = async (req, res, next) => {
 
         // Real-time broadcast via Socket.io
         const io = req.app.get('io');
-        io.to(chat_id).emit('receive_message', newMessage);
+        const sender = await User.findByPk(sender_id, {
+            attributes: ['username', 'pigeonId'],
+        });
+        io.to(chat_id).emit('receive_message', {
+            id: newMessage.id,
+            content: newMessage.content,
+            sender_id: newMessage.sender_id,
+            createdAt: newMessage.createdAt,
+            sender: {
+                username: sender?.username ?? '',
+                pigeonId: sender?.pigeonId ?? null,
+            },
+        });
 
         // Return 201 Created
         res.status(201).json(newMessage); 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/services/token_manager.dart';
 import 'package:frontend/view/addChat_screen.dart';
 import 'package:frontend/view/auth_check.dart';
@@ -76,7 +77,7 @@ class RequireAuth extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: TokenManager.instance.hasSession(),
+      future: _connectIfNeeded(),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return const Scaffold(
@@ -91,4 +92,13 @@ class RequireAuth extends StatelessWidget {
       },
     );
   }
+}
+
+// check for session, connect socket if logged in
+Future<bool> _connectIfNeeded() async {
+  final loggedIn = await TokenManager.instance.hasSession();
+  if (loggedIn) {
+    await SocketClient.instance.connect();
+  }
+  return loggedIn;
 }

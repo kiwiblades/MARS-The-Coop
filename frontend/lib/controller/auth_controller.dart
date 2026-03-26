@@ -1,4 +1,5 @@
 import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/socket_client.dart';
 
 class AuthController {
   final AuthService auth;
@@ -24,6 +25,7 @@ class AuthController {
   }) async {
     try {
       await auth.signin(username: username, password: password);
+      await SocketClient.instance.connect(); // establish connection with socket once tokens are saved
       return {'success': true}; // tokens are saved locally inside AuthService
     } catch (e) {
       return {'success': false, 'error': e.toString()};
