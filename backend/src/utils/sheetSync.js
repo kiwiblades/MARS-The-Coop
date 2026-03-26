@@ -158,8 +158,8 @@ export async function runSync() {
     return lastSyncResult;
 }
 
-// cron scheduler
-export function startScheduler() {
+// sync schedular: once per hour
+export function startSyncScheduler() {
     const hours = config.sheets.syncIntervalHours;
     const ms = hours*60*60*1000; // convert the interval hrs to ms
     console.log(`[sheetSync] scheduler started, syncing every ${hours}h`);
