@@ -1,5 +1,6 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../db/sequelize.js';
 
 const GlobalQuestion = sequelize.define('GlobalQuestion', {
   id: {
@@ -25,4 +26,4 @@ const GlobalQuestion = sequelize.define('GlobalQuestion', {
   timestamps: true
 });
 
-module.exports = GlobalQuestion;
+export default GlobalQuestion;

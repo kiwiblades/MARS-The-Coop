@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../db/sequelize.js';
 
 const ChatSettings = sequelize.define('ChatSettings', {
   id: {
