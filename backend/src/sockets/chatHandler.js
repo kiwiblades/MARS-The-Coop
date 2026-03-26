@@ -1,6 +1,6 @@
 /**
  * Socket.io Handler for Chat Messaging
- * This handles the real-time events for User Story ID 14.
+ * This handles the real-time events.
  */
 
 export const registerChatHandlers = (io, socket) => {

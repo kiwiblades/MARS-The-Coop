@@ -5,7 +5,7 @@ export const verifyOwner = async (req, res, next) => {
   const chatId = req.params.id || req.body.chatId;
   
   const membership = await ChatMembership.findOne({
-    where: { chatId, userId: req.user.id }
+    where: { chatId, userId: req.user.uid }
   });
 
   if (!membership || membership.role !== 'owner') {

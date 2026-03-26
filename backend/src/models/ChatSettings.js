@@ -29,4 +29,4 @@ const ChatSettings = sequelize.define('ChatSettings', {
   timestamps: true
 });
 
-module.exports = ChatSettings;
+export default ChatSettings;

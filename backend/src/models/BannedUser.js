@@ -33,4 +33,4 @@ const BannedUser = sequelize.define('BannedUser', {
   ]
 });
 
-module.exports = BannedUser;
+export default BannedUser;
