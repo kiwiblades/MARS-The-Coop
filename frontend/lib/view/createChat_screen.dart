@@ -16,28 +16,23 @@ class CreateChatScreen extends StatefulWidget {
   }
 }
 
-//helper function to take the relationship type enum and make it a string for labels
-String formatRelationship(RelationshipType type) {
-  switch (type) {
-    case RelationshipType.acquaintance:
-      return "Acquaintance";
-    case RelationshipType.family:
-      return "Family";
-    case RelationshipType.friends:
-      return "Friends";
-    case RelationshipType.romantic:
-      return "Romantic";
-  }
+//helper function for question type and relationship type (enums) for readability
+String formatEnumName(String name) {
+  return name
+      .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
+      .replaceFirst(name[0], name[0].toUpperCase());
 }
 
 class CreateChatScreenState extends State<CreateChatScreen> {
   late final CreateChatController controller;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  //form controllers
+  //form controllers/values
   final TextEditingController chatroomNameController = TextEditingController();
   RelationshipType? selectedRelationship; //selected relationship
   String? relationshipError;
-  bool fineGrainControlSwitch = false;
+  bool fineGrainControlSwitch = true;
+  Set<QuestionType> selectedQuestionTypes = {};
+  Set<QuestionTopic> selectedQuestionTopics = {};
 
   @override
   void initState() {
@@ -138,7 +133,7 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                     dropdownMenuEntries: RelationshipType.values.map((type) {
                       return DropdownMenuEntry(
                         value: type,
-                        label: formatRelationship(type),
+                        label: formatEnumName(type.name),
                         style: ButtonStyle(
                           textStyle: WidgetStateProperty.all(
                             const TextStyle(fontSize: 16),
@@ -195,13 +190,176 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                           onChanged: (bool value) {
                             setState(() {
                               fineGrainControlSwitch = value;
+                              if(!value) { //clear question preferences when fine-grain control is turned off
+                                selectedQuestionTopics = {};
+                                selectedQuestionTypes = {};
+                              }
                             });
                           },
                         ),
                       ),
                     ],
                   ),
+                  if (fineGrainControlSwitch)
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: AppColors.darkBrown, width: 1.5), 
+                          bottom: BorderSide(color: AppColors.darkBrown, width: 1.5)
+                        )
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsetsGeometry.fromLTRB(0.0, 5.0, 0.0, 5.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              //first column: question Type
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Question Type',
+                                    style: Theme.of(context).textTheme.bodyLarge
+                                        ?.copyWith(
+                                          fontSize: 20.0,
+                                          color: AppColors.darkBrown,
+                                        ),
+                                  ),
+                        
+                                  ...QuestionType.values.map((type) {
+                                    return SizedBox(
+                                      height: 20.0,
+                                      child: Row(
+                                        // mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              formatEnumName(type.name),
+                                              style: TextStyle(
+                                                color: AppColors.darkBrown,
+                                              ),
+                                            ),
+                                          ),
+                                          Checkbox(
+                                            value: selectedQuestionTypes.contains(
+                                              type,
+                                            ),
+                        
+                                            fillColor:
+                                                WidgetStateProperty.resolveWith((
+                                                  states,
+                                                ) {
+                                                  if (states.contains(
+                                                    WidgetState.selected,
+                                                  )) {
+                                                    return AppColors.darkBrown;
+                                                  }
+                                                  return AppColors.background;
+                                                }),
+                        
+                                            side: BorderSide(
+                                              color: AppColors.darkBrown,
+                                              width: 1.5,
+                                            ),
+                        
+                                            onChanged: (bool? value) {
+                                              setState(() {
+                                                if (value == true) {
+                                                  selectedQuestionTypes.add(type);
+                                                } else {
+                                                  selectedQuestionTypes.remove(
+                                                    type,
+                                                  );
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 10.0),
+                            Expanded(
+                              //2nd column: question topic
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Question Topic',
+                                    style: Theme.of(context).textTheme.bodyLarge
+                                        ?.copyWith(
+                                          fontSize: 20.0,
+                                          color: AppColors.darkBrown,
+                                        ),
+                                  ),
+                        
+                                  ...QuestionTopic.values.map((topic) {
+                                    return SizedBox(
+                                      height: 20.0,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              formatEnumName(topic.name),
+                                              style: TextStyle(
+                                                color: AppColors.darkBrown,
+                                              ),
+                                            ),
+                                          ),
+                                          Checkbox(
+                                            value: selectedQuestionTopics.contains(
+                                              topic,
+                                            ),
+                        
+                                            fillColor:
+                                                WidgetStateProperty.resolveWith((
+                                                  states,
+                                                ) {
+                                                  if (states.contains(
+                                                    WidgetState.selected,
+                                                  )) {
+                                                    return AppColors.darkBrown;
+                                                  }
+                                                  return AppColors.background;
+                                                }),
+                        
+                                            side: BorderSide(
+                                              color: AppColors.darkBrown,
+                                              width: 1.5,
+                                            ),
+                        
+                                            onChanged: (bool? value) {
+                                              setState(() {
+                                                if (value == true) {
+                                                  selectedQuestionTopics.add(topic);
+                                                } else {
+                                                  selectedQuestionTopics.remove(
+                                                    topic,
+                                                  );
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   SizedBox(height: 10.0),
+
                   Center(
                     child: ElevatedButton(
                       onPressed: controller.onPressCreate,

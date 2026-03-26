@@ -43,9 +43,14 @@ class CreateChatController {
 
     if (!isValid) return;
 
+    
+
       print('validation passed');
       try {
-        //TODO: edit createChatroom to take: name, relationship type, fine-grain control one/off, and question preferences 
+        //TODO: edit createChatroom to take: name(state.chatroomNameController), 
+        //relationship type(state.selectedRelationship), 
+        //fine-grain control one/off(state.fineGrainControlSwitch), 
+        //and question preferences (state.selectedQuestionTypes and selectedQuestionTopics) all relevant values are in "form controllers/values" section
         final chatroom = await chatroomService.createChatroom(
           state.chatroomNameController.text,
         );
