@@ -30,7 +30,7 @@ class CreateChatScreenState extends State<CreateChatScreen> {
   final TextEditingController chatroomNameController = TextEditingController();
   RelationshipType? selectedRelationship; //selected relationship
   String? relationshipError;
-  bool fineGrainControlSwitch = true;
+  bool fineGrainControlSwitch = false;
   Set<QuestionType> selectedQuestionTypes = {};
   Set<QuestionTopic> selectedQuestionTopics = {};
 
@@ -95,15 +95,30 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                     validator: controller.chatNameValidator,
                   ),
                   SizedBox(height: 10.0),
-                  Text(
-                    'Relationship Type',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontSize: 20.0,
-                      color: AppColors.darkBrown,
-                    ),
-                    textAlign: TextAlign.left,
+                  Row(
+                    children: [
+                      Text(
+                        'Relationship Type',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 20.0,
+                          color: AppColors.darkBrown,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      IconButton(
+                          alignment: Alignment.centerLeft,
+                          icon: Icon(
+                            Icons.info_outline,
+                            color: AppColors.darkBrown,
+                            size: 20.0,
+                          ),
+                          onPressed: () => showRelationshipTypeInfoPopUp(
+                            context,
+                          ), //show info
+                        ),
+                    ],
                   ),
-                  SizedBox(height: 10.0),
+                  SizedBox(height: 2.0),
                   DropdownMenu<RelationshipType>(
                     width:
                         MediaQuery.of(context).size.width -
@@ -383,6 +398,51 @@ class CreateChatScreenState extends State<CreateChatScreen> {
   }
 }
 
+void showRelationshipTypeInfoPopUp(BuildContext context) {
+  //helper function to show dialog for relationship info button
+  showDialog(
+    context: context,
+    builder: (context) {
+      return RelationshipTypeInfo();
+    },
+  );
+}
+
+class RelationshipTypeInfo extends StatelessWidget {
+  //pop up element
+  const RelationshipTypeInfo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.background,
+      title: Text(
+        'Relationship Type',
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontSize: 14.0,
+          color: AppColors.darkBrown,
+        ),
+      ),
+      content: Text(
+        '''Chat relationship type should be selected to match how you and the other chat members are related to eachother. The details of each relationship type are as follows.
+
+Acquaintances: Best for when you are just getting to know someone. Daily questions will include non-invasive icebreakers such as “What is your favorite color?” or “What is the top item on your bucket list?”
+
+Family: Best for when you are chatting with close relatives. Daily questions will pry deeper than with acquaintances but will stay family-friendly, i.e., “What is your favorite  family vacation you have been on?”
+
+Friends: Best for when you are chatting with close friends, maybe someone you’ve known for a good amount of time. Daily questions will cover even broader topics than those given to family chats and may not stay as family-friendly, i.e., “Who is the hottest US president?”
+
+Romantic partners: Best for when you are chatting with romantic partners. Daily questions may broach topics of intimacy and future plans, i.e., “Do you have terms of endearment you hate?” or “What do you wear when you sleep?”
+''',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 12.5,
+          color: AppColors.darkBrown,
+        ),
+      ),
+    );
+  }
+}
+
 //fine grain control info pop up
 void showFineGrainControlInfoPopUp(BuildContext context) {
   //helper function to show dialog
@@ -422,6 +482,7 @@ All unchecked question types and topics will be filtered out of the possible que
     );
   }
 }
+
 
 void showCodePopup(BuildContext context, String code) {
   //helper function to show code banner
