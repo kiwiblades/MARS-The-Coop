@@ -31,12 +31,12 @@ class CreateChatController {
 
     // dropdown must be manually validated because it does not have the validator option
     if (state.selectedRelationship == null) {
-      state.setState(() {
+      state.callSetState(() {
         state.relationshipError = 'Please select a relationship type';
       });
       isValid = false;
     } else { //reset to null if it validates
-      state.setState(() {
+      state.callSetState(() {
         state.relationshipError = null;
       });
     }
