@@ -10,7 +10,6 @@ router.get("/", getChatrooms);
 router.post("/create", createChatroom);
 router.post("/join", joinChatroom);
 router.delete("/leave", leaveChatroom);
-router.delete("/delete", deleteChatroom);
 router.patch("/pin", togglePin);
 router.patch("/:id/settings", updateSettings); 
 router.delete("/:id", verifyOwner, deleteChatroom); 

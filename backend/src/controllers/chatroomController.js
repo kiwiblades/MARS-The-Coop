@@ -190,7 +190,8 @@ export async function leaveChatroom(req, res) {
 
 export async function deleteChatroom(req, res) {
     const uid = req.user.uid;
-    const { chatroomId } = req.body;
+    const chatroomId = req.params.id;
+
     if (!chatroomId) {
         throw AppError.badRequest("chatroomId is required for deleting a chatroom");
     }
