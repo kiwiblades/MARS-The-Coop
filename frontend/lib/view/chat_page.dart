@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/message_service.dart';
+import 'package:frontend/services/socket_client.dart';
 import '../constants.dart';
-import '../services/api_client.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_model.dart';
 import '../model/pigeon.dart';
@@ -39,6 +43,9 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   List<PromptQASection> _promptSections = [];
 
+  StreamSubscription<Message>? _messageSubscription;
+  ChatGroup? _chatGroup;
+
   // prompt state
   final TextEditingController _promptAnswerController = TextEditingController();
   bool _showPromptModal = false;
@@ -48,7 +55,6 @@ class _ChatPageState extends State<ChatPage> {
   bool _isSubmittingPrompt = false;
 
   List<Message> _messages = [];
-  ChatGroup? _chatGroup;
   bool _hasMore = true;
   User? _currentUser;
 
@@ -73,8 +79,13 @@ class _ChatPageState extends State<ChatPage> {
     print('_loadCurrentUser started');
     try {
       final user = await _userService.getProfile();
+      final messageService = MessageService(
+        socket: SocketClient.instance,
+        api: ApiClient(),
+        currentUserId: user.uid,
+      );
       _chatController = ChatController(
-        ApiClient(),
+        messageService,
         widget.chatId,
         user.uid,
         chatroomService: widget.chatroomService,
@@ -84,8 +95,28 @@ class _ChatPageState extends State<ChatPage> {
         _currentUser = user;
       });
 
+      // join socket room to receive live messages
+      await _chatController.joinRoom();
+
+      // subscribe to incoming msg stream
+      _messageSubscription = _chatController.onReceiveMessage().listen((
+        message,
+      ) {
+        setState(() {
+          _messages.add(message);
+        });
+        _scrollToBottom();
+      });
+
       // check if user needs to answer today's prompt
       await _checkTodaysPrompt();
+      // error listener
+      _chatController.onMessageError().listen((e) {
+        if (!mounted) return; // if widget was disposed
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+      });
 
       // load chat data
       _loadChatData();
@@ -236,11 +267,6 @@ class _ChatPageState extends State<ChatPage> {
         _model.isLoading = false;
       });
       _scrollToBottom();
-    } else {
-      setState(() {
-        _model.loadError = messagesResult['error'];
-        _model.isLoading = false;
-      });
     }
   }
 
@@ -280,18 +306,8 @@ class _ChatPageState extends State<ChatPage> {
 
     _messageController.clear();
 
-    final result = await _chatController.sendMessage(content);
-    if (result['success']) {
-      setState(() {
-        _messages.add(result['message']);
-      });
-      _scrollToBottom();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: ${result['error']}')),
-      );
-      _messageController.text = content;
-    }
+    // send message, no need to await. server broadcasts back to the room
+    _chatController.sendMessage(content);
   }
 
   void _onTypingChanged(String text) {
@@ -309,7 +325,7 @@ class _ChatPageState extends State<ChatPage> {
       builder: (context) => AlertDialog(
         title: Text('Leave Chat'),
         content: Text(
-          _chatGroup?.memberCount == 1
+          widget.participants.length + 1 == 1
               ? 'You are the last member. Leaving will delete this chat.'
               : 'Are you sure you want to leave this chat?',
         ),
@@ -350,6 +366,8 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
+    _messageSubscription?.cancel(); // stop listening for new msgs
+    _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
     _promptAnswerController.dispose();
@@ -585,15 +603,15 @@ class _ChatPageState extends State<ChatPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _chatGroup?.name ?? 'Loading...',
+                    widget.chatName,
                     style: AppTextStyles.heading.copyWith(fontSize: 18),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     _model.showFullGroupName
-                        ? '${_chatGroup?.memberCount ?? 0} members: ${_chatGroup?.memberNames?.join(", ") ?? ""}'
-                        : '${_chatGroup?.memberCount ?? 0} members',
+                        ? '${widget.participants.length + 1} members: ${widget.participants.map((p) => p.username).join(", ")}'
+                        : '${widget.participants.length + 1} members',
                     style: AppTextStyles.label,
                     maxLines: _model.showFullGroupName ? null : 1,
                     overflow: _model.showFullGroupName
@@ -723,72 +741,76 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-Widget _buildMessageList() {
-  if (_messages.isEmpty && _promptSections.isEmpty) {
-    return Center(
-      child: Text(
-        'No messages yet. Start the conversation!',
-        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-      ),
+  Widget _buildMessageList() {
+    if (_messages.isEmpty && _promptSections.isEmpty) {
+      return Center(
+        child: Text(
+          'No messages yet. Start the conversation!',
+          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    // Build a combined list of regular messages and prompt sections
+    List<Widget> items = [];
+
+    // Get regular messages (excluding prompt answers)
+    final regularMessages = _messages.where((message) {
+      for (var section in _promptSections) {
+        if (section.answerMessageIds.contains(message.id)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    int messageIndex = 0;
+
+    // Interleave regular messages and prompt sections by timestamp
+    for (int i = 0; i < regularMessages.length; i++) {
+      final message = regularMessages[i];
+
+      // Check if any prompt section should appear before this message
+      for (var section in _promptSections) {
+        if (section.askedAt.isBefore(message.timestamp) &&
+            !items.contains(_buildPromptResponsesSection())) {
+          items.add(_buildPromptResponsesSection());
+        }
+      }
+
+      final showTimestamp =
+          i == regularMessages.length - 1 ||
+          regularMessages[i + 1].timestamp
+                  .difference(message.timestamp)
+                  .inMinutes >=
+              1;
+
+      final isFirstInGroup =
+          i == 0 || message.senderId != regularMessages[i - 1].senderId;
+
+      items.add(
+        Column(
+          children: [
+            _buildMessageBubble(message, isFirstInGroup),
+            if (showTimestamp) _buildTimestamp(message.timestamp),
+            SizedBox(height: AppSpacing.sm),
+          ],
+        ),
+      );
+    }
+
+    // If prompt section hasn't been added yet, add it at the end
+    if (_promptSections.isNotEmpty && !items.any((item) => item is Container)) {
+      items.add(_buildPromptResponsesSection());
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: EdgeInsets.all(AppSpacing.md),
+      itemCount: items.length,
+      itemBuilder: (context, index) => items[index],
     );
   }
-
-  // Build a combined list of regular messages and prompt sections
-  List<Widget> items = [];
-  
-  // Get regular messages (excluding prompt answers)
-  final regularMessages = _messages.where((message) {
-    for (var section in _promptSections) {
-      if (section.answerMessageIds.contains(message.id)) {
-        return false;
-      }
-    }
-    return true;
-  }).toList();
-
-  int messageIndex = 0;
-  
-  // Interleave regular messages and prompt sections by timestamp
-  for (int i = 0; i < regularMessages.length; i++) {
-    final message = regularMessages[i];
-    
-    // Check if any prompt section should appear before this message
-    for (var section in _promptSections) {
-      if (section.askedAt.isBefore(message.timestamp) && !items.contains(_buildPromptResponsesSection())) {
-        items.add(_buildPromptResponsesSection());
-      }
-    }
-    
-    final showTimestamp = i == regularMessages.length - 1 ||
-        regularMessages[i + 1].timestamp
-                .difference(message.timestamp)
-                .inMinutes >=
-            1;
-    
-    final isFirstInGroup = i == 0 ||
-        message.senderId != regularMessages[i - 1].senderId;
-
-    items.add(Column(
-      children: [
-        _buildMessageBubble(message, isFirstInGroup),
-        if (showTimestamp) _buildTimestamp(message.timestamp),
-        SizedBox(height: AppSpacing.sm),
-      ],
-    ));
-  }
-  
-  // If prompt section hasn't been added yet, add it at the end
-  if (_promptSections.isNotEmpty && !items.any((item) => item is Container)) {
-    items.add(_buildPromptResponsesSection());
-  }
-
-  return ListView.builder(
-    controller: _scrollController,
-    padding: EdgeInsets.all(AppSpacing.md),
-    itemCount: items.length,
-    itemBuilder: (context, index) => items[index],
-  );
-}
 
   bool _shouldShowTimestamp(int index) {
     if (index == _messages.length - 1) return true;

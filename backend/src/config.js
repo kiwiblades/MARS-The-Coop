@@ -47,4 +47,8 @@ export const config = {
     sheetName: process.env.SHEETS_SHEET_NAME ?? 'Sheet1',
     syncIntervalHours: Number(process.env.SHEETS_SYNC_INTERVAL_HOURS ?? '1'),
   },
+  dailyQuestion: {
+    cronTime: process.env.DAILYQ_CRON_TIME ?? '0 5 * * *',
+    timezone: process.env.DAILYQ_TIMEZONE ?? 'America/Chicago',
+  },
 };
