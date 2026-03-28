@@ -33,8 +33,9 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void initState() {
-    super.initState();
-    controller = ChatDetailController(this);
+    super
+        .initState(); // TODO (Rye): this is where the current chatroom details will need to be fetched and set to the model, and also all the model editing values will need to be set to what they are in the chatroom so that when the user clicks edit it is already synced up
+    controller = ChatDetailController(this, chatroomService: chatroomService);
     model = ChatDetailModel();
   }
 
@@ -753,25 +754,24 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
 }
 
 //DELETE Confirmation
-Future<bool?> showDeleteConfirmationPopUp(
-    BuildContext context) {
+Future<bool?> showDeleteConfirmationPopUp(BuildContext context) {
   return showDialog<bool>(
     context: context,
     builder: (context) {
-      return DeleteConfirmationPopUp(
-      );
+      return DeleteConfirmationPopUp();
     },
   );
 }
+
 class DeleteConfirmationPopUp extends StatelessWidget {
-  const DeleteConfirmationPopUp({super.key,});
+  const DeleteConfirmationPopUp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Delete Chat'),
       content: Text(
-        'Are you sure you want to delete this chat? You will be deleting it for all members.'
+        'Are you sure you want to delete this chat? You will be deleting it for all members.',
       ),
       actions: [
         TextButton(
@@ -787,19 +787,19 @@ class DeleteConfirmationPopUp extends StatelessWidget {
   }
 }
 
-
 //LEAVE Confirmation
 Future<bool?> showLeaveConfirmationPopUp(
-    BuildContext context, int numberOfParticipants) {
+  BuildContext context,
+  int numberOfParticipants,
+) {
   return showDialog<bool>(
     context: context,
     builder: (context) {
-      return LeaveConfirmationPopUp(
-        numberOfParticipants: numberOfParticipants,
-      );
+      return LeaveConfirmationPopUp(numberOfParticipants: numberOfParticipants);
     },
   );
 }
+
 class LeaveConfirmationPopUp extends StatelessWidget {
   final numberOfParticipants;
   const LeaveConfirmationPopUp({super.key, required this.numberOfParticipants});

@@ -1,6 +1,9 @@
 import 'package:frontend/model/chatroom.dart';
 
 class ChatDetailModel {
+  // The actual data object from the backend
+  Chatroom? currentChatroom;
+
   bool isEditingChatName = false;
 
   RelationshipType? selectedRelationshipType;
@@ -8,13 +11,28 @@ class ChatDetailModel {
   bool isEditingRelationshipType = false;
 
   bool fineGrainControlEdit = false;
+  // Set for preventing duplicates
   Set<QuestionType> questionTypePreferenceEdits = {};
   Set<QuestionTopic> questionTopicPreferenceEdits = {};
   bool isEditingQuestionPreferences = false;
 
-//TODO: delete test values once actual values are implemented
-  bool isOwner = true; //for conditional render test
-  bool fineGrainTest = true; 
-  Set<QuestionType> questionTypePreferenceTest = {QuestionType.favorite, QuestionType.ifYouCould, QuestionType.memory };
-  Set<QuestionTopic> questionTopicPreferenceTest = {QuestionTopic.intimacy, QuestionTopic.politics};
+  // TODO (Rye): in case you need to refer back to chatDetail_model
+  // TODO: delete test values once actual values are implemented
+  // bool isOwner = true; //for conditional render test
+  bool get isOwner => currentChatroom?.membership == 'owner';
+
+  // HELPER: Getters to safely access current values from the chatroom object
+  String get chatName => currentChatroom?.name ?? '';
+  String get chatId => currentChatroom?.id ?? '';
+
+  bool fineGrainTest = true;
+  Set<QuestionType> questionTypePreferenceTest = {
+    QuestionType.favorite,
+    QuestionType.ifYouCould,
+    QuestionType.memory,
+  };
+  Set<QuestionTopic> questionTopicPreferenceTest = {
+    QuestionTopic.intimacy,
+    QuestionTopic.politics,
+  };
 }

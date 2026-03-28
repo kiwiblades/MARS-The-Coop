@@ -5,9 +5,26 @@ import 'package:frontend/services/chatroom_service.dart';
 
 class ChatDetailController {
   ChatDetailScreenState state;
-  ChatDetailController(this.state);
+  final ChatroomService chatroomService;
+  ChatDetailController(this.state, {required this.chatroomService});
 
-  //TODO: i think the chat needs to be fetched for currentChat in view and also to set all the model editing values to what they are already
+  //TODO: chat needs to be fetched for currentChat in view and also to set all the model editing values to what they are already
+  // Helper to get current chat ID
+  String get _chatId => state.model.currentChatroom!.id;
+
+  // INITIALIZATION: Called from the View's initState to sync model with existing data
+  void init(Chatroom chatroom) {
+    state.model.currentChatroom = chatroom;
+    state.callSetState(() {
+      // Set initial values for the relationship dropdown
+      state.model.selectedRelationshipType = RelationshipType.values.firstWhere(
+        (e) => e.name.toLowerCase() == chatroom.relationshipType.toLowerCase(),
+        orElse: () => RelationshipType.friends,
+      );
+      // Sync fine grain control state
+      state.model.fineGrainControlEdit = chatroom.allowedTopics.isNotEmpty;
+    });
+  }
 
   //CHAT NAME:
   //chat name edit click
@@ -34,7 +51,12 @@ class ChatDetailController {
     final newChatName = value?.trim();
     if (newChatName == null || newChatName.isEmpty) return;
 
-    //TODO: try catch for editing the chat's name
+    //TODO (rye): try catch for editing the chat's name
+    try {
+      await chatroomService.updateSettings(chatId, newChatName);
+    } catch (error) {
+      print('Error updating chat name: $error');
+    }
   }
 
   //chat name cancel edit
@@ -100,8 +122,12 @@ class ChatDetailController {
   Future<void> onSaveRelationshipType(RelationshipType? value) async {
     final newRelationshipType = value;
     if (newRelationshipType == null) return;
-    //TODO: try catch for editing the relationship type
-    
+    //TODO (rye): try catch for editing the relationship type
+    try {
+      await chatroomService.updateSettings(chatId, newRelationshipType);
+    } catch (error) {
+      print('Error updating relationship type: $error');
+    }
   }
 
   //relationship type cancel edit
@@ -125,11 +151,23 @@ class ChatDetailController {
   //fine-grain question control edit click
   void onPressedEditFineGrainControl() {
     print('edit fine-grain question control clicked');
+
+    //TODO (rye): copy over all current values that were fetched from db into edit variables in model
+
     state.callSetState(() {
       state.model.isEditingQuestionPreferences = true;
+
+      // SYNC: Copy current topics from the chatroom object into the "Edits" buffer
+      state.model.questionTopicPreferenceEdits.clear();
+      for (var topicName in state.model.currentChatroom!.allowedTopics) {
+        final topic = QuestionTopic.values.firstWhere(
+          (t) => t.name.toLowerCase() == topicName.toLowerCase(),
+          orElse: () => QuestionTopic.personal,
+        );
+        state.model.questionTopicPreferenceEdits.add(topic);
+      }
     });
 
-    //TODO: copy over all current values that were fetched from db into edit variables in model
     //Test Data
     state.model.questionTopicPreferenceEdits.add(QuestionTopic.intimacy);
     state.model.questionTypePreferenceEdits.add(QuestionType.favorite);
@@ -175,13 +213,37 @@ class ChatDetailController {
     state.callSetState(() {
       state.model.isEditingQuestionPreferences = false;
     });
-    //TODO: call the fine grain control save for backend
+    //TODO (rye): call the fine grain control save for backend
+    try {
+      fineGrainControlEdit(
+        state.model.fineGrainControlEdit,
+        state.model.questionTypePreferenceEdits.toList(),
+        state.model.questionTopicPreferenceEdits.toList(),
+      );
+    } catch (error) {
+      print('Error updating fine grain control: $error');
+    }
   }
 
-  //fine grain control save
-  // Future<void> onSaveFineGrainControl(bool fineGrainControl, List<QuestionType> types, List<QuestionTopic> topics) {
-  //   //TODO: try catch to update fine grain control on or off and the preferences accordingly
-  // }
+  ///fine grain control save
+  Future<void> fineGrainControlEdit(
+    bool fineGrainControl,
+    List<QuestionType> types,
+    List<QuestionTopic> topics,
+  ) async {
+    //TODO (rye): try catch to update fine grain control on or off and the preferences accordingly
+    try {
+      await chatroomService.updateSettings(
+        chatId,
+        null, // No change to chat name
+        fineGrainControl: fineGrainControl,
+        questionTypePreference: types,
+        questionTopicPreference: topics,
+      );
+    } catch (error) {
+      print('Error updating fine grain control: $error');
+    }
+  }
 
   //fine grain control cancel edit
   void onPressedEditFineGrainControlCancel() {
@@ -204,16 +266,25 @@ class ChatDetailController {
 
   Future<void> deleteChat() async {
     print('delete chat called');
-    //TODO: delete chat funcitonality
+    //TODO (rye): delete chat functionality
+    try {
+      await chatroomService.deleteChatroom(_chatId);
+      // Navigate back to mail screen
+      Navigator.of(state.context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      print('Delete chat failed: $e');
+    }
   }
 
   //LEAVE
   void onPressedLeaveChat() async {
     print('pressed leave chat');
+    // Calculate real participant count (others + current user)
+    final count = (state.model.currentChatroom?.participants.length ?? 0) + 1;
 
     final confirmed = await showLeaveConfirmationPopUp(
       state.context,
-      1, // TODO: real participant count
+      count, // Pass the participant count to the confirmation popup
     );
 
     if (confirmed == true) {
@@ -223,27 +294,34 @@ class ChatDetailController {
 
   Future<void> leaveChat() async {
     print('leave chat called');
-    //TODO: BUGFIX leave implementation
-    //   if (_currentUser == null) return;
-
-    //   final result = await _chatController.leaveChat();
-
-    //   if (result['success']) {
-    //     Navigator.pop(state.context);
-    //     ScaffoldMessenger.of(
-    //       state.context,
-    //     ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
-    //   } else {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
-    //     );
-    //   }
-    // }
-
-    // @override
-    // void dispose() {
-    //   _messageController.dispose();
-    //   _scrollController.dispose();
-    //   super.dispose();
+    //TODO (rye): BUGFIX leave implementation
+    try {
+      await chatroomService.leaveChatroom(_chatId);
+      // Pop twice (back to main mail screen)
+      Navigator.of(state.context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      print('Leave chat failed: $e');
+    }
   }
+  //   if (_currentUser == null) return;
+
+  //   final result = await _chatController.leaveChat();
+
+  //   if (result['success']) {
+  //     Navigator.pop(state.context);
+  //     ScaffoldMessenger.of(
+  //       state.context,
+  //     ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
+  //     );
+  //   }
+  // }
+
+  // @override
+  // void dispose() {
+  //   _messageController.dispose();
+  //   _scrollController.dispose();
+  //   super.dispose();
 }

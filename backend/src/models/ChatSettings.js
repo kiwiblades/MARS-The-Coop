@@ -21,10 +21,6 @@ const ChatSettings = sequelize.define('ChatSettings', {
     type: DataTypes.JSON, 
     defaultValue: [] 
   },
-  difficulty: {
-    type: DataTypes.ENUM('Casual', 'Deep', 'Intimate'),
-    defaultValue: 'Casual'
-  }
 }, {
   timestamps: true
 });

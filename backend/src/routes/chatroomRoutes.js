@@ -13,6 +13,5 @@ router.delete("/leave", leaveChatroom);
 router.patch("/pin", togglePin);
 router.patch("/:id/settings", updateSettings); 
 router.delete("/:id", verifyOwner, deleteChatroom); 
-router.patch("/pin", togglePin);
 
 export default router;
