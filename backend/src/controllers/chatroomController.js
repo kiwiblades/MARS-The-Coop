@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { sequelize } from "../db/sequelize.js";
 import ChatMembership from "../models/ChatMembership.js";
 import ChatRoom from "../models/ChatRoom.js";
+import ChatSettings from "../models/ChatSettings.js";
 import User from "../models/userModel.js";
 import Message from "../models/Message.js";
 import AppError from "../utils/errors/AppError.js";
@@ -85,24 +86,32 @@ export async function getChatrooms(req, res) {
 
 export async function createChatroom(req, res) {
     const uid = req.user.uid;
-    const { name } = req.body;
+    const { name, relationshipType, allowedTopics } = req.body;
     if (!name) throw AppError.badRequest('Name is a required field', { code: 'NAME_MISSING' });
 
     // because multiple queries need to be made, start a transaction (to prevent orphan entries)
     const t = await sequelize.transaction();
     try {
+        // 1. create base room
         // only name is customizable, everything else is generated
         const chatroom = await ChatRoom.create({ 
             name,
             lastMsgSent: new Date(Date.now() + 60*1000), // set 1 min grace period into future to keep new chat at top
         }, { transaction: t });
 
-        // add the user as the owner of the room
-        await ChatMembership.create({
-            // the userId + chatId act as a primary key, so there is no new id
-            userId: uid, // the current user
+        // 2. create settings row for the new chatroom (ChatSettings Table)
+        await ChatSettings.create({
             chatId: chatroom.id, // the chatroom's generated id
-            role: 'owner', // give the creater ownership permissions
+            relationshipType: relationshipType || 'Friends', 
+            allowedTopics: allowedTopics || [], 
+            //role: 'owner', // give the creater ownership permissions
+        }, { transaction: t });
+
+        // 3. Add to Membership as 'owner'
+        await ChatMembership.create({
+            userId: uid,
+            chatId: chatroom.id,
+            role: 'owner' 
         }, { transaction: t });
 
         await t.commit(); // commit the transaction
