@@ -80,11 +80,11 @@ io.on('connection', (socket) => {
 
 // start server once everything is attached
 const port = config.SV_PORT;
-// server.listen(port, () => console.log(`Server running on port ${port}`)); // display a server status upon startup
+server.listen(port, () => console.log(`Server running on port ${port}`)); // display a server status upon startup
 
-if (process.env.NODE_ENV !== 'test') {
-    const port = config.SV_PORT;
-    server.listen(port, () => console.log(`Server running on port ${port}`));
-}
+// if (process.env.NODE_ENV !== 'test') {
+//     const port = config.SV_PORT;
+//     server.listen(port, () => console.log(`Server running on port ${port}`));
+// }
 
-export default app; // This allows the test file to see your Express logic
+// export default app; // This allows the test file to see your Express logic

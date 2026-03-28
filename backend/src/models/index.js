@@ -13,7 +13,6 @@ import ChatRoom from "./ChatRoom.js";
 import ChatMembership from "./ChatMembership.js";
 import Message from "./Message.js";
 import ChatSettings from "./ChatSettings.js";
-import BannedUser from "./BannedUser.js";
 import GlobalQuestion from "./GlobalQuestion.js";
 
 // define associations after all models are imported
@@ -57,17 +56,6 @@ export function initModels() {
         onDelete: "CASCADE" 
     });
     ChatSettings.belongsTo(ChatRoom, { foreignKey: "chatId" });
-
-    // Ban Management 
-    ChatRoom.hasMany(BannedUser, { 
-        foreignKey: "chatId", 
-        as: "bannedUsers",
-        onDelete: "CASCADE" 
-    });
-    BannedUser.belongsTo(ChatRoom, { foreignKey: "chatId" });
-
-    User.hasMany(BannedUser, { foreignKey: "userId", onDelete: "CASCADE" });
-    BannedUser.belongsTo(User, { foreignKey: "userId" });
 
     // Messages & History 
     // foreignKey "chat_id" to match Message.js
