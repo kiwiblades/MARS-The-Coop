@@ -40,12 +40,22 @@ const DailyQuestion = sequelize.define('DailyQuestion', {
         defaultValue: false,
         allowNull: false,
     },
+    // tracks how many times the daily q attempted to send (for retry limiting)
+    deliveryAttempts: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
+    // when the daily q last attempted to send, so we can gauge when to retrigger
+    lastAttemptAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
 }, {
     tableName: 'dailyquestion',
     timestamps: true,
     indexes: [
         // enforce one question per room per day
-        { unique: true, field: ['chatId', date] }
+        { unique: true, fields: ['chatId', 'date'] }
     ]
 });
 
