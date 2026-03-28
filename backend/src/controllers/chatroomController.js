@@ -85,7 +85,7 @@ export async function getChatrooms(req, res) {
 
 export async function createChatroom(req, res) {
     const uid = req.user.uid;
-    const { name } = req.body;
+    const { name, relationshipType, allowedTopics } = req.body;
     if (!name) throw AppError.badRequest('Name is a required field', { code: 'NAME_MISSING' });
 
     // because multiple queries need to be made, start a transaction (to prevent orphan entries)
@@ -94,6 +94,8 @@ export async function createChatroom(req, res) {
         // only name is customizable, everything else is generated
         const chatroom = await ChatRoom.create({ 
             name,
+            relationshipType,
+            allowedTopics,
             lastMsgSent: new Date(Date.now() + 60*1000), // set 1 min grace period into future to keep new chat at top
         }, { transaction: t });
 
@@ -102,7 +104,16 @@ export async function createChatroom(req, res) {
             // the userId + chatId act as a primary key, so there is no new id
             userId: uid, // the current user
             chatId: chatroom.id, // the chatroom's generated id
+            relationshipType: relationshipType || 'Friends', 
+            allowedTopics: allowedTopics || [], 
             role: 'owner', // give the creater ownership permissions
+        }, { transaction: t });
+
+        // Add to Membership as 'owner'
+        await ChatMembership.create({
+            userId: uid,
+            chatId: chatroom.id,
+            role: 'owner' 
         }, { transaction: t });
 
         await t.commit(); // commit the transaction
