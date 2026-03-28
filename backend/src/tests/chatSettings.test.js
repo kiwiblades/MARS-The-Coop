@@ -24,7 +24,10 @@ describe('Sprint 3: Chat Management & Persistence', () => {
                 username: moniqueData.username, password: moniqueData.password 
             });
             moniqueToken = moniqueLogin.body.accessToken;
-
+        } catch (error) {
+            console.error("Setup failed:", error);
+            throw error;
+        }
     });
 
     afterAll(async () => {
