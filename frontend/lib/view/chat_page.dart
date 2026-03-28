@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/services/message_service.dart';
@@ -42,6 +43,14 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   StreamSubscription<Message>? _messageSubscription;
 
+  // prompt state
+  final TextEditingController _promptAnswerController = TextEditingController();
+  bool _showPromptModal = false;
+  bool _hasAnsweredToday = false;
+  String? _todaysPromptQuestion;
+  bool _canSubmitPrompt = false;
+  bool _isSubmittingPrompt = false;
+
   List<Message> _messages = [];
   bool _hasMore = true;
   User? _currentUser;
@@ -51,10 +60,16 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     final apiClient = ApiClient();
     _userService = UserService(api: apiClient);
-  
-    // fetch current user first
+
     _loadCurrentUser();
     _setupScrollListener();
+
+    // listen for prompt answer changes
+    _promptAnswerController.addListener(() {
+      setState(() {
+        _canSubmitPrompt = _promptAnswerController.text.trim().isNotEmpty;
+      });
+    });
   }
 
   Future<void> _loadCurrentUser() async {
@@ -79,6 +94,8 @@ class _ChatPageState extends State<ChatPage> {
         _scrollToBottom();
       });
 
+      // check if user needs to answer today's prompt
+      await _checkTodaysPrompt();
       // error listener
       _chatController.onMessageError().listen((e) {
         if (!mounted) return; // if widget was disposed
@@ -87,7 +104,7 @@ class _ChatPageState extends State<ChatPage> {
         );
       });
 
-      // load chat data with the current user
+      // load chat data
       _loadChatData();
     } catch (e) {
       print('Failed to load current user: $e');
@@ -97,9 +114,54 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  Future<void> _checkTodaysPrompt() async {
+    try {
+      // TODO: API call
+      // for now, using mock data
+      setState(() {
+        _todaysPromptQuestion = "What's your favorite memory from this week?";
+        _hasAnsweredToday = false; // Set to true when user has answered
+        _showPromptModal = !_hasAnsweredToday;
+      });
+    } catch (e) {
+      print('Failed to check prompt: $e');
+    }
+  }
+
+  Future<void> _submitPromptAnswer() async {
+    final answerText = _promptAnswerController.text.trim();
+    if (answerText.isEmpty) return;
+
+    setState(() {
+      _isSubmittingPrompt = true;
+    });
+
+    try {
+      // TODO: API call
+
+      // simulate API call
+      await Future.delayed(Duration(seconds: 1));
+
+      setState(() {
+        _showPromptModal = false;
+        _hasAnsweredToday = true;
+        _isSubmittingPrompt = false;
+      });
+
+      _promptAnswerController.clear();
+    } catch (e) {
+      setState(() {
+        _isSubmittingPrompt = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to submit answer: $e')));
+    }
+  }
+
   void _setupScrollListener() {
     _scrollController.addListener(() {
-      // load more messages when scrolling to top
       if (_scrollController.position.pixels == 0 &&
           _hasMore &&
           !_model.isLoading) {
@@ -117,11 +179,8 @@ class _ChatPageState extends State<ChatPage> {
       _model.loadError = null;
     });
 
-    // load chat info and messages
-    // final infoResult = await _chatController.loadChatInfo();
     final messagesResult = await _chatController.loadMessages();
 
-    //if (infoResult['success'] && messagesResult['success']) {
     if (messagesResult['success']) {
       setState(() {
         _messages = messagesResult['messages'];
@@ -131,7 +190,6 @@ class _ChatPageState extends State<ChatPage> {
       _scrollToBottom();
     } else {
       setState(() {
-        // _model.loadError = infoResult['error'] ?? messagesResult['error'];
         _model.loadError = messagesResult['error'];
         _model.isLoading = false;
       });
@@ -172,7 +230,6 @@ class _ChatPageState extends State<ChatPage> {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
-    // clear input field immediately
     _messageController.clear();
 
     // send message, no need to await. server broadcasts back to the room
@@ -185,7 +242,6 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {});
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
-    //   _chatController.sendTypingIndicator(isTyping);
     }
   }
 
@@ -240,6 +296,7 @@ class _ChatPageState extends State<ChatPage> {
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
+    _promptAnswerController.dispose();
     super.dispose();
   }
 
@@ -247,31 +304,188 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('images/woodGrainTexture.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: _model.isLoading
-                    ? Center(child: CircularProgressIndicator())
-                    : _model.loadError != null
-                    ? _buildErrorView()
-                    : _buildMessageList(),
+      body: Stack(
+        children: [
+          // main chat content
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('images/woodGrainTexture.png'),
+                fit: BoxFit.cover,
               ),
-              _buildInputArea(),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: _model.isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : _model.loadError != null
+                        ? _buildErrorView()
+                        : _buildMessageList(),
+                  ),
+                  _buildInputArea(),
+                ],
+              ),
+            ),
+          ),
+
+          // prompt modal overlay
+          if (_showPromptModal) _buildPromptModal(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPromptModal() {
+    return Stack(
+      children: [
+        // blurred background
+        BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(color: Colors.black.withOpacity(0.3)),
+        ),
+
+        // prompt card
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Tab sticking out above the card
+              Padding(
+                padding: EdgeInsets.only(left: AppSpacing.sm),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(AppBorderRadius.md),
+                      topRight: Radius.circular(AppBorderRadius.md),
+                    ),
+                    border: Border(
+                      left: BorderSide(color: AppColors.border, width: 1),
+                      top: BorderSide(color: AppColors.border, width: 1),
+                      right: BorderSide(color: AppColors.border, width: 1),
+                    ),
+                  ),
+                  child: Text(
+                    'Daily Question',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineMedium?.copyWith(fontSize: 16),
+                  ),
+                ),
+              ),
+
+              // main card
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  left: AppSpacing.md,
+                  right: AppSpacing.md,
+                  bottom: AppSpacing.md,
+                  top: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // question text
+                      Text(
+                        _todaysPromptQuestion ?? 'Loading question...',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(fontSize: 20),
+                      ),
+                      SizedBox(height: AppSpacing.md),
+
+                      // input row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _promptAnswerController,
+                              autofocus: true,
+                              maxLength: 500,
+                              decoration: InputDecoration(
+                                hintText: 'Type your answer here...',
+                                hintStyle: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontStyle: FontStyle.italic),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppBorderRadius.lg,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: AppColors.border,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppBorderRadius.lg,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: AppColors.border,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppBorderRadius.lg,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                counterText: '',
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.sm),
+
+                          // send button
+                          IconButton(
+                            icon: _isSubmittingPrompt
+                                ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primary,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(Icons.send),
+                            color: _canSubmitPrompt
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                            onPressed: _canSubmitPrompt && !_isSubmittingPrompt
+                                ? _submitPromptAnswer
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                
+              ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -405,14 +619,13 @@ class _ChatPageState extends State<ChatPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!message.isSentByCurrentUser) ...[
-            // Show avatar only for first message in group
             isFirstInGroup
                 ? CircleAvatar(
                     radius: 16,
                     backgroundImage: AssetImage(profileImage),
                     backgroundColor: Colors.transparent,
                   )
-                : SizedBox(width: 32), // Placeholder space for alignment
+                : SizedBox(width: 32),
             SizedBox(width: AppSpacing.sm),
           ],
           Flexible(
@@ -421,7 +634,6 @@ class _ChatPageState extends State<ChatPage> {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                // Show username only for first message in group
                 if (!message.isSentByCurrentUser && isFirstInGroup)
                   Padding(
                     padding: EdgeInsets.only(bottom: 4),
