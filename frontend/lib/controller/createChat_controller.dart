@@ -10,13 +10,13 @@ class CreateChatController {
   //name validator
   String? chatNameValidator(String? value) {
     final RegExp validInput = RegExp(r'^[ a-zA-Z0-9@$!%*?&]+$');
-    if(value == null || value.isEmpty) {
+    if (value == null || value.isEmpty) {
       return 'Please enter name';
     }
-    if(value.length > 20) {
+    if (value.length > 20) {
       return 'Chat name cannot be greater than 20 characters';
     }
-    if(!validInput.hasMatch(value)) {
+    if (!validInput.hasMatch(value)) {
       return 'Only letters, numbers, spaces, and @\$!%*?& allowed';
     }
 
@@ -27,10 +27,33 @@ class CreateChatController {
   void onPressCreate() async {
     final form = state.formKey.currentState;
 
-    if(form != null && form.validate()) {
+    bool isValid = form != null && form.validate(); //used to fam
+
+    // dropdown must be manually validated because it does not have the validator option
+    if (state.selectedRelationship == null) {
+      state.callSetState(() {
+        state.relationshipError = 'Please select a relationship type';
+      });
+      isValid = false;
+    } else { //reset to null if it validates
+      state.callSetState(() {
+        state.relationshipError = null;
+      });
+    }
+
+    if (!isValid) return;
+
+    
+
       print('validation passed');
       try {
-        final chatroom = await chatroomService.createChatroom(state.chatroomNameController.text);
+        //TODO: edit createChatroom to take: name(state.chatroomNameController), 
+        //relationship type(state.selectedRelationship), 
+        //fine-grain control one/off(state.fineGrainControlSwitch), 
+        //and question preferences (state.selectedQuestionTypes and selectedQuestionTopics) all relevant values are in "form controllers/values" section
+        final chatroom = await chatroomService.createChatroom(
+          state.chatroomNameController.text,
+        );
         Navigator.pop(state.context); // back to invite screen
         Navigator.pop(state.context); // back to mail screen
         showCodePopup(state.context, chatroom.inviteCode);
@@ -38,9 +61,7 @@ class CreateChatController {
         print('failed to create chatroom: $e');
         // TODO: dispaly error
       }
-    }
 
     print('create pressed');
   }
-
 }
