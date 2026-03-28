@@ -37,6 +37,7 @@ class _ChatPageState extends State<ChatPage> {
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  List<PromptQASection> _promptSections = [];
 
   // prompt state
   final TextEditingController _promptAnswerController = TextEditingController();
@@ -124,13 +125,67 @@ class _ChatPageState extends State<ChatPage> {
       // simulate API call
       await Future.delayed(Duration(seconds: 1));
 
+      // mock response
+      final mockResponses = [
+        {
+          'username': 'Alice',
+          'pigeonId': 1,
+          'answer': 'Going to the beach with friends',
+          'userId': 'user1',
+        },
+        {
+          'username': 'Bob',
+          'pigeonId': 2,
+          'answer': 'Finishing my project',
+          'userId': 'user2',
+        },
+        {
+          'username': _currentUser!.username,
+          'pigeonId': _currentUser!.pigeonId,
+          'answer': answerText,
+          'userId': _currentUser!.uid,
+        },
+      ];
+
+      List<String> answerMessageIds = [];
+
       setState(() {
+        // Add each answer as a chat message
+        for (var response in mockResponses) {
+          final messageId =
+              'prompt_${DateTime.now().millisecondsSinceEpoch}_${response['userId']}';
+          answerMessageIds.add(messageId);
+
+          _messages.add(
+            Message(
+              id: messageId,
+              senderId: response['userId'] as String,
+              senderUsername: response['username'] as String,
+              senderPigeonId: response['pigeonId'] as int,
+              content: response['answer'] as String,
+              timestamp: DateTime.now(),
+              isSentByCurrentUser: response['userId'] == _currentUser!.uid,
+            ),
+          );
+        }
+
+        // create prompt section
+        _promptSections.add(
+          PromptQASection(
+            questionId: 'q_${DateTime.now().millisecondsSinceEpoch}',
+            questionText: _todaysPromptQuestion!,
+            askedAt: DateTime.now(),
+            answerMessageIds: answerMessageIds,
+          ),
+        );
+
         _showPromptModal = false;
         _hasAnsweredToday = true;
         _isSubmittingPrompt = false;
       });
 
       _promptAnswerController.clear();
+      _scrollToBottom();
     } catch (e) {
       setState(() {
         _isSubmittingPrompt = false;
@@ -357,13 +412,13 @@ class _ChatPageState extends State<ChatPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Tab sticking out above the card
+              // tab
               Padding(
-                padding: EdgeInsets.only(left: AppSpacing.sm),
+                padding: EdgeInsets.only(left: AppSpacing.sm, right: 160),
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.background,
@@ -377,111 +432,123 @@ class _ChatPageState extends State<ChatPage> {
                       right: BorderSide(color: AppColors.border, width: 1),
                     ),
                   ),
-                  child: Text(
-                    'Daily Question',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.headlineMedium?.copyWith(fontSize: 16),
-                  ),
-                ),
-              ),
 
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, size: 20),
+                        padding: EdgeInsets.symmetric(),
+                        constraints: BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showPromptModal = false;
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                      SizedBox(width: AppSpacing.xs),
+                      Text(
+                        'Daily Question',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.headlineMedium?.copyWith(fontSize: 14),
+                      ),
+                    ],
+                  ), // Close Row
+                ), // Close Container
+              ), // Close Padding
               // main card
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
                   left: AppSpacing.md,
                   right: AppSpacing.md,
-                  bottom: AppSpacing.md,
+                  bottom: AppSpacing.lg,
                   top: AppSpacing.md,
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // question text
-                      Text(
-                        _todaysPromptQuestion ?? 'Loading question...',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge?.copyWith(fontSize: 20),
-                      ),
-                      SizedBox(height: AppSpacing.md),
+                decoration: BoxDecoration(color: AppColors.background),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // question text
+                    Text(
+                      _todaysPromptQuestion ?? 'Loading question...',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(fontSize: 20),
+                    ),
+                    SizedBox(height: AppSpacing.md),
 
-                      // input row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _promptAnswerController,
-                              autofocus: true,
-                              maxLength: 500,
-                              decoration: InputDecoration(
-                                hintText: 'Type your answer here...',
-                                hintStyle: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontStyle: FontStyle.italic),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppBorderRadius.lg,
-                                  ),
-                                  borderSide: BorderSide(
-                                    color: AppColors.border,
-                                  ),
+                    // input row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _promptAnswerController,
+                            autofocus: true,
+                            maxLength: 500,
+                            decoration: InputDecoration(
+                              hintText: 'Type your answer here...',
+                              hintStyle: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(fontStyle: FontStyle.italic),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppBorderRadius.lg,
                                 ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppBorderRadius.lg,
-                                  ),
-                                  borderSide: BorderSide(
-                                    color: AppColors.border,
-                                  ),
+                                borderSide: BorderSide(color: AppColors.border),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppBorderRadius.lg,
                                 ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppBorderRadius.lg,
-                                  ),
-                                  borderSide: BorderSide(
-                                    color: AppColors.primary,
-                                    width: 2,
-                                  ),
+                                borderSide: BorderSide(color: AppColors.border),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppBorderRadius.lg,
                                 ),
-                                counterText: '',
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.md,
-                                  vertical: AppSpacing.sm,
+                                borderSide: BorderSide(
+                                  color: AppColors.primary,
+                                  width: 2,
                                 ),
+                              ),
+                              counterText: '',
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                                vertical: AppSpacing.sm,
                               ),
                             ),
                           ),
-                          SizedBox(width: AppSpacing.sm),
+                        ),
+                        SizedBox(width: AppSpacing.sm),
 
-                          // send button
-                          IconButton(
-                            icon: _isSubmittingPrompt
-                                ? SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: AppColors.primary,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Icon(Icons.send),
-                            color: _canSubmitPrompt
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                            onPressed: _canSubmitPrompt && !_isSubmittingPrompt
-                                ? _submitPromptAnswer
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                
+                        // send button
+                        IconButton(
+                          icon: _isSubmittingPrompt
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primary,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(Icons.send),
+                          color: _canSubmitPrompt
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          onPressed: _canSubmitPrompt && !_isSubmittingPrompt
+                              ? _submitPromptAnswer
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -553,35 +620,175 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildMessageList() {
-    if (_messages.isEmpty) {
-      return Center(
-        child: Text(
-          'No messages yet. Start the conversation!',
-          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-        ),
-      );
-    }
+  bool _shouldShowPromptResponses() {
+    return _hasAnsweredToday && _promptSections.isNotEmpty;
+  }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.all(AppSpacing.md),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) {
-        final message = _messages[index];
-        final showTimestamp = _shouldShowTimestamp(index);
-        final isFirstInGroup = _isFirstInGroup(index);
+  Widget _buildPromptResponsesSection() {
+    if (_promptSections.isEmpty) return SizedBox.shrink();
 
-        return Column(
-          children: [
-            _buildMessageBubble(message, isFirstInGroup),
-            if (showTimestamp) _buildTimestamp(message.timestamp),
-            SizedBox(height: AppSpacing.sm),
-          ],
-        );
-      },
+    final section = _promptSections.last;
+
+    return Container(
+      margin: EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppBorderRadius.lg),
+                topRight: Radius.circular(AppBorderRadius.lg),
+              ),
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    section.questionText,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(AppSpacing.sm),
+            child: Column(
+              children: section.answerMessageIds.map((messageId) {
+                final message = _messages.firstWhere((m) => m.id == messageId);
+                final pigeon = message.senderPigeonId != null
+                    ? Pigeon.getById(message.senderPigeonId!)
+                    : null;
+                final profileImage =
+                    pigeon?.profile ??
+                    'images/pigeonProfile/defaultPigeonProfile.png';
+
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundImage: AssetImage(profileImage),
+                        backgroundColor: Colors.transparent,
+                      ),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.senderUsername,
+                              style: AppTextStyles.label.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              message.content,
+                              style: AppTextStyles.body.copyWith(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _buildPromptDivider() {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
+      height: 1,
+      color: AppColors.border,
+    );
+  }
+
+Widget _buildMessageList() {
+  if (_messages.isEmpty && _promptSections.isEmpty) {
+    return Center(
+      child: Text(
+        'No messages yet. Start the conversation!',
+        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+      ),
+    );
+  }
+
+  // Build a combined list of regular messages and prompt sections
+  List<Widget> items = [];
+  
+  // Get regular messages (excluding prompt answers)
+  final regularMessages = _messages.where((message) {
+    for (var section in _promptSections) {
+      if (section.answerMessageIds.contains(message.id)) {
+        return false;
+      }
+    }
+    return true;
+  }).toList();
+
+  int messageIndex = 0;
+  
+  // Interleave regular messages and prompt sections by timestamp
+  for (int i = 0; i < regularMessages.length; i++) {
+    final message = regularMessages[i];
+    
+    // Check if any prompt section should appear before this message
+    for (var section in _promptSections) {
+      if (section.askedAt.isBefore(message.timestamp) && !items.contains(_buildPromptResponsesSection())) {
+        items.add(_buildPromptResponsesSection());
+      }
+    }
+    
+    final showTimestamp = i == regularMessages.length - 1 ||
+        regularMessages[i + 1].timestamp
+                .difference(message.timestamp)
+                .inMinutes >=
+            1;
+    
+    final isFirstInGroup = i == 0 ||
+        message.senderId != regularMessages[i - 1].senderId;
+
+    items.add(Column(
+      children: [
+        _buildMessageBubble(message, isFirstInGroup),
+        if (showTimestamp) _buildTimestamp(message.timestamp),
+        SizedBox(height: AppSpacing.sm),
+      ],
+    ));
+  }
+  
+  // If prompt section hasn't been added yet, add it at the end
+  if (_promptSections.isNotEmpty && !items.any((item) => item is Container)) {
+    items.add(_buildPromptResponsesSection());
+  }
+
+  return ListView.builder(
+    controller: _scrollController,
+    padding: EdgeInsets.all(AppSpacing.md),
+    itemCount: items.length,
+    itemBuilder: (context, index) => items[index],
+  );
+}
 
   bool _shouldShowTimestamp(int index) {
     if (index == _messages.length - 1) return true;
@@ -765,6 +972,37 @@ class _ChatPageState extends State<ChatPage> {
                 : _sendMessage,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPromptHeader(String question) {
+    return Center(
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(AppBorderRadius.md),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.question_answer, color: AppColors.primary, size: 20),
+            SizedBox(height: 4),
+            Text(
+              question,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

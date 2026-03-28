@@ -37,6 +37,7 @@ class Message {
   }
 }
 
+
 class ChatGroup {
   final dynamic id;
   final String name;
@@ -63,4 +64,18 @@ class ChatGroup {
         : null,
     );
   }
+}
+
+class PromptQASection {
+  final String questionId;
+  final String questionText;
+  final DateTime askedAt;
+  final List<String> answerMessageIds; // IDs of messages that are answers
+
+  PromptQASection({
+    required this.questionId,
+    required this.questionText,
+    required this.askedAt,
+    required this.answerMessageIds,
+  });
 }

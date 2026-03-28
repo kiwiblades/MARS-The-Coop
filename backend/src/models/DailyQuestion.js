@@ -45,7 +45,7 @@ const DailyQuestion = sequelize.define('DailyQuestion', {
     timestamps: true,
     indexes: [
         // enforce one question per room per day
-        { unique: true, field: ['chatId', date] }
+        { unique: true, fields: ['chatId', 'date'] }
     ]
 });
 
