@@ -282,6 +282,9 @@ export async function updateSettings(req, res, next) {
 
     await t.commit();
 
+    // Fetch the updated settings to return to the frontend
+    const updatedSettings = await ChatSettings.findOne({ where: { chatId } });
+
     // 3. BROADCAST via Socket.io
     const io = req.app.get('io');
     io.to(chatId).emit('room_settings_updated', { 
@@ -294,7 +297,7 @@ export async function updateSettings(req, res, next) {
     const settings = await ChatSettings.findOne({ where: { chatId } });
     res.status(200).json({ 
       message: 'Settings updated successfully',
-      settings 
+      settings: updatedSettings
     });
 
   } catch (error) {

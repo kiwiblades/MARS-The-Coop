@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
+import 'package:frontend/services/chatroom_service.dart';
 
 class ChatDetailController {
   ChatDetailScreenState state;
@@ -100,6 +101,7 @@ class ChatDetailController {
     final newRelationshipType = value;
     if (newRelationshipType == null) return;
     //TODO: try catch for editing the relationship type
+    
   }
 
   //relationship type cancel edit
