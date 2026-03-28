@@ -257,3 +257,47 @@ export async function togglePin(req, res) {
 
     return res.status(204).end();
 }
+
+export async function updateSettings(req, res, next) {
+  const { name, relationshipType, allowedTopics } = req.body;
+  const chatId = req.params.id;
+  
+  const t = await sequelize.transaction();
+
+  try {
+    // 1. Update ChatRoom Name
+    if (name) {
+      await ChatRoom.update(
+        { name }, 
+        { where: { id: chatId }, transaction: t }
+      );
+    }
+
+    // 2. Update ChatSettings Table
+    await ChatSettings.update(
+      { relationshipType, allowedTopics },
+      { where: { chatId: chatId }, transaction: t }
+    );
+
+    await t.commit();
+
+    // 3. BROADCAST via Socket.io
+    const io = req.app.get('io');
+    io.to(chatId).emit('room_settings_updated', { 
+      chatId, 
+      newName: name,
+      relationshipType,
+      allowedTopics
+    });
+
+    const settings = await ChatSettings.findOne({ where: { chatId } });
+    res.status(200).json({ 
+      message: 'Settings updated successfully',
+      settings 
+    });
+
+  } catch (error) {
+    if (t) await t.rollback();
+    next(error);
+  }
+}
