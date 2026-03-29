@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/daily_question_service.dart';
 import '../constants.dart';
-import '../services/api_client.dart';
 import '../controller/prompt_controller.dart';
 import '../model/prompt_model.dart';
 import '../model/pigeon.dart';
@@ -8,11 +8,13 @@ import '../model/pigeon.dart';
 class PromptResponseFeed extends StatefulWidget {
   final String chatId;
   final String currentUserId;
+  final DailyQuestionService dqService;
 
   const PromptResponseFeed({
     Key? key,
     required this.chatId,
     required this.currentUserId,
+    required this.dqService,
   }) : super(key: key);
 
   @override
@@ -29,7 +31,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
   void initState() {
     super.initState();
     _controller = DailyPromptController(
-      ApiClient(),
+      widget.dqService,
       widget.chatId,
       widget.currentUserId,
     );
@@ -37,6 +39,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
   }
 
   Future<void> _loadResponses() async {
+    if (!mounted) return;
     setState(() {
       _model.isLoading = true;
       _model.loadError = null;
@@ -44,6 +47,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
 
     final result = await _controller.getTodaysResponses();
 
+    if (!mounted) return;
     if (result['success']) {
       setState(() {
         _responses = result['responses'];
@@ -79,7 +83,9 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
           else if (_responses.isEmpty)
             _buildEmptyState()
           else
-            Expanded(child: _buildResponseList()),
+            Expanded(
+              child: _buildResponseList()
+            ),
         ],
       ),
     );
