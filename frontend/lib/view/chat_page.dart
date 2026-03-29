@@ -7,7 +7,6 @@ import 'package:frontend/services/daily_question_service.dart';
 import 'package:frontend/services/message_service.dart';
 import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/view/prompt_modal.dart';
-import 'package:frontend/view/prompt_response.dart';
 import '../constants.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_model.dart';
@@ -276,22 +275,17 @@ class _ChatPageState extends State<ChatPage> {
 
     if (messagesResult['success']) {
       setState(() {
-        _chatGroup = ChatGroup(
-          id: widget.chatId,
-          name: widget.chatName,
-          memberCount: widget.participants.length + 1,
-          memberAvatars: widget.participants.map((p) {
-            final pigeon = Pigeon.getById(p.pigeonId);
-            return pigeon?.profile ??
-                'images/pigeonProfile/defaultPigeonProfile.png';
-          }).toList(),
-          memberNames: widget.participants.map((p) => p.username).toList(),
-        );
         _messages = messagesResult['messages'];
         _hasMore = messagesResult['hasMore'];
         _model.isLoading = false;
       });
       _scrollToBottom();
+      if (_hasAnsweredToday) await _loadPromptSection();
+    } else {
+      setState(() {
+        _model.loadError = messagesResult['error'];
+        _model.isLoading = false;
+      });
     }
   }
 
@@ -389,6 +383,47 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  Future<void> _loadPromptSection() async {
+    if (!_dqServiceReady || !_hasAnsweredToday || _currentUser == null) return;
+    try {
+      final dqData = await _dqService.getTodaysQuestion(widget.chatId);
+      if (dqData == null) return;
+
+      final answers = await _dqService.getAnswers(widget.chatId);
+      if (answers.isEmpty) return;
+
+      final List<String> answerMessageIds = [];
+      final List<Message> answerMessages = [];
+
+      for (final answer in answers) {
+        final messageId = 'prompt_${answer['id']}';
+        answerMessageIds.add(messageId);
+        answerMessages.add(Message(
+          id:                  messageId,
+          content:             answer['answerText'] as String? ?? '',
+          senderUsername:      answer['username'] as String? ?? 'Unknown',
+          senderId:            answer['userId'] as String? ?? '',
+          timestamp:           DateTime.parse(answer['answeredAt'] as String),
+          isSentByCurrentUser: answer['userId'] == _currentUser!.uid,
+          senderPigeonId:      answer['pigeonId'] as int?,
+        ));
+      }
+
+      setState(() {
+        _messages.addAll(answerMessages);
+        _promptSections.add(PromptQASection(
+          questionId:       dqData.dailyQuestionId,
+          questionText:     dqData.question,
+          askedAt:          DateTime.now(),
+          answerMessageIds: answerMessageIds,
+        ));
+      });
+      _scrollToBottom();
+    } catch (e) {
+      print('[ChatPage] failed to load prompt section: $e');
+    }
+  }
+
   @override
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
@@ -444,6 +479,7 @@ class _ChatPageState extends State<ChatPage> {
               dqService: _dqService,
               onAnswerSubmitted: () {
                 setState(() { _hasAnsweredToday = true; });
+                _loadPromptSection();
               },
             ),
         ],
@@ -675,9 +711,9 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  bool _shouldShowPromptResponses() {
-    return _hasAnsweredToday && _promptSections.isNotEmpty;
-  }
+  // bool _shouldShowPromptResponses() {
+  //   return _hasAnsweredToday && _promptSections.isNotEmpty;
+  // }
 
   Widget _buildPromptResponsesSection() {
     if (_promptSections.isEmpty) return SizedBox.shrink();
@@ -770,13 +806,13 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildPromptDivider() {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
-      height: 1,
-      color: AppColors.border,
-    );
-  }
+  // Widget _buildPromptDivider() {
+  //   return Container(
+  //     margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
+  //     height: 1,
+  //     color: AppColors.border,
+  //   );
+  // }
 
   Widget _buildMessageList() {
     if (_messages.isEmpty && _promptSections.isEmpty) {
@@ -790,6 +826,7 @@ class _ChatPageState extends State<ChatPage> {
 
     // Build a combined list of regular messages and prompt sections
     List<Widget> items = [];
+    bool promptSectionAdded = false; // flag to prevent duplicate prompt section
 
     // Get regular messages (excluding prompt answers)
     final regularMessages = _messages.where((message) {
@@ -801,17 +838,18 @@ class _ChatPageState extends State<ChatPage> {
       return true;
     }).toList();
 
-    int messageIndex = 0;
-
     // Interleave regular messages and prompt sections by timestamp
     for (int i = 0; i < regularMessages.length; i++) {
       final message = regularMessages[i];
 
       // Check if any prompt section should appear before this message
-      for (var section in _promptSections) {
-        if (section.askedAt.isBefore(message.timestamp) &&
-            !items.contains(_buildPromptResponsesSection())) {
-          items.add(_buildPromptResponsesSection());
+      if (!promptSectionAdded && _promptSections.isNotEmpty) {
+        for (var section in _promptSections) {
+          if (section.askedAt.isBefore(message.timestamp)) {
+            items.add(_buildPromptResponsesSection());
+            promptSectionAdded = true;
+            break;
+          }
         }
       }
 
@@ -853,39 +891,30 @@ class _ChatPageState extends State<ChatPage> {
     return Column(
       children: [
         Expanded(child: _buildMessageList()),
-        if (_hasAnsweredToday && _currentUser != null && _dqServiceReady)
-          SizedBox(
-            height: 300,
-            child: PromptResponseFeed(
-              chatId: widget.chatId, 
-              currentUserId: _currentUser!.uid, 
-              dqService: _dqService
-            ),
-          ),
       ],
     );
   }
 
-  bool _shouldShowTimestamp(int index) {
-    if (index == _messages.length - 1) return true;
+  // bool _shouldShowTimestamp(int index) {
+  //   if (index == _messages.length - 1) return true;
 
-    final currentMessage = _messages[index];
-    final nextMessage = _messages[index + 1];
+  //   final currentMessage = _messages[index];
+  //   final nextMessage = _messages[index + 1];
 
-    final timeDifference = nextMessage.timestamp.difference(
-      currentMessage.timestamp,
-    );
-    return timeDifference.inMinutes >= 1;
-  }
+  //   final timeDifference = nextMessage.timestamp.difference(
+  //     currentMessage.timestamp,
+  //   );
+  //   return timeDifference.inMinutes >= 1;
+  // }
 
-  bool _isFirstInGroup(int index) {
-    if (index == 0) return true;
+  // bool _isFirstInGroup(int index) {
+  //   if (index == 0) return true;
 
-    final currentMessage = _messages[index];
-    final previousMessage = _messages[index - 1];
+  //   final currentMessage = _messages[index];
+  //   final previousMessage = _messages[index - 1];
 
-    return currentMessage.senderId != previousMessage.senderId;
-  }
+  //   return currentMessage.senderId != previousMessage.senderId;
+  // }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
     final pigeon = message.senderPigeonId != null
@@ -1052,34 +1081,34 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildPromptHeader(String question) {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
-        padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(AppBorderRadius.md),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(Icons.question_answer, color: AppColors.primary, size: 20),
-            SizedBox(height: 4),
-            Text(
-              question,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildPromptHeader(String question) {
+  //   return Center(
+  //     child: Container(
+  //       margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
+  //       padding: EdgeInsets.symmetric(
+  //         horizontal: AppSpacing.md,
+  //         vertical: AppSpacing.sm,
+  //       ),
+  //       decoration: BoxDecoration(
+  //         color: AppColors.primary.withOpacity(0.2),
+  //         borderRadius: BorderRadius.circular(AppBorderRadius.md),
+  //         border: Border.all(color: AppColors.border),
+  //       ),
+  //       child: Column(
+  //         children: [
+  //           Icon(Icons.question_answer, color: AppColors.primary, size: 20),
+  //           SizedBox(height: 4),
+  //           Text(
+  //             question,
+  //             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  //               fontSize: 14,
+  //               fontWeight: FontWeight.w600,
+  //             ),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 }
