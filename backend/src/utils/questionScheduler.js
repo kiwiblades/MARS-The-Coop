@@ -104,8 +104,8 @@ async function attemptDelivery(io, dailyQuestion, question) {
     });
 
     // simulate failure for testing
-    console.log(`[questionScheduler] simulated failure for room ${dailyQuestion.chatId}`);
-    throw new Error('Simulated delivery failure');
+    // console.log(`[questionScheduler] simulated failure for room ${dailyQuestion.chatId}`);
+    // throw new Error('Simulated delivery failure');
 
     console.log(`[questionScheduler] emitting to room: "${dailyQuestion.chatId}"`);
     io.to(dailyQuestion.chatId).emit('daily_question', {
