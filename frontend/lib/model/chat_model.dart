@@ -37,30 +37,16 @@ class Message {
   }
 }
 
-class ChatGroup {
-  final dynamic id;
-  final String name;
-  final int memberCount;
-  final List<String> memberAvatars;
-  final List<String>? memberNames;
+class PromptQASection {
+  final String questionId;
+  final String questionText;
+  final DateTime askedAt;
+  final List<String> answerMessageIds; // IDs of messages that are answers
 
-  ChatGroup({
-    required this.id,
-    required this.name,
-    required this.memberCount,
-    required this.memberAvatars,
-    this.memberNames,
+  PromptQASection({
+    required this.questionId,
+    required this.questionText,
+    required this.askedAt,
+    required this.answerMessageIds,
   });
-
-  factory ChatGroup.fromJson(Map<String, dynamic> json) {
-    return ChatGroup(
-      id: json['id'],
-      name: json['name'] ?? 'Unnamed Group',
-      memberCount: json['memberCount'] ?? 0,
-      memberAvatars: List<String>.from(json['memberAvatars'] ?? []),
-      memberNames: json['memberNames'] != null   
-        ? List<String>.from(json['memberNames'])
-        : null,
-    );
-  }
 }

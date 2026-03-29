@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/view/chat_page.dart';
 import 'package:frontend/view/createChat_screen.dart';
 
 class CreateChatController {
@@ -51,12 +52,25 @@ class CreateChatController {
         //relationship type(state.selectedRelationship), 
         //fine-grain control one/off(state.fineGrainControlSwitch), 
         //and question preferences (state.selectedQuestionTypes and selectedQuestionTopics) all relevant values are in "form controllers/values" section
-        final chatroom = await chatroomService.createChatroom(
-          state.chatroomNameController.text,
+        final chatroom = await chatroomService.createChatroom(state.chatroomNameController.text);
+        Navigator.pushAndRemoveUntil( // remove the create chat and join chat pages from the stack
+          state.context,
+          MaterialPageRoute(
+            builder: (_) => ChatPage( // jump to the new chat page
+              chatId: chatroom.id,
+              chatName: chatroom.name,
+              participants: const [],
+              membership: 'owner',
+              chatroomService: chatroomService,
+            ),
+          ),
+          (route) => route.settings.name == '/mailScreen', // keep mail screen on the stack
         );
-        Navigator.pop(state.context); // back to invite screen
-        Navigator.pop(state.context); // back to mail screen
-        showCodePopup(state.context, chatroom.inviteCode);
+
+        // delay invite code popup so there's time to navigate to the chatroom
+        Future.delayed(const Duration(milliseconds: 100), () {
+          showCodePopup(state.context, chatroom.inviteCode);
+        });
       } catch (e) {
         print('failed to create chatroom: $e');
         // TODO: dispaly error

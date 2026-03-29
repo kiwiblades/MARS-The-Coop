@@ -57,6 +57,7 @@ class AppTextStyles {
 }
 
 class AppSpacing {
+  static const double xs = 1.0;
   static const double sm = 10.0;
   static const double md = 20.0;
   static const double lg = 40.0;

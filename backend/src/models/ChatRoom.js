@@ -22,7 +22,13 @@ const ChatRoom = sequelize.define('ChatRoom', {
     lastMsgSent: {
         type: DataTypes.DATE,
         allowNull: true,
-    }
+    },
+    // a room without recent question answers is marked as inactive
+    isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true, // new rooms start as active
+        allowNull: false,
+    },
 }, {
     tableName: 'chatroom',
     timestamps: true,
