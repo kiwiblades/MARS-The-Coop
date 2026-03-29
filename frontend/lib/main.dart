@@ -5,7 +5,6 @@ import 'package:frontend/services/token_manager.dart';
 import 'package:frontend/view/addChat_screen.dart';
 import 'package:frontend/view/auth_check.dart';
 import 'package:frontend/view/app_shell.dart';
-import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/view/createChat_screen.dart';
 import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/mycoop_screen.dart';

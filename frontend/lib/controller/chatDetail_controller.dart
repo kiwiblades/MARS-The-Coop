@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/view/mail_screen.dart';
 
 class ChatDetailController {
   ChatDetailScreenState state;
@@ -359,11 +360,13 @@ class ChatDetailController {
 
   Future<void> deleteChat() async {
     print('delete chat called');
-    //TODO (rye): delete chat functionality
     try {
       await chatroomService.deleteChatroom(_chatId);
       // Navigate back to mail screen
-      Navigator.of(state.context).popUntil((route) => route.isFirst);
+      Navigator.of(state.context).pushNamedAndRemoveUntil(
+        MailScreen.routeName,
+        (route) => false, // remove everything below too
+      );
     } catch (e) {
       print('Delete chat failed: $e');
     }
@@ -387,11 +390,13 @@ class ChatDetailController {
 
   Future<void> leaveChat() async {
     print('leave chat called');
-    //TODO (rye): BUGFIX leave implementation
     try {
       await chatroomService.leaveChatroom(_chatId);
       // Pop twice (back to main mail screen)
-      Navigator.of(state.context).popUntil((route) => route.isFirst);
+      Navigator.of(state.context).pushNamedAndRemoveUntil(
+        MailScreen.routeName,
+        (route) => false
+      );
     } catch (e) {
       print('Leave chat failed: $e');
     }
