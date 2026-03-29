@@ -11,18 +11,18 @@ class ChatDetailController {
   //TODO: chat needs to be fetched for currentChat in view and also to set all the model editing values to what they are already
   // Helper to get current chat ID
   String get _chatId => state.model.currentChatroom!.id;
-
+  
   // INITIALIZATION: Called from the View's initState to sync model with existing data
   void init(Chatroom chatroom) {
     state.model.currentChatroom = chatroom;
     state.callSetState(() {
       // Set initial values for the relationship dropdown
       state.model.selectedRelationshipType = RelationshipType.values.firstWhere(
-        (e) => e.name.toLowerCase() == chatroom.relationshipType.toLowerCase(),
+        (e) => e.name.toLowerCase() == chatroom.relationshipType.name.toLowerCase(),
         orElse: () => RelationshipType.friends,
       );
       // Sync fine grain control state
-      state.model.fineGrainControlEdit = chatroom.allowedTopics.isNotEmpty;
+      state.model.fineGrainControlEdit = chatroom.allowedTopics.isNotEmpty || chatroom.allowedTypes.isNotEmpty;
     });
   }
 
@@ -42,6 +42,9 @@ class ChatDetailController {
 
     if (form != null && form.validate()) {
       form.save();
+      state.callSetState(() {
+        state.model.isEditingChatName = false; // close the form once finished
+      });
     }
     print('chat name save clicked');
   }
@@ -51,9 +54,31 @@ class ChatDetailController {
     final newChatName = value?.trim();
     if (newChatName == null || newChatName.isEmpty) return;
 
-    //TODO (rye): try catch for editing the chat's name
+    // immediately update local model to reflect changes
+    // TODO: there's probably a better way to do this, fix later
+    
+    final updated = Chatroom(
+      id:                      state.model.currentChatroom!.id,
+      name:                    newChatName,
+      inviteCode:              state.model.currentChatroom!.inviteCode,
+      participants:            state.model.currentChatroom!.participants,
+      pinned:                  state.model.currentChatroom!.pinned,
+      membership:              state.model.currentChatroom!.membership,
+      lastSentMessage:         state.model.currentChatroom!.lastSentMessage,
+      lastSentTime:            state.model.currentChatroom!.lastSentTime,
+      relationshipType:        state.model.currentChatroom!.relationshipType,
+      fineGrainControl:        state.model.currentChatroom!.fineGrainControl,
+      allowedTypes:            state.model.currentChatroom!.allowedTypes,
+      allowedTopics:           state.model.currentChatroom!.allowedTopics,
+    );
+    state.callSetState(() {
+      state.model.currentChatroom = updated;
+    });
+
     try {
-      await chatroomService.updateSettings(chatId, newChatName);
+      await chatroomService.updateSettings(chatroomId: _chatId, name: newChatName);
+      // notify parent of the change
+      state.widget.onSettingsChanged?.call(updated);
     } catch (error) {
       print('Error updating chat name: $error');
     }
@@ -122,9 +147,29 @@ class ChatDetailController {
   Future<void> onSaveRelationshipType(RelationshipType? value) async {
     final newRelationshipType = value;
     if (newRelationshipType == null) return;
-    //TODO (rye): try catch for editing the relationship type
+
+    final updated = Chatroom(
+      id:               state.model.currentChatroom!.id,
+      name:             state.model.currentChatroom!.name,
+      inviteCode:       state.model.currentChatroom!.inviteCode,
+      participants:     state.model.currentChatroom!.participants,
+      pinned:           state.model.currentChatroom!.pinned,
+      membership:       state.model.currentChatroom!.membership,
+      lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
+      lastSentTime:     state.model.currentChatroom!.lastSentTime,
+      relationshipType: newRelationshipType, // updated
+      fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+      allowedTypes:     state.model.currentChatroom!.allowedTypes,
+      allowedTopics:    state.model.currentChatroom!.allowedTopics,
+    );
+
+    state.callSetState(() {
+      state.model.currentChatroom = updated;
+      state.model.isEditingRelationshipType = false;
+    });
+
     try {
-      await chatroomService.updateSettings(chatId, newRelationshipType);
+      await chatroomService.updateSettings(chatroomId: _chatId, relationshipType: newRelationshipType.name);
     } catch (error) {
       print('Error updating relationship type: $error');
     }
@@ -161,16 +206,18 @@ class ChatDetailController {
       state.model.questionTopicPreferenceEdits.clear();
       for (var topicName in state.model.currentChatroom!.allowedTopics) {
         final topic = QuestionTopic.values.firstWhere(
-          (t) => t.name.toLowerCase() == topicName.toLowerCase(),
+          (t) => t.name.toLowerCase() == topicName.name.toLowerCase(),
           orElse: () => QuestionTopic.personal,
         );
         state.model.questionTopicPreferenceEdits.add(topic);
       }
+      for (var typeName in state.model.currentChatroom!.allowedTypes) {
+        final type = QuestionType.values.firstWhere(
+          (t) => t.name.toLowerCase() == typeName.name.toLowerCase()
+        );
+        state.model.questionTypePreferenceEdits.add(type);
+      }
     });
-
-    //Test Data
-    state.model.questionTopicPreferenceEdits.add(QuestionTopic.intimacy);
-    state.model.questionTypePreferenceEdits.add(QuestionType.favorite);
   }
 
   //fine grain control toggle
@@ -213,7 +260,7 @@ class ChatDetailController {
     state.callSetState(() {
       state.model.isEditingQuestionPreferences = false;
     });
-    //TODO (rye): call the fine grain control save for backend
+
     try {
       fineGrainControlEdit(
         state.model.fineGrainControlEdit,
@@ -231,14 +278,31 @@ class ChatDetailController {
     List<QuestionType> types,
     List<QuestionTopic> topics,
   ) async {
-    //TODO (rye): try catch to update fine grain control on or off and the preferences accordingly
+
+    final updated = Chatroom(
+      id:               state.model.currentChatroom!.id,
+      name:             state.model.currentChatroom!.name,
+      inviteCode:       state.model.currentChatroom!.inviteCode,
+      participants:     state.model.currentChatroom!.participants,
+      pinned:           state.model.currentChatroom!.pinned,
+      membership:       state.model.currentChatroom!.membership,
+      lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
+      lastSentTime:     state.model.currentChatroom!.lastSentTime,
+      relationshipType: state.model.currentChatroom!.relationshipType,
+      fineGrainControl: fineGrainControl,
+      allowedTypes:     types.toSet(),
+      allowedTopics:    topics.toSet(),
+    );
+
+    state.callSetState(() {
+      state.model.currentChatroom = updated;
+    });
+
     try {
       await chatroomService.updateSettings(
-        chatId,
-        null, // No change to chat name
-        fineGrainControl: fineGrainControl,
-        questionTypePreference: types,
-        questionTopicPreference: topics,
+        chatroomId: _chatId,
+        allowedTypes: types.map((t) => t.name).toList(),
+        allowedTopics: topics.map((t) => t.name).toList(),
       );
     } catch (error) {
       print('Error updating fine grain control: $error');

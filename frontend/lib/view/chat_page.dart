@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/services/daily_question_service.dart';
 import 'package:frontend/services/message_service.dart';
 import 'package:frontend/services/socket_client.dart';
+import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/view/prompt_modal.dart';
 import '../constants.dart';
 import '../controller/chat_controller.dart';
@@ -22,6 +24,7 @@ class ChatPage extends StatefulWidget {
   final List<User> participants;
   final String membership;
   final ChatroomService chatroomService;
+  final Chatroom chatroom;
 
   const ChatPage({
     Key? key,
@@ -30,6 +33,7 @@ class ChatPage extends StatefulWidget {
     required this.participants,
     required this.membership,
     required this.chatroomService,
+    required this.chatroom,
   }) : super(key: key);
 
   @override
@@ -44,6 +48,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<PromptQASection> _promptSections = [];
+  late String _chatName;
 
   StreamSubscription<Message>? _messageSubscription;
   // StreamSubscription? _dqSubscription;
@@ -69,6 +74,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     final apiClient = ApiClient();
     _userService = UserService(api: apiClient);
+    _chatName = widget.chatName;
 
     _loadCurrentUser();
     _setupScrollListener();
@@ -676,7 +682,7 @@ class _ChatPageState extends State<ChatPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.chatName,
+                    _chatName,
                     style: AppTextStyles.heading.copyWith(fontSize: 18),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -697,9 +703,21 @@ class _ChatPageState extends State<ChatPage> {
           ),
           //icon button for chat detail screen
           IconButton(
-            onPressed: () => Navigator.pushNamed(context, '/chatDetailScreen'), 
             icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
-          ),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatDetailScreen(
+                  chatroom: widget.chatroom,
+                  onSettingsChanged: (updatedChatroom) {
+                    setState(() {
+                      _chatName = updatedChatroom.name; // when name is changed, reflect upon returning to chat screen
+                    });
+                  }
+                )
+              )
+            )
+          ), 
           // PopupMenuButton<String>(
           //   icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
           //   onSelected: (value) {

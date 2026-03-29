@@ -21,7 +21,12 @@ const ChatSettings = sequelize.define('ChatSettings', {
     type: DataTypes.JSON, 
     defaultValue: [] 
   },
+  allowedTypes: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
 }, {
+  tableName: 'chatsettings',
   timestamps: true
 });
 

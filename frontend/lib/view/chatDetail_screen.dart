@@ -5,10 +5,14 @@ import 'package:frontend/controller/chatDetail_controller.dart';
 import 'package:frontend/model/chatDetail_model.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/profile_model.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/chatroom_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   static const String routeName = '/chatDetailScreen';
-  const ChatDetailScreen({super.key});
+  final Chatroom chatroom;
+  final void Function(Chatroom)? onSettingsChanged;
+  const ChatDetailScreen({super.key, required this.chatroom, this.onSettingsChanged});
 
   @override
   State<StatefulWidget> createState() {
@@ -33,10 +37,11 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void initState() {
-    super
-        .initState(); // TODO (Rye): this is where the current chatroom details will need to be fetched and set to the model, and also all the model editing values will need to be set to what they are in the chatroom so that when the user clicks edit it is already synced up
-    controller = ChatDetailController(this, chatroomService: chatroomService);
+    super.initState();
+    final chatroomService = ChatroomService(api: ApiClient());
     model = ChatDetailModel();
+    controller = ChatDetailController(this, chatroomService: chatroomService);
+    controller.init(widget.chatroom);
   }
 
   void callSetState(fn) => setState(fn);
@@ -83,7 +88,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   children: [
                     Text(
                       //code
-                      currentChat?.inviteCode ?? '<CODE>',
+                      model.currentChatroom?.inviteCode ?? '<CODE>',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 20.0,
                         color: AppColors.darkBrown,
@@ -95,7 +100,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       onPressed: () {
                         //show that the code has been copied
                         Clipboard.setData(
-                          ClipboardData(text: currentChat!.inviteCode),
+                          ClipboardData(text: model.currentChatroom?.inviteCode ?? ''),
                         );
                       },
                       icon: const Icon(
@@ -129,7 +134,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                   labelText: 'Chat Name',
                                   border: OutlineInputBorder(),
                                 ),
-                                initialValue: currentChat?.name ?? '',
+                                initialValue: model.currentChatroom?.name ?? '',
                                 validator: controller.chatNameValidator,
                                 onSaved: controller.onSaveChatName,
                               ),
@@ -155,7 +160,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                         : [
                             Text(
                               //chat name
-                              currentChat?.name ?? '<Chat Name>',
+                              model.currentChatroom?.name ?? '<Chat Name>',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     fontSize: 20.0,
@@ -187,8 +192,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                 const SizedBox(height: 10), //spacer
                 Text(
                   //role
-                  currentChat?.name ??
-                      '<Participant Role>', //TODO: i do not know not user role will be grabbed but currentChat?.name will need to be switched out for whatever returns the current user's chat role
+                  model.currentChatroom?.membership ??
+                      '<Participant Role>',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 20.0,
                     color: AppColors.darkBrown,
@@ -206,9 +211,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   textAlign: TextAlign.left,
                 ),
                 const SizedBox(height: 5), //spacer
-                //TODO: conditional statement for rendering i.e. if(current user is the owner), again i do not know how role will be accesible
                 model.isOwner
-                    ? //test value TODO: replace with correct conditional
+                    ?
                       Form(
                         key: formKeyRelationshipType,
                         child: Row(
@@ -304,8 +308,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                               : [
                                   Text(
                                     //relationship type
-                                    currentChat?.name ??
-                                        '<Relationship Type>', //TODO: replace with currentChat?.relationshipType
+                                    formatEnumName(model.currentChatroom?.relationshipType.name 
+                                      ?? '<Relationship Type>'),
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
                                           fontSize: 20.0,
@@ -331,8 +335,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           const SizedBox(height: 6), //spacer
                           Text(
                             //relationship type
-                            currentChat?.name ??
-                                '<Relationship Type>', //TODO: replace with currentChat?.relationshipType
+                            formatEnumName(model.currentChatroom?.relationshipType.name 
+                              ?? '<Relationship Type>'), 
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontSize: 20.0,
@@ -349,7 +353,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                         .isEditingQuestionPreferences) //just label is not editing
                       Text(
                         /*currentChat.fineGrainControl*/ model
-                                .fineGrainTest //TODO: link actual value
+                                .fineGrainControlEdit
                             ? "Fine-grain Question Control: On"
                             : "Fine-grain Question Control: Off", //label
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -442,8 +446,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 5),
-                                  // ...?currentChat?.questionTypePreferences.map((type) { //TODO
-                                  ...model.questionTypePreferenceTest.map((
+                                  ...(model.currentChatroom?.allowedTypes ?? {}).map((
                                     type,
                                   ) {
                                     return Padding(
@@ -478,8 +481,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 5),
-                                  // ...?currentChat?.questionTopicPreferences.map((topic) { //TODO
-                                  ...model.questionTopicPreferenceTest.map((
+                                  ...(model.currentChatroom?.allowedTopics ?? {}).map((
                                     topic,
                                   ) {
                                     return Padding(

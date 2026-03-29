@@ -62,6 +62,7 @@ class CreateChatController {
               participants: const [],
               membership: 'owner',
               chatroomService: chatroomService,
+              chatroom: chatroom,
             ),
           ),
           (route) => route.settings.name == '/mailScreen', // keep mail screen on the stack

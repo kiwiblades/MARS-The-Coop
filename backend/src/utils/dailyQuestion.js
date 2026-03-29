@@ -4,6 +4,7 @@ import Question from "../models/Question.js"
 import UserDailyAnswer from "../models/UserDailyAnswer.js";
 import ChatRoom from "../models/ChatRoom.js";
 import AppError from "./errors/AppError.js";
+import ChatSettings from "../models/ChatSettings.js";
 
 // helper to return today's date as yyyy-mm-dd
 export function today() {
@@ -27,6 +28,8 @@ export async function pickQuestionForRoom(chatId) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
 
+    const settings = await ChatSettings.findOne({ where: { chatId } });
+
     // find questionIds already used in this room within the thirty day window
     const recentlyUsed = await DailyQuestion.findAll({
         where: {
@@ -37,8 +40,11 @@ export async function pickQuestionForRoom(chatId) {
     });
     const excludedIds = recentlyUsed.map(dq => dq.questionId);
 
-    // TODO: replace preference filter with rool preferences
-    const preferenceFilter = {};
+    const preferenceFilter = {
+        ...(room.relationshipType ? { relationshipType: settings.relationshipType } : {}),
+        ...(room.allowedTopics?.length ? { topics: { [Op.overlap]: settings.allowedTopics } } : {}),
+        ...(room.allowedTypes?.length ? { questionType: { [Op.in]: settings.allowedTypes } } : {}),
+    };
 
     // collect all questions that match the thirty day and preference criteria
     const eligible = await Question.findAll({

@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
         ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),
         AddChatScreen.routeName: (_) => RequireAuth(child: const AddChatScreen()),
         CreateChatScreen.routeName: (_) => RequireAuth(child: const CreateChatScreen()),
-        ChatDetailScreen.routeName: (_) => RequireAuth(child: const ChatDetailScreen()),
+        // ChatDetailScreen.routeName: (_) => RequireAuth(child: const ChatDetailScreen()),
       },
     );
   }

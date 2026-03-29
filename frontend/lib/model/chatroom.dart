@@ -29,13 +29,10 @@ class Chatroom {
   final String membership;
   final String lastSentMessage;
   final String lastSentTime;
-  final RelationshipType
-  relationshipType; //TODO: this is the storage for whether the user has on
-  //fine grain question control, it cannot be uncommented
-  //until the service is updated (but idk how that works)
+  final RelationshipType relationshipType;
   final bool fineGrainControl;
-  final Set<QuestionType> questionTypePreference; //TODO: similar to above
-  final Set<QuestionTopic> questionTopicPreference; //TODO: similar to above
+  final Set<QuestionTopic> allowedTopics;
+  final Set<QuestionType> allowedTypes;
 
   Chatroom({
     required this.id,
@@ -46,9 +43,9 @@ class Chatroom {
     required this.membership,
     required this.lastSentMessage,
     required this.lastSentTime,
-    required this.relationshipType, //TODO
-    required this.fineGrainControl, //TODO
-    required this.questionTypePreference, //TODO
-    required this.questionTopicPreference, //TODO
+    required this.relationshipType,
+    required this.fineGrainControl,
+    required this.allowedTopics,
+    required this.allowedTypes,
   });
 }

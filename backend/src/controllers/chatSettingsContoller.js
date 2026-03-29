@@ -2,7 +2,7 @@ import { ChatRoom, ChatSettings } from '../models/index.js';
 import { sequelize } from '../db/sequelize.js';
 
 export const updateSettings = async (req, res, next) => {
-  const { name, relationshipType, allowedTopics } = req.body;
+  const { name, relationshipType, allowedTopics, allowedTypes } = req.body;
   const chatId = req.params.id;
   const t = await sequelize.transaction();
 
@@ -13,7 +13,7 @@ export const updateSettings = async (req, res, next) => {
     
       // Update Settings Table
         await ChatSettings.update(
-            { relationshipType, allowedTopics },
+            { relationshipType, allowedTopics, allowedTypes },
             { where: { chatId: id }, transaction: t }
         );
 
@@ -25,7 +25,8 @@ export const updateSettings = async (req, res, next) => {
         chatId, 
         newName: name,
         relationshipType,
-        allowedTopics
+        allowedTopics,
+        allowedTypes
       });
     }
 
@@ -33,7 +34,7 @@ export const updateSettings = async (req, res, next) => {
     // Using findOrCreate + update to ensure the row exists
     const settings = await ChatSettings.findOne({ where: { chatId } });
     if (settings) {
-      await settings.update({ relationshipType, allowedTopics });
+      await settings.update({ relationshipType, allowedTopics, allowedTypes });
     }
 
     res.status(200).json({ 

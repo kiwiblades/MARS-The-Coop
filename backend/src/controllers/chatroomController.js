@@ -22,10 +22,12 @@ export async function getChatrooms(req, res) {
                 model: User,
                 as: "participants",
                 attributes: ["uid","username","pigeonId"],
-                through: {
-                    // participant membership fields
-                    attributes: ["role","joinedAt"],
-                },
+                through: { attributes: ["role","joinedAt"] }, // participant membership fields
+            }, {
+                model: ChatSettings,
+                as: "settings",
+                attributes: ["relationshipType","allowedTopics","allowedTypes"],
+                required: false, // left join, so rooms without settings aren't excluded
             }],
         }],
         order: [
@@ -66,6 +68,7 @@ export async function getChatrooms(req, res) {
     const payload = chatrooms.map((m) => {
         // look up the last message for the current chatroom, if one exists
         const lastMessage = lastMessageMap[m.chatId];
+        const settings = m.ChatRoom?.settings;
         return {
             chatroom: m.ChatRoom,
             membership: {
@@ -77,6 +80,11 @@ export async function getChatrooms(req, res) {
             participants: (m.ChatRoom?.participants ?? []).filter((u) => u.uid !== uid),
             lastSentMessage: lastMessage?.content ?? '',
             lastSentTime: lastMessage?.createdAt ?? '',
+            settings: {
+                relationshipType: settings?.relationshipType ?? 'Friends',
+                allowedTopics: settings?.allowedTopics ?? [],
+                allowedTypes: settings?.allowedTypes ?? [],
+            }
         }
     });
 
@@ -86,7 +94,7 @@ export async function getChatrooms(req, res) {
 
 export async function createChatroom(req, res) {
     const uid = req.user.uid;
-    const { name, relationshipType, allowedTopics } = req.body;
+    const { name, relationshipType, allowedTopics, allowedTypes } = req.body;
     if (!name) throw AppError.badRequest('Name is a required field', { code: 'NAME_MISSING' });
 
     // because multiple queries need to be made, start a transaction (to prevent orphan entries)
@@ -100,12 +108,14 @@ export async function createChatroom(req, res) {
         }, { transaction: t });
 
         // 2. create settings row for the new chatroom (ChatSettings Table)
+        console.log('[createChatroom] creating settings for chatId:', chatroom.id);
         await ChatSettings.create({
             chatId: chatroom.id, // the chatroom's generated id
             relationshipType: relationshipType || 'Friends', 
             allowedTopics: allowedTopics || [], 
-            //role: 'owner', // give the creater ownership permissions
+            allowedTypes: allowedTypes || [],
         }, { transaction: t });
+        console.log('[createChatroom] settings created');
 
         // 3. Add to Membership as 'owner'
         await ChatMembership.create({
@@ -260,24 +270,31 @@ export async function togglePin(req, res) {
 }
 
 export async function updateSettings(req, res, next) {
-  const { name, relationshipType, allowedTopics } = req.body;
+  const { name, relationshipType, allowedTopics, allowedTypes } = req.body;
   const chatId = req.params.id;
-  
+
   const t = await sequelize.transaction();
 
   try {
     // 1. Update ChatRoom Name
     if (name) {
+      console.log('[updateSettings] updating chatroom name');
       await ChatRoom.update(
         { name }, 
         { where: { id: chatId }, transaction: t }
       );
     }
 
+    const normalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : str;
+
     // 2. Update ChatSettings Table
-    await ChatSettings.update(
-      { relationshipType, allowedTopics },
-      { where: { chatId: chatId }, transaction: t }
+    console.log('[updateSettings] updating chatroom settings');
+    await ChatSettings.update({ 
+        relationshipType: normalize(relationshipType), 
+        allowedTopics, 
+        allowedTypes 
+    },
+      { where: { chatId }, transaction: t }
     );
 
     await t.commit();
@@ -291,17 +308,17 @@ export async function updateSettings(req, res, next) {
       chatId, 
       newName: name,
       relationshipType,
-      allowedTopics
+      allowedTopics,
+      allowedTypes,
     });
 
-    const settings = await ChatSettings.findOne({ where: { chatId } });
     res.status(200).json({ 
       message: 'Settings updated successfully',
       settings: updatedSettings
     });
 
   } catch (error) {
-    if (t) await t.rollback();
+    await t.rollback();
     next(error);
   }
 }
