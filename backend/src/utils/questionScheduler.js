@@ -68,6 +68,22 @@ async function retryFailedDeliveries(io, todayStr) {
         },
         include: [{ association: 'question' }],
     });
+
+    // log the rooms that hit max retries and are being skipped
+    const maxed = await DailyQuestion.findAll({
+        where: {
+            date: todayStr,
+            wasDelivered: false,
+            deliveryAttempts: { [Op.gte]: MAX_RETRIES },
+        }
+    });
+    if (maxed.length) {
+        console.log(`[questionScheduler] ${maxed.length} room(s) have hit MAX_RETRIES, skipping...`);
+        for (const dq of maxed) {
+            console.log(`[questionScheduler] room ${dq.chatId} - attempts: ${dq.deliveryAttempts}/${MAX_RETRIES}`);
+        }
+    }
+
     if (!failed.length) return; // no failed deliveries
 
     for (const dailyQuestion of failed) {
@@ -86,6 +102,10 @@ async function attemptDelivery(io, dailyQuestion, question) {
         deliveryAttempts: dailyQuestion.deliveryAttempts+1,
         lastAttemptedAt: new Date(),
     });
+
+    // simulate failure for testing
+    console.log(`[questionScheduler] simulated failure for room ${dailyQuestion.chatId}`);
+    throw new Error('Simulated delivery failure');
 
     console.log(`[questionScheduler] emitting to room: "${dailyQuestion.chatId}"`);
     io.to(dailyQuestion.chatId).emit('daily_question', {
@@ -124,10 +144,10 @@ export function startQuestionScheduler(io) {
         // initial dispatch at default time (5am)
         dispatchDailyQuestions(io);
 
-        // retry pass 3 times (for testing, TODO: repeat every 15 mins indefinitely)
-        setTimeout(() => retryFailedDeliveries(io, today()), 15*60*1000);
-        setTimeout(() => retryFailedDeliveries(io, today()), 30*60*1000);
-        setTimeout(() => retryFailedDeliveries(io, today()), 60*60*1000);
+        // retry pass 3 times (for testing, do every 15 secs, TODO: repeat every 15 mins indefinitely)
+        setTimeout(() => retryFailedDeliveries(io, today()), 15*1000);
+        setTimeout(() => retryFailedDeliveries(io, today()), 30*1000);
+        setTimeout(() => retryFailedDeliveries(io, today()), 45*1000);
     }, {
         timezone: config.dailyQuestion.timezone,
     });
