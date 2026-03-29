@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/view/chat_page.dart';
 import 'package:frontend/view/createChat_screen.dart';
+import 'package:frontend/view/mail_screen.dart';
 
 class CreateChatController {
   CreateChatScreenState state;
@@ -60,20 +61,21 @@ class CreateChatController {
             ? state.selectedQuestionTypes.map((t) => t.name).toList()
             : [],
         );
-        Navigator.pushAndRemoveUntil( // remove the create chat and join chat pages from the stack
-          state.context,
-          MaterialPageRoute(
-            builder: (_) => ChatPage( // jump to the new chat page
-              chatId: chatroom.id,
-              chatName: chatroom.name,
-              participants: const [],
-              membership: 'owner',
-              chatroomService: chatroomService,
-              chatroom: chatroom,
+        Navigator.of(state.context)
+          ..pop() // pop createchatscreen
+          ..pop() // pop add chat screen
+          ..push(
+            MaterialPageRoute(
+              builder: (_) => ChatPage( // jump to the new chat page
+                chatId: chatroom.id,
+                chatName: chatroom.name,
+                participants: const [],
+                membership: 'owner',
+                chatroomService: chatroomService,
+                chatroom: chatroom,
+              ),
             ),
-          ),
-          (route) => route.settings.name == '/mailScreen', // keep mail screen on the stack
-        );
+          );
 
         // delay invite code popup so there's time to navigate to the chatroom
         Future.delayed(const Duration(milliseconds: 100), () {

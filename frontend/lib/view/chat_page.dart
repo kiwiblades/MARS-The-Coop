@@ -54,7 +54,7 @@ class _ChatPageState extends State<ChatPage> {
 
   StreamSubscription<Message>? _messageSubscription;
   // StreamSubscription? _dqSubscription;
-  // StreamSubscription? _dqPushSubscription;
+  StreamSubscription? _dqPushSubscription;
   StreamSubscription? _messageErrorSubscription;
   bool _dqServiceReady = false;
 
@@ -113,15 +113,17 @@ class _ChatPageState extends State<ChatPage> {
       // });
 
       // listen for live daily question push if the user has chat open when it runs
-      // _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
-      //   if (!_hasAnsweredToday) {
-      //     setState(() {
-      //       _todaysPromptQuestion = dq.question;
-      //       _dailyQuestionId = dq.dailyQuestionId;
-      //       _showPromptModal = true;
-      //     });
-      //   }
-      // });
+      _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
+        if (!mounted) return;
+        setState(() {
+          _hasAnsweredToday = false;
+          // _todaysPromptQuestion = dq.question;
+          // _dailyQuestionId = dq.dailyQuestionId;
+          // _showPromptModal = true;
+          _promptSections.clear();
+          _messages.removeWhere((m) => m.id.startsWith('prompt_'));
+        });
+      });
 
       setState(() { _currentUser = user; });
 
@@ -437,7 +439,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
     // _dqSubscription?.cancel(); // stop listening for dq
-    // _dqPushSubscription?.cancel();
+    _dqPushSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
