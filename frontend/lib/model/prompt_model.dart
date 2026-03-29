@@ -17,10 +17,10 @@ class DailyPrompt {
 
   factory DailyPrompt.fromJson(Map<String, dynamic> json) {
     return DailyPrompt(
-      id: json['id'],
-      chatId: json['chatId'],
-      questionText: json['questionText'] ?? json['question'] ?? '',
-      date: json['date'],
+      id: json['dailyQuestionId'] as String,
+      chatId: '', // not returned by backend
+      questionText: json['question'] as String,
+      date: json['date'] as String,
       answeredCount: json['answeredCount'] ?? 0,
       hasAnswered: json['hasAnswered'] ?? false,
     );

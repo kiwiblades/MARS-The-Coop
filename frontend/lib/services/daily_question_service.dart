@@ -56,6 +56,11 @@ class DailyQuestionService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getAnswers(String chatId) async {
+    final data = await api.getJsonList('/daily-question/$chatId/answers');
+    return data.map((e) => e as Map<String, dynamic>).toList();
+  }
+
   // --- socket
 
   // stream of incoming daily questions pushed by server, listen so live users get the question the moment it's sent

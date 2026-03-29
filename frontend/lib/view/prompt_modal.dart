@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:frontend/services/daily_question_service.dart';
 import 'dart:ui';
 import '../constants.dart';
-import '../services/api_client.dart';
 import '../controller/prompt_controller.dart';
 import '../model/prompt_model.dart';
 
 class DailyPromptModal extends StatefulWidget {
   final String chatId;
   final String currentUserId;
+  final DailyQuestionService dqService;
   final VoidCallback onAnswerSubmitted;
 
   const DailyPromptModal({
@@ -15,6 +18,7 @@ class DailyPromptModal extends StatefulWidget {
     required this.chatId,
     required this.currentUserId,
     required this.onAnswerSubmitted,
+    required this.dqService,
   }) : super(key: key);
 
   @override
@@ -25,6 +29,7 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
   late final DailyPromptController _controller;
   final DailyPromptModel _model = DailyPromptModel();
   final TextEditingController _answerController = TextEditingController();
+  StreamSubscription? _answerAcceptedSubscription;
   
   DailyPrompt? _prompt;
   bool _canSubmit = false;
@@ -33,7 +38,7 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
   void initState() {
     super.initState();
     _controller = DailyPromptController(
-      ApiClient(),
+      widget.dqService,
       widget.chatId,
       widget.currentUserId,
     );
@@ -43,6 +48,12 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
       setState(() {
         _canSubmit = _answerController.text.trim().isNotEmpty;
       });
+    });
+
+    // listen for server confirmation
+    _answerAcceptedSubscription = widget.dqService.onAnswerAccepted().listen((_) {
+      if (!mounted) return;
+      widget.onAnswerSubmitted();
     });
   }
 
@@ -78,14 +89,11 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
 
     final result = await _controller.submitAnswer(answerText);
 
-    if (result['success']) {
-      widget.onAnswerSubmitted();
-    } else {
+    if (!result['success']) {
       setState(() {
         _model.submitError = result['error'];
         _model.isSubmitting = false;
       });
-      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to submit answer: ${result['error']}')),
       );
@@ -94,6 +102,7 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
 
   @override
   void dispose() {
+    _answerAcceptedSubscription?.cancel();
     _answerController.dispose();
     super.dispose();
   }

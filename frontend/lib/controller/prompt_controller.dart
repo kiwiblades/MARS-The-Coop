@@ -1,24 +1,36 @@
-import '../services/api_client.dart';
+import 'package:frontend/services/daily_question_service.dart';
 import '../model/prompt_model.dart';
 
 class DailyPromptController {
-  final ApiClient _apiClient;
+  final DailyQuestionService _dqService;
   final String chatId;
   final String currentUserId;
+  String? _dailyQuestionId;
 
-  DailyPromptController(this._apiClient, this.chatId, this.currentUserId);
+  DailyPromptController(this._dqService, this.chatId, this.currentUserId);
 
   // get prompt
   Future<Map<String, dynamic>> getTodaysPrompt() async {
     try {
-      // TODO: Backend needs GET /chat/:chatId/daily-prompt endpoint
-      final response = await _apiClient.getJson('/chat/$chatId/daily-prompt');
-      
-      final prompt = DailyPrompt.fromJson(response);
-      
-      return {
-        'success': true,
-        'prompt': prompt,
+      final response = await _dqService.getTodaysQuestion(chatId);
+      if (response == null) {
+        return { 
+          'success': false, 
+          'error': 'No prompt today' 
+        };
+      }
+      _dailyQuestionId = response.dailyQuestionId; // store for submit answer
+      final prompt = DailyPrompt(
+        id: response.dailyQuestionId,
+        chatId: '',
+        questionText: response.question,
+        date: response.date,
+        answeredCount: response.answeredCount,
+        hasAnswered: response.hasAnswered,
+      );
+      return { 
+        'success': true, 
+        'prompt': prompt 
       };
     } catch (e) {
       return {
@@ -31,16 +43,20 @@ class DailyPromptController {
   // submit answer 
   Future<Map<String, dynamic>> submitAnswer(String answerText) async {
     try {
-      // TODO: connect backend
-      final response = await _apiClient.postJson(
-        '/chat/$chatId/daily-prompt/answer',
-        {'answerText': answerText},
+      if (_dailyQuestionId == null) {
+        return {
+        'success': false,
+        'error': 'No active prompt',
+        };
+      }
+      _dqService.submitAnswer(
+        dailyQuestionId: _dailyQuestionId!, 
+        userId: currentUserId, 
+        answerText: answerText, 
+        chatId: chatId
       );
-      
-      return {
-        'success': true,
-        'response': response,
-      };
+      // response comes back through onAnswerAccepted stream
+      return { 'success': true };
     } catch (e) {
       return {
         'success': false,
@@ -52,12 +68,8 @@ class DailyPromptController {
   // get all responses 
   Future<Map<String, dynamic>> getTodaysResponses() async {
     try {
-      // TODO: connect backend
-      final response = await _apiClient.getJson('/chat/$chatId/daily-prompt/responses');
-      
-      final responses = (response['responses'] as List)
-          .map((r) => PromptResponse.fromJson(r, currentUserId))
-          .toList();
+      final data = await _dqService.getAnswers(chatId);
+      final responses = data.map((r) => PromptResponse.fromJson(r, currentUserId)).toList();
       
       return {
         'success': true,
