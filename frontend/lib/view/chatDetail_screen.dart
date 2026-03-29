@@ -408,7 +408,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   ],
                 ),
                 //bullet pointed list if not editing
-                if (!model.isEditingQuestionPreferences)
+                if (!model.isEditingQuestionPreferences && model.fineGrainControlEdit)
                   Column(
                     children: [
                       if (!model.isOwner)
