@@ -97,6 +97,8 @@ export async function createChatroom(req, res) {
     const { name, relationshipType, allowedTopics, allowedTypes } = req.body;
     if (!name) throw AppError.badRequest('Name is a required field', { code: 'NAME_MISSING' });
 
+    const normalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : str;
+
     // because multiple queries need to be made, start a transaction (to prevent orphan entries)
     const t = await sequelize.transaction();
     try {
@@ -111,7 +113,7 @@ export async function createChatroom(req, res) {
         console.log('[createChatroom] creating settings for chatId:', chatroom.id);
         await ChatSettings.create({
             chatId: chatroom.id, // the chatroom's generated id
-            relationshipType: relationshipType || 'Friends', 
+            relationshipType: normalize(relationshipType) || 'Friends', 
             allowedTopics: allowedTopics || [], 
             allowedTypes: allowedTypes || [],
         }, { transaction: t });

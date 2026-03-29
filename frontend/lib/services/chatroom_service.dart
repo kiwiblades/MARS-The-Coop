@@ -62,8 +62,18 @@ class ChatroomService {
   // post /chatroom/create
   // returns the new chatroom row, but it doesn't really need to be displayed immediately
   // the invite code is immediately provided with the new chatroom, though
-  Future<Chatroom> createChatroom(String name) async {
-    final data = await api.postJson('/chatroom/create', {'name': name});
+  Future<Chatroom> createChatroom({
+    required String name,
+    required String relationshipType,
+    List<String> allowedTopics = const [],
+    List<String> allowedTypes = const [],
+  }) async {
+    final data = await api.postJson('/chatroom/create', {
+      'name': name,
+      'relationshipType': relationshipType,
+      'allowedTopics': allowedTopics,
+      'allowedTypes': allowedTypes,
+    });
     return Chatroom(
       id: data['id'] as String,
       name: data['name'] as String,
@@ -74,10 +84,22 @@ class ChatroomService {
       membership: 'owner',
       lastSentMessage: '',
       lastSentTime: '',
-      relationshipType: RelationshipType.friends,
-      fineGrainControl: false,
-      allowedTypes: const {},
-      allowedTopics: const {},
+      relationshipType: RelationshipType.values.firstWhere(
+      (e) => e.name.toLowerCase() == relationshipType.toLowerCase(),
+      orElse: () => RelationshipType.friends),
+      fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
+      allowedTypes: allowedTypes.map((t) =>
+        QuestionType.values.firstWhere(
+          (q) => q.name.toLowerCase() == t.toLowerCase(),
+          orElse: () => QuestionType.favorite,
+        )
+      ).toSet(),
+      allowedTopics: allowedTopics.map((t) =>
+        QuestionTopic.values.firstWhere(
+          (q) => q.name.toLowerCase() == t.toLowerCase(),
+          orElse: () => QuestionTopic.personal,
+        )
+      ).toSet(),
     );
   }
 

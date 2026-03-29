@@ -44,15 +44,22 @@ class CreateChatController {
 
     if (!isValid) return;
 
-    
-
       print('validation passed');
       try {
         //TODO: edit createChatroom to take: name(state.chatroomNameController), 
         //relationship type(state.selectedRelationship), 
         //fine-grain control one/off(state.fineGrainControlSwitch), 
         //and question preferences (state.selectedQuestionTypes and selectedQuestionTopics) all relevant values are in "form controllers/values" section
-        final chatroom = await chatroomService.createChatroom(state.chatroomNameController.text);
+        final chatroom = await chatroomService.createChatroom(
+          name: state.chatroomNameController.text,
+          relationshipType: state.selectedRelationship!.name,
+          allowedTopics: state.fineGrainControlSwitch
+            ? state.selectedQuestionTopics.map((t) => t.name).toList()
+            : [],
+          allowedTypes: state.fineGrainControlSwitch
+            ? state.selectedQuestionTypes.map((t) => t.name).toList()
+            : [],
+        );
         Navigator.pushAndRemoveUntil( // remove the create chat and join chat pages from the stack
           state.context,
           MaterialPageRoute(
