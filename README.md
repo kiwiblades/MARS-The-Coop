@@ -143,6 +143,39 @@ cd frontend
 flutter run
 ```
 
+#### Running multiple emulators
+The Coop is built for communicating seamlessly with others. Because of this, much of the functionality is based on bidirectional communication. Therefore, running more than one emulator with different instances of the application allows for simulating interactions between more than one user.
+
+- Open Android Studio -> Device Manager -> Start two different emulators
+
+You many need to install a second device to run two emulators.
+
+Confirm both devices are seen by flutter:
+```bash
+flutter devices
+```
+
+You should see two different android emulators listed, something like:
+
+* sdk gphone64 x86 64 (mobile) • emulator-5554 • android-x64    • Android 16 (API 36) (emulator)
+* sdk gphone64 x86 64 (mobile) • emulator-5556 • android-x64    • Android 16 (API 36) (emulator)
+
+To run two instances, open two *different* terminals. You can use the "-d" flag to specify which emulator to run flutter on.
+
+Terminal 1:
+```bash
+cd frontend
+flutter run -d emulator-5554
+```
+
+Terminal 2:
+```bash
+cd frontend
+flutter run -d emulator-5556
+```
+
+With this, you can log the devices into separate accounts. Keep in mind, there should still only be once instance of the backend.
+
 ## Environment config notes
 
 ### Android emulator networking
