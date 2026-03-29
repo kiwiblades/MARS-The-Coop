@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/view/addChat_screen.dart';
+import 'package:frontend/view/chat_page.dart';
 
 class AddChatController {
   AddChatScreenState state;
@@ -23,7 +24,26 @@ class AddChatController {
       print('validation passed');
       try {
         await chatroomService.joinChatroom(state.chatroomCodeController.text);
-        Navigator.pop(state.context); // return to mail screen on success
+
+        // fetch updated chatroom list to find newly joined room
+        final chatrooms = await chatroomService.getChatrooms();
+        final joined = chatrooms.firstWhere(
+          (c) => c.inviteCode.toUpperCase() == state.chatroomCodeController.text.trim().toUpperCase(),
+        );
+
+        Navigator.of(state.context).pop(); // return to mail screen
+        Navigator.of(state.context).push( // push the newly joined chay
+          MaterialPageRoute(
+            builder: (_) => ChatPage(
+              chatId: joined.id,
+              chatName: joined.name,
+              participants: joined.participants,
+              membership: joined.membership,
+              chatroomService: chatroomService,
+              chatroom: joined,
+            ),
+          ),
+        );
       } catch (e) {
         print('failed to join chatroom: $e');
         if (e.toString().contains('404')) {
