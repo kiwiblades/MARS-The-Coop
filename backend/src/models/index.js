@@ -15,16 +15,20 @@ import Message from "./Message.js";
 import DailyQuestion from "./DailyQuestion.js";
 import UserDailyAnswer from "./UserDailyAnswer.js";
 import Question from "./Question.js";
+import ChatSettings from "./ChatSettings.js";
+import GlobalQuestion from "./GlobalQuestion.js";
 
 // define associations after all models are imported
 export function initModels() {
+    // Auth Tokens 
     User.hasMany(RefreshToken, { foreignKey: "userId" });
     RefreshToken.belongsTo(User, { foreignKey: "userId" });
 
     User.hasMany(EmailVerificationToken, { foreignKey: "userId" });
     EmailVerificationToken.belongsTo(User, { foreignKey: "userId" });
 
-    // User <-> ChatRoom is many-to-many, so ChatMembership is the junction table
+    // ChatRoom & Memberships (Many-to-Many) 
+    // This allows: user.getChatrooms() and chatroom.getParticipants()
     User.belongsToMany(ChatRoom, {
         through: ChatMembership,
         foreignKey: "userId",
@@ -39,21 +43,27 @@ export function initModels() {
         as: 'participants',
     });
 
-    ChatRoom.hasMany(ChatMembership, {
-        foreignKey: "chatId",
-    });
-  
-    ChatMembership.belongsTo(ChatRoom, {
-        foreignKey: "chatId",
-    });
+    // Direct Membership Links (For querying roles/pins)
+    // Essential for: ChatMembership.findAll({ where: { userId } })
+    ChatRoom.hasMany(ChatMembership, { foreignKey: "chatId", onDelete: "CASCADE" });
+    ChatMembership.belongsTo(ChatRoom, { foreignKey: "chatId" });
 
-    User.hasMany(ChatMembership, {
-        foreignKey: "userId",
+    User.hasMany(ChatMembership, { foreignKey: "userId", onDelete: "CASCADE" });
+    ChatMembership.belongsTo(User, { foreignKey: "userId" });
+
+    // Chat Settings (One-to-One) 
+    // Persists relationshipType and allowedTopics
+    ChatRoom.hasOne(ChatSettings, { 
+        foreignKey: "chatId", 
+        as: "settings",
+        onDelete: "CASCADE" 
     });
-  
-    ChatMembership.belongsTo(User, {
-        foreignKey: "userId",
-    });
+    ChatSettings.belongsTo(ChatRoom, { foreignKey: "chatId" });
+
+    // Messages & History 
+    // foreignKey "chat_id" to match Message.js
+    ChatRoom.hasMany(Message, { foreignKey: "chat_id", onDelete: "CASCADE" });
+    Message.belongsTo(ChatRoom, { foreignKey: "chat_id" });
 
     User.hasMany(Message, { foreignKey: "sender_id" });
     Message.belongsTo(User, { foreignKey: "sender_id", as: 'sender' });

@@ -13,15 +13,15 @@ class ChatroomService {
   // get /chatroom
   Future<List<Chatroom>> getChatrooms() async {
     final data = await api.getJsonList('/chatroom');
-    
+
     // map the returned response into the expected chatroom model form
     return data.map((entry) {
       final chatroom = entry['chatroom'] as Map<String, dynamic>;
       final membership = entry['membership'] as Map<String, dynamic>;
       final participants = (entry['participants'] as List<dynamic>? ?? [])
-        .map((p) => User.fromJson(p as Map<String, dynamic>))
-        .toList();
-      
+          .map((p) => User.fromJson(p as Map<String, dynamic>))
+          .toList();
+
       return Chatroom(
         id: chatroom['id'] as String,
         name: chatroom['name'] as String,
@@ -29,8 +29,34 @@ class ChatroomService {
         participants: participants,
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
-        lastSentMessage: entry['lastSentMessage'] as String? ?? '', 
+        lastSentMessage: entry['lastSentMessage'] as String? ?? '',
         lastSentTime: entry['lastSentTime'] as String? ?? '',
+
+        /// TODO (Rye), added arguments for relationshipType and fineGrainControl, but the service needs to be updated to actually return these values before this works
+        relationshipType: RelationshipType.values.firstWhere(
+          (e) =>
+              e.name.toLowerCase() ==
+              (chatroom['relationshipType'] as String? ?? 'friends')
+                  .toLowerCase(),
+          orElse: () => RelationshipType.friends,
+        ),
+        fineGrainControl: chatroom['fineGrainControl'] as bool? ?? false,
+        questionTypePreference:
+            (chatroom['questionTypePreference'] as List<dynamic>?)
+            ? chatroom['questionTypePreference']!
+                  .map(
+                    (e) => QuestionType.values.firstWhere((v) => v.name == e),
+                  )
+                  .toList()
+            : const [],
+        questionTopicPreference:
+            (chatroom['questionTopicPreference'] as List<dynamic>?)
+            ? chatroom['questionTopicPreference']!
+                  .map(
+                    (e) => QuestionTopic.values.firstWhere((v) => v.name == e),
+                  )
+                  .toList()
+            : const [],
       );
     }).toList();
   }
@@ -50,6 +76,12 @@ class ChatroomService {
       membership: 'owner',
       lastSentMessage: '',
       lastSentTime: '',
+
+      /// TODO (Rye), added arguments for relationshipType and fineGrainControl, but the service needs to be updated to actually return these values before this works
+      relationshipType: RelationshipType.friends,
+      fineGrainControl: false,
+      questionTypePreference: const [],
+      questionTopicPreference: const [],
     );
   }
 
@@ -65,7 +97,23 @@ class ChatroomService {
 
   // delete /chatroom/delete
   Future<void> deleteChatroom(String chatroomId) async {
-    await api.deleteJson('/chatroom/delete', {'chatroomId': chatroomId});
+    //await api.deleteJson('/chatroom/delete', {'chatroomId': chatroomId});
+    await api.deleteJson('/chatroom/$chatroomId', {});
+  }
+
+  Future<void> updateSettings({
+    required String chatroomId,
+    String? name,
+    String? relationshipType,
+    List<String>? allowedTopics,
+  }) async {
+    final body = {
+      if (name != null) 'name': name,
+      if (relationshipType != null) 'relationshipType': relationshipType,
+      if (allowedTopics != null) 'allowedTopics': allowedTopics,
+    };
+
+    await api.patchJson('/chatroom/$chatroomId/settings', body);
   }
 
   // patch /chatroom/pin

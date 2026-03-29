@@ -61,6 +61,22 @@ initModels();
 await sequelize.sync({ alter: true }); // alter: true modifies tables to match if the model has changed
 console.log("Database models synced");
 
+// // ---------------------------------- TEMPORARY FIX FOR DB SYNC ISSUES --
+// // If schema changes cause errors, use { force: true } to drop and recreate tables (data loss warning) 
+// //  change back to { alter: true } after the issue is resolved to prevent accidental data loss in the future
+
+// // 1. Initialize models
+// initModels();
+
+// // 2. TEMPORARY FIX: Change { alter: true } to { force: true }
+// // This will drop ALL tables and recreate them cleanly.
+// // Use this once to clear the error, then change it back to { alter: true }
+// await sequelize.sync({ force: true }); 
+
+// // -------------------------- END OF TEMPORARY FIX FOR DB SYNC ISSUES ------------------------
+
+console.log("Database models recreated and synced successfully");
+
 // listen on connection events for the incoming socket
 io.on('connection', (socket) => {
     console.log('Socket connected: ', socket.id);
@@ -78,3 +94,10 @@ const port = config.SV_PORT;
 server.listen(port, () => console.log(`Server running on port ${port}`)); // display a server status upon startup
 startSyncScheduler();
 startQuestionScheduler(io);
+
+// if (process.env.NODE_ENV !== 'test') {
+//     const port = config.SV_PORT;
+//     server.listen(port, () => console.log(`Server running on port ${port}`));
+// }
+
+// export default app; // This allows the test file to see your Express logic

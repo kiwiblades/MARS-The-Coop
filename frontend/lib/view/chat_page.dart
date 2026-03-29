@@ -695,17 +695,22 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
-          PopupMenuButton<String>(
+          //icon button for chat detail screen
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, '/chatDetailScreen'), 
             icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
-            onSelected: (value) {
-              if (value == 'leave') {
-                _showLeaveConfirmation();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
-            ],
           ),
+          // PopupMenuButton<String>(
+          //   icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
+          //   onSelected: (value) {
+          //     if (value == 'leave') {
+          //       _showLeaveConfirmation();
+          //     }
+          //   },
+          //   itemBuilder: (context) => [
+          //     PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
+          //   ],
+          // ),
         ],
       ),
     );
