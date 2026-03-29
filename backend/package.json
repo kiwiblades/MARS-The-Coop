@@ -10,7 +10,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "db:migrate": "node src/db/migrate.js",
-    "db:rollback": "node src/db/rollback.js"
+    "db:rollback": "node src/db/rollback.js",
+    "dispatch": "node src/tests/dispatch.js"
   },
   "keywords": [],
   "author": "",
