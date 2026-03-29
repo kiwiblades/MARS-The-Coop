@@ -12,7 +12,11 @@ class ChatDetailScreen extends StatefulWidget {
   static const String routeName = '/chatDetailScreen';
   final Chatroom chatroom;
   final void Function(Chatroom)? onSettingsChanged;
-  const ChatDetailScreen({super.key, required this.chatroom, this.onSettingsChanged});
+  const ChatDetailScreen({
+    super.key,
+    required this.chatroom,
+    this.onSettingsChanged,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -100,7 +104,9 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       onPressed: () {
                         //show that the code has been copied
                         Clipboard.setData(
-                          ClipboardData(text: model.currentChatroom?.inviteCode ?? ''),
+                          ClipboardData(
+                            text: model.currentChatroom?.inviteCode ?? '',
+                          ),
                         );
                       },
                       icon: const Icon(
@@ -192,8 +198,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                 const SizedBox(height: 10), //spacer
                 Text(
                   //role
-                  model.currentChatroom?.membership ??
-                      '<Participant Role>',
+                  model.currentChatroom?.membership ?? '<Participant Role>',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 20.0,
                     color: AppColors.darkBrown,
@@ -212,8 +217,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                 ),
                 const SizedBox(height: 5), //spacer
                 model.isOwner
-                    ?
-                      Form(
+                    ? Form(
                         key: formKeyRelationshipType,
                         child: Row(
                           children: model.isEditingRelationshipType
@@ -308,8 +312,13 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                               : [
                                   Text(
                                     //relationship type
-                                    formatEnumName(model.currentChatroom?.relationshipType.name 
-                                      ?? '<Relationship Type>'),
+                                    formatEnumName(
+                                      model
+                                              .currentChatroom
+                                              ?.relationshipType
+                                              .name ??
+                                          '<Relationship Type>',
+                                    ),
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
                                           fontSize: 20.0,
@@ -335,8 +344,10 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           const SizedBox(height: 6), //spacer
                           Text(
                             //relationship type
-                            formatEnumName(model.currentChatroom?.relationshipType.name 
-                              ?? '<Relationship Type>'), 
+                            formatEnumName(
+                              model.currentChatroom?.relationshipType.name ??
+                                  '<Relationship Type>',
+                            ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontSize: 20.0,
@@ -405,10 +416,27 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           onChanged: controller.onToggleFineGrainControl,
                         ),
                       ),
+                    //if editing and toggle is off
+                    if (model.isEditingQuestionPreferences && !model.fineGrainControlEdit) //if editing, toggle
+                      IconButton(
+                        //relationship type edit save
+                        onPressed: controller.onPressedEditFineGrainControlSave,
+                        icon: const Icon(
+                          Icons.check,
+                          color: AppColors.darkBrown,
+                        ),
+                      ),
+                    if (model.isEditingQuestionPreferences && !model.fineGrainControlEdit) //if editing, toggle
+                    IconButton(
+                      //relationship type cancel
+                      onPressed: controller.onPressedEditFineGrainControlCancel,
+                      icon: const Icon(Icons.close, color: AppColors.darkBrown),
+                    ),
                   ],
                 ),
                 //bullet pointed list if not editing
-                if (!model.isEditingQuestionPreferences && model.fineGrainControlEdit)
+                if (!model.isEditingQuestionPreferences &&
+                    model.fineGrainControlEdit)
                   Column(
                     children: [
                       if (!model.isOwner)
@@ -446,21 +474,21 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 5),
-                                  ...(model.currentChatroom?.allowedTypes ?? {}).map((
-                                    type,
-                                  ) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 2.0,
-                                      ),
-                                      child: Text(
-                                        "• ${formatEnumName(type.name)}",
-                                        style: TextStyle(
-                                          color: AppColors.darkBrown,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  ...(model.currentChatroom?.allowedTypes ?? {})
+                                      .map((type) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2.0,
+                                          ),
+                                          child: Text(
+                                            "• ${formatEnumName(type.name)}",
+                                            style: TextStyle(
+                                              color: AppColors.darkBrown,
+                                            ),
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
                                 ],
                               ),
                             ),
@@ -481,21 +509,22 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 5),
-                                  ...(model.currentChatroom?.allowedTopics ?? {}).map((
-                                    topic,
-                                  ) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 2.0,
-                                      ),
-                                      child: Text(
-                                        "• ${formatEnumName(topic.name)}",
-                                        style: TextStyle(
-                                          color: AppColors.darkBrown,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  ...(model.currentChatroom?.allowedTopics ??
+                                          {})
+                                      .map((topic) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2.0,
+                                          ),
+                                          child: Text(
+                                            "• ${formatEnumName(topic.name)}",
+                                            style: TextStyle(
+                                              color: AppColors.darkBrown,
+                                            ),
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
                                 ],
                               ),
                             ),
@@ -504,174 +533,178 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
                     ],
                   ),
-                if (model.isEditingQuestionPreferences &&
-                    model.fineGrainControlEdit)
+                if (model
+                    .isEditingQuestionPreferences &&
+                    model.fineGrainControlEdit )
                   Column(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: AppColors.darkBrown,
-                              width: 1.5,
+                      if (model.fineGrainControlEdit)
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: AppColors.darkBrown,
+                                width: 1.5,
+                              ),
+                              bottom: BorderSide(
+                                color: AppColors.darkBrown,
+                                width: 1.5,
+                              ),
                             ),
-                            bottom: BorderSide(
-                              color: AppColors.darkBrown,
-                              width: 1.5,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsetsGeometry.fromLTRB(
+                              0.0,
+                              5.0,
+                              0.0,
+                              5.0,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  //first column: question Type
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Question Type',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontSize: 20.0,
+                                              color: AppColors.darkBrown,
+                                            ),
+                                      ),
+
+                                      ...QuestionType.values.map((type) {
+                                        return SizedBox(
+                                          height: 20.0,
+                                          child: Row(
+                                            // mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  formatEnumName(type.name),
+                                                  style: TextStyle(
+                                                    color: AppColors.darkBrown,
+                                                  ),
+                                                ),
+                                              ),
+                                              Checkbox(
+                                                value: model
+                                                    .questionTypePreferenceEdits
+                                                    .contains(type),
+
+                                                fillColor:
+                                                    WidgetStateProperty.resolveWith(
+                                                      (states) {
+                                                        if (states.contains(
+                                                          WidgetState.selected,
+                                                        )) {
+                                                          return AppColors
+                                                              .darkBrown;
+                                                        }
+                                                        return AppColors
+                                                            .background;
+                                                      },
+                                                    ),
+
+                                                side: BorderSide(
+                                                  color: AppColors.darkBrown,
+                                                  width: 1.5,
+                                                ),
+
+                                                onChanged: (value) => controller
+                                                    .onToggleQuestionType(
+                                                      type,
+                                                      value,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 10.0),
+                                Expanded(
+                                  //2nd column: question topic
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Question Topic',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontSize: 20.0,
+                                              color: AppColors.darkBrown,
+                                            ),
+                                      ),
+
+                                      ...QuestionTopic.values.map((topic) {
+                                        return SizedBox(
+                                          height: 20.0,
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  formatEnumName(topic.name),
+                                                  style: TextStyle(
+                                                    color: AppColors.darkBrown,
+                                                  ),
+                                                ),
+                                              ),
+                                              Checkbox(
+                                                value: model
+                                                    .questionTopicPreferenceEdits
+                                                    .contains(topic),
+
+                                                fillColor:
+                                                    WidgetStateProperty.resolveWith(
+                                                      (states) {
+                                                        if (states.contains(
+                                                          WidgetState.selected,
+                                                        )) {
+                                                          return AppColors
+                                                              .darkBrown;
+                                                        }
+                                                        return AppColors
+                                                            .background;
+                                                      },
+                                                    ),
+
+                                                side: BorderSide(
+                                                  color: AppColors.darkBrown,
+                                                  width: 1.5,
+                                                ),
+
+                                                onChanged: (value) => controller
+                                                    .onToggleQuestionTopic(
+                                                      topic,
+                                                      value,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsetsGeometry.fromLTRB(
-                            0.0,
-                            5.0,
-                            0.0,
-                            5.0,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                //first column: question Type
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Question Type',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            fontSize: 20.0,
-                                            color: AppColors.darkBrown,
-                                          ),
-                                    ),
-
-                                    ...QuestionType.values.map((type) {
-                                      return SizedBox(
-                                        height: 20.0,
-                                        child: Row(
-                                          // mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                formatEnumName(type.name),
-                                                style: TextStyle(
-                                                  color: AppColors.darkBrown,
-                                                ),
-                                              ),
-                                            ),
-                                            Checkbox(
-                                              value: model
-                                                  .questionTypePreferenceEdits
-                                                  .contains(type),
-
-                                              fillColor:
-                                                  WidgetStateProperty.resolveWith(
-                                                    (states) {
-                                                      if (states.contains(
-                                                        WidgetState.selected,
-                                                      )) {
-                                                        return AppColors
-                                                            .darkBrown;
-                                                      }
-                                                      return AppColors
-                                                          .background;
-                                                    },
-                                                  ),
-
-                                              side: BorderSide(
-                                                color: AppColors.darkBrown,
-                                                width: 1.5,
-                                              ),
-
-                                              onChanged: (value) => controller
-                                                  .onToggleQuestionType(
-                                                    type,
-                                                    value,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(width: 10.0),
-                              Expanded(
-                                //2nd column: question topic
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Question Topic',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            fontSize: 20.0,
-                                            color: AppColors.darkBrown,
-                                          ),
-                                    ),
-
-                                    ...QuestionTopic.values.map((topic) {
-                                      return SizedBox(
-                                        height: 20.0,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                formatEnumName(topic.name),
-                                                style: TextStyle(
-                                                  color: AppColors.darkBrown,
-                                                ),
-                                              ),
-                                            ),
-                                            Checkbox(
-                                              value: model
-                                                  .questionTopicPreferenceEdits
-                                                  .contains(topic),
-
-                                              fillColor:
-                                                  WidgetStateProperty.resolveWith(
-                                                    (states) {
-                                                      if (states.contains(
-                                                        WidgetState.selected,
-                                                      )) {
-                                                        return AppColors
-                                                            .darkBrown;
-                                                      }
-                                                      return AppColors
-                                                          .background;
-                                                    },
-                                                  ),
-
-                                              side: BorderSide(
-                                                color: AppColors.darkBrown,
-                                                width: 1.5,
-                                              ),
-
-                                              onChanged: (value) => controller
-                                                  .onToggleQuestionTopic(
-                                                    topic,
-                                                    value,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
