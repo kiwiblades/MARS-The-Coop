@@ -41,9 +41,9 @@ export async function pickQuestionForRoom(chatId) {
     const excludedIds = recentlyUsed.map(dq => dq.questionId);
 
     const preferenceFilter = {
-        ...(room.relationshipType ? { relationshipType: settings.relationshipType } : {}),
-        ...(room.allowedTopics?.length ? { topics: { [Op.overlap]: settings.allowedTopics } } : {}),
-        ...(room.allowedTypes?.length ? { questionType: { [Op.in]: settings.allowedTypes } } : {}),
+        ...(settings?.relationshipType ? { relationshipType: settings.relationshipType } : {}),
+        ...(settings?.allowedTopics?.length ? { topics: { [Op.overlap]: settings.allowedTopics } } : {}),
+        ...(settings?.allowedTypes?.length ? { questionType: { [Op.in]: settings.allowedTypes } } : {}),
     };
 
     // collect all questions that match the thirty day and preference criteria
@@ -64,6 +64,10 @@ export async function pickQuestionForRoom(chatId) {
             order: [['date', 'ASC']], // oldest first = lru
             include: [{ model: Question, as: 'question', where: preferenceFilter }],
         });
+
+        console.log('[pickQuestion] settings:', settings?.relationshipType);
+        console.log('[pickQuestion] preferenceFilter:', preferenceFilter);
+        console.log('[pickQuestion] eligible count:', eligible.length);
         
         if (!fallback) { // no eligible questions
             console.log(`[dailyQuestion] no eligible questions for chatroom ${chatId} found`);
