@@ -197,26 +197,24 @@ class ChatDetailController {
   void onPressedEditFineGrainControl() {
     print('edit fine-grain question control clicked');
 
-    //TODO (rye): copy over all current values that were fetched from db into edit variables in model
+    print('[FineGrain] allowedTopics: ${state.model.currentChatroom!.allowedTopics}');
+    print('[FineGrain] allowedTypes: ${state.model.currentChatroom!.allowedTypes}');
 
     state.callSetState(() {
       state.model.isEditingQuestionPreferences = true;
 
+      // resync finegraincontroledit
+      state.model.fineGrainControlEdit = state.model.currentChatroom!.allowedTopics.isNotEmpty ||
+        state.model.currentChatroom!.allowedTypes.isNotEmpty;
+
       // SYNC: Copy current topics from the chatroom object into the "Edits" buffer
-      state.model.questionTopicPreferenceEdits.clear();
-      for (var topicName in state.model.currentChatroom!.allowedTopics) {
-        final topic = QuestionTopic.values.firstWhere(
-          (t) => t.name.toLowerCase() == topicName.name.toLowerCase(),
-          orElse: () => QuestionTopic.personal,
-        );
-        state.model.questionTopicPreferenceEdits.add(topic);
-      }
-      for (var typeName in state.model.currentChatroom!.allowedTypes) {
-        final type = QuestionType.values.firstWhere(
-          (t) => t.name.toLowerCase() == typeName.name.toLowerCase()
-        );
-        state.model.questionTypePreferenceEdits.add(type);
-      }
+      state.model.questionTopicPreferenceEdits
+        ..clear()
+        ..addAll(state.model.currentChatroom!.allowedTopics);
+      
+      state.model.questionTypePreferenceEdits
+        ..clear()
+        ..addAll(state.model.currentChatroom!.allowedTypes);
     });
   }
 
@@ -230,6 +228,36 @@ class ChatDetailController {
     if (!value) {
       state.model.questionTypePreferenceEdits.clear();
       state.model.questionTopicPreferenceEdits.clear();
+
+      // clear the allowed types/topics on backend + local
+      final updated = Chatroom(
+        id:               state.model.currentChatroom!.id,
+        name:             state.model.currentChatroom!.name,
+        inviteCode:       state.model.currentChatroom!.inviteCode,
+        participants:     state.model.currentChatroom!.participants,
+        pinned:           state.model.currentChatroom!.pinned,
+        membership:       state.model.currentChatroom!.membership,
+        lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
+        lastSentTime:     state.model.currentChatroom!.lastSentTime,
+        relationshipType: state.model.currentChatroom!.relationshipType,
+        fineGrainControl: false,
+        allowedTypes:     const {},
+        allowedTopics:    const {},
+      );
+
+      state.callSetState(() {
+        state.model.currentChatroom = updated;
+      });
+
+      chatroomService.updateSettings(
+        chatroomId: _chatId,
+        allowedTypes: [],
+        allowedTopics: [], 
+      ).then((_) {
+        state.widget.onSettingsChanged?.call(updated);
+      }).catchError((e) {
+        print('Error clearing fine grain control: $e');
+      });
     }
   }
 
@@ -304,6 +332,7 @@ class ChatDetailController {
         allowedTypes: types.map((t) => t.name).toList(),
         allowedTopics: topics.map((t) => t.name).toList(),
       );
+      state.widget.onSettingsChanged?.call(updated);
     } catch (error) {
       print('Error updating fine grain control: $error');
     }

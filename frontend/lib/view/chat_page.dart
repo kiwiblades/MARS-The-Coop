@@ -48,7 +48,9 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<PromptQASection> _promptSections = [];
+  late Chatroom _currentChatroom;
   late String _chatName;
+  
 
   StreamSubscription<Message>? _messageSubscription;
   // StreamSubscription? _dqSubscription;
@@ -74,6 +76,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     final apiClient = ApiClient();
     _userService = UserService(api: apiClient);
+    _currentChatroom = widget.chatroom;
     _chatName = widget.chatName;
 
     _loadCurrentUser();
@@ -708,9 +711,10 @@ class _ChatPageState extends State<ChatPage> {
               context,
               MaterialPageRoute(
                 builder: (_) => ChatDetailScreen(
-                  chatroom: widget.chatroom,
+                  chatroom: _currentChatroom,
                   onSettingsChanged: (updatedChatroom) {
                     setState(() {
+                      _currentChatroom = updatedChatroom;
                       _chatName = updatedChatroom.name; // when name is changed, reflect upon returning to chat screen
                     });
                   }
