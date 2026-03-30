@@ -18,6 +18,22 @@ export function yesterday() {
     return d.toISOString().split('T')[0];
 }
 
+// map the frontend enum to the google sheet categories
+const questionTypeMap = {
+    'favorite': 'Favorites',
+    'wouldYouRather': 'Would you rather',
+    'ranking': 'Ranking',
+    'ifYouCould': 'If you could...',
+    'ifYouWere': 'If you were...',
+    'whatTypeAreYou': 'What type are you',
+    'prompt': 'Prompt',
+    'riddle': 'Riddle',
+    'whatsYourOpinion': "What's your opinion on ___",
+    'firsts': 'Firsts',
+    'kissMaryKill': 'Kiss, marry, kill',
+    'memory': 'Memory',
+};
+
 export async function notifyRoom(chatId, question) {
     // TODO: push notification
     console.log(`[questionScheduler] notify room ${chatId}: ${question}`);
@@ -41,9 +57,13 @@ export async function pickQuestionForRoom(chatId) {
     const excludedIds = recentlyUsed.map(dq => dq.questionId);
 
     const preferenceFilter = {
-        ...(settings?.relationshipType ? { relationshipType: settings.relationshipType } : {}),
-        ...(settings?.allowedTopics?.length ? { topics: { [Op.overlap]: settings.allowedTopics } } : {}),
-        ...(settings?.allowedTypes?.length ? { questionType: { [Op.in]: settings.allowedTypes } } : {}),
+        ...(settings?.relationshipType ? { relationshipType: { [Op.iLike]: settings.relationshipType } } : {}),
+        ...(settings?.allowedTopics?.length ? { topics: { [Op.overlap]: settings.allowedTopics.map(t =>
+            t.charAt(0).toUpperCase() + t.slice(1)
+        ) } } : {}),
+        ...(settings?.allowedTypes?.length ? { 
+            questionType: { [Op.in]: settings.allowedTypes.map(t => questionTypeMap[t] ?? t) } 
+        } : {}),
     };
 
     // collect all questions that match the thirty day and preference criteria

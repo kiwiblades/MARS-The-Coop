@@ -6,14 +6,13 @@ import ChatRoom from "../models/ChatRoom.js";
 import {
     pickQuestionForRoom,
     today,
-    yesterday,
     notifyRoom,
 } from './dailyQuestion.js';
 
 const MAX_RETRIES = 3; // how many retry attempts for resending failed daily q
 
 // dispatch to rooms that haven't received today's question
-async function dispatchNewQuestions(io, todayStr, yesterdayStr) {
+async function dispatchNewQuestions(io, todayStr) {
     const rooms = await ChatRoom.findAll();
     console.log(`[questionScheduler] checking ${rooms.length} rooms`);
 
@@ -26,10 +25,11 @@ async function dispatchNewQuestions(io, todayStr, yesterdayStr) {
             if (alreadySent) continue;
 
             // skip inactive rooms, new rooms with no history are treated as active
-            const yesterdaysQuestion = await DailyQuestion.findOne({
-                where: { chatId: room.id, date: yesterdayStr },
+            const mostRecentQuestion = await DailyQuestion.findOne({
+                where: { chatId: room.id },
+                order: [['date', 'DESC']],
             });
-            if (yesterdaysQuestion && yesterdaysQuestion.answeredCount < 1) {
+            if (mostRecentQuestion && mostRecentQuestion.answeredCount < 1) {
                 await ChatRoom.update({ isActive: false }, { where: { id: room.id } });
                 console.log(`[questionScheduler] room ${room.id} inactive, skipping...`);
                 continue;
@@ -125,10 +125,9 @@ async function attemptDelivery(io, dailyQuestion, question) {
 export async function dispatchDailyQuestions(io) {
     console.log(`[questionScheduler] tick at ${new Date().toISOString()}`);
     const todayStr = today();
-    const yesterdayStr = yesterday();
 
     // new dispatches
-    await dispatchNewQuestions(io, todayStr, yesterdayStr);
+    await dispatchNewQuestions(io, todayStr);
 
     // retry failures
     await retryFailedDeliveries(io, todayStr);
