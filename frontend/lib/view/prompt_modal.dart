@@ -114,26 +114,76 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
         // Blurred background
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            color: Colors.black.withOpacity(0.3),
-          ),
+          child: Container(color: Colors.black.withOpacity(0.3)),
         ),
         
-        // Modal content
-        Center(
-          child: Container(
-            margin: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            padding: EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-              border: Border.all(color: AppColors.border, width: 2),
-            ),
-            child: _model.isLoading
-                ? _buildLoadingView()
-                : _model.loadError != null
-                    ? _buildErrorView()
-                    : _buildPromptView(),
+        // Prompt card - BOTTOM ALIGNED with TAB
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Tab header
+              Padding(
+                padding: EdgeInsets.only(left: AppSpacing.sm, right: 160),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(AppBorderRadius.md),
+                      topRight: Radius.circular(AppBorderRadius.md),
+                    ),
+                    border: Border(
+                      left: BorderSide(color: AppColors.border, width: 1),
+                      top: BorderSide(color: AppColors.border, width: 1),
+                      right: BorderSide(color: AppColors.border, width: 1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, size: 20),
+                        padding: EdgeInsets.symmetric(),
+                        constraints: BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      SizedBox(width: AppSpacing.xs),
+                      Text(
+                        'Daily Question',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Main card
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(
+                  left: AppSpacing.md,
+                  right: AppSpacing.md,
+                  bottom: AppSpacing.lg,
+                  top: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(color: AppColors.background),
+                child: _model.isLoading
+                    ? _buildLoadingView()
+                    : _model.loadError != null
+                        ? _buildErrorView()
+                        : _buildPromptContent(),
+              ),
+            ],
           ),
         ),
       ],
@@ -175,120 +225,76 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
     );
   }
 
-  Widget _buildPromptView() {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header
-          Text(
-            'Daily Prompt',
-            style: AppTextStyles.heading.copyWith(fontSize: 22),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: AppSpacing.sm),
-          
-          // date
-          Text(
-            _prompt?.date ?? 'Today',
-            style: AppTextStyles.label,
-            textAlign: TextAlign.center,
-          ),
-          
-          SizedBox(height: AppSpacing.lg),
-          
-          // question card
-          Container(
-            padding: EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Text(
-              _prompt?.questionText ?? '',
-              style: AppTextStyles.body.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          
-          SizedBox(height: AppSpacing.lg),
-          
-          // answer input
-          TextField(
-            controller: _answerController,
-            autofocus: true,
-            maxLines: 4,
-            maxLength: 500,
-            decoration: InputDecoration(
-              hintText: 'Type your answer here...',
-              hintStyle: AppTextStyles.label,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                borderSide: BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                borderSide: BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                borderSide: BorderSide(color: AppColors.primary, width: 2),
-              ),
-              counterText: '',
-              contentPadding: EdgeInsets.all(AppSpacing.md),
-            ),
-          ),
-          
-          SizedBox(height: AppSpacing.md),
-          
-          // character count
-          Text(
-            '${_answerController.text.length}/500',
-            style: AppTextStyles.label.copyWith(fontSize: 12),
-            textAlign: TextAlign.right,
-          ),
-          
-          SizedBox(height: AppSpacing.md),
-          
-          // submit button
-          ElevatedButton(
-            onPressed: _canSubmit && !_model.isSubmitting ? _submitAnswer : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-              disabledBackgroundColor: AppColors.textSecondary.withOpacity(0.5),
-            ),
-            child: _model.isSubmitting
-                ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: AppColors.background,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    'Submit Answer',
-                    style: AppTextStyles.button,
+  Widget _buildPromptContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Question text
+        Text(
+          _prompt?.questionText ?? 'Loading question...',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 20),
+        ),
+        SizedBox(height: AppSpacing.md),
+
+        // Input row
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _answerController,
+                autofocus: true,
+                maxLength: 500,
+                decoration: InputDecoration(
+                  hintText: 'Type your answer here...',
+                  hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
-          ),
-          
-          SizedBox(height: AppSpacing.sm),
-          
-          // Info text
-          Text(
-            'Answer to unlock your flock\'s responses',
-            style: AppTextStyles.label.copyWith(fontSize: 12),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                    borderSide: BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                    borderSide: BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
+                  ),
+                  counterText: '',
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: AppSpacing.sm),
+
+            // Send button
+            IconButton(
+              icon: _model.isSubmitting
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Icon(Icons.send),
+              color: _canSubmit
+                  ? AppColors.primary
+                  : AppColors.textSecondary,
+              onPressed: _canSubmit && !_model.isSubmitting
+                  ? _submitAnswer
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

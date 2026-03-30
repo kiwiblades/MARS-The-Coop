@@ -899,7 +899,7 @@ class _ChatPageState extends State<ChatPage> {
             if (showTimestamp) _buildTimestamp(message.timestamp),
             SizedBox(height: AppSpacing.sm),
           ],
-        ),
+        ), 
       );
     }
 
