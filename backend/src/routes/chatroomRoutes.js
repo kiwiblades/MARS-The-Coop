@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticateToken } from "../middleware/auth.js";
-import { getChatrooms, createChatroom, joinChatroom, leaveChatroom, deleteChatroom, togglePin } from "../controllers/chatroomController.js";
+import { verifyOwner } from "../middleware/chatPermissions.js";
+import { getChatrooms, createChatroom, joinChatroom, leaveChatroom, deleteChatroom, togglePin, updateSettings } from "../controllers/chatroomController.js";
 
 const router = Router();
 
@@ -9,7 +10,8 @@ router.get("/", getChatrooms);
 router.post("/create", createChatroom);
 router.post("/join", joinChatroom);
 router.delete("/leave", leaveChatroom);
-router.delete("/delete", deleteChatroom);
 router.patch("/pin", togglePin);
+router.patch("/:id/settings", updateSettings); 
+router.delete("/:id", verifyOwner, deleteChatroom); 
 
 export default router;

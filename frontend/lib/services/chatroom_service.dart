@@ -13,7 +13,7 @@ class ChatroomService {
   // get /chatroom
   Future<List<Chatroom>> getChatrooms() async {
     final data = await api.getJsonList('/chatroom');
-    
+
     // map the returned response into the expected chatroom model form
     return data.map((entry) {
       final chatroom = entry['chatroom'] as Map<String, dynamic>;
@@ -21,7 +21,14 @@ class ChatroomService {
       final participants = (entry['participants'] as List<dynamic>? ?? [])
         .map((p) => User.fromJson(p as Map<String, dynamic>))
         .toList();
-      
+      final settings = entry['settings'] as Map<String, dynamic>? ?? {};
+      final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
+        .map((t) => t as String)
+        .toList();
+      final allowedTypes = (settings['allowedTypes'] as List<dynamic>? ?? [])
+        .map((t) => t as String)
+        .toList();
+
       return Chatroom(
         id: chatroom['id'] as String,
         name: chatroom['name'] as String,
@@ -29,8 +36,25 @@ class ChatroomService {
         participants: participants,
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
-        lastSentMessage: entry['lastSentMessage'] as String? ?? '', 
+        lastSentMessage: entry['lastSentMessage'] as String? ?? '',
         lastSentTime: entry['lastSentTime'] as String? ?? '',
+        relationshipType: RelationshipType.values.firstWhere(
+          (e) => e.name.toLowerCase() == (settings['relationshipType'] as String? ?? 'friends').toLowerCase(),
+          orElse: () => RelationshipType.friends,
+        ),
+        fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
+        allowedTypes: allowedTypes.map((t) => 
+          QuestionType.values.firstWhere(
+            (q) => q.name.toLowerCase() == t.toLowerCase(),
+            orElse: () => QuestionType.favorite,
+          )
+        ).toSet(),
+        allowedTopics: allowedTopics.map((t) =>
+          QuestionTopic.values.firstWhere(
+            (q) => q.name.toLowerCase() == t.toLowerCase(),
+            orElse: () => QuestionTopic.personal,
+          )
+        ).toSet(),
       );
     }).toList();
   }
@@ -38,8 +62,18 @@ class ChatroomService {
   // post /chatroom/create
   // returns the new chatroom row, but it doesn't really need to be displayed immediately
   // the invite code is immediately provided with the new chatroom, though
-  Future<Chatroom> createChatroom(String name) async {
-    final data = await api.postJson('/chatroom/create', {'name': name});
+  Future<Chatroom> createChatroom({
+    required String name,
+    required String relationshipType,
+    List<String> allowedTopics = const [],
+    List<String> allowedTypes = const [],
+  }) async {
+    final data = await api.postJson('/chatroom/create', {
+      'name': name,
+      'relationshipType': relationshipType,
+      'allowedTopics': allowedTopics,
+      'allowedTypes': allowedTypes,
+    });
     return Chatroom(
       id: data['id'] as String,
       name: data['name'] as String,
@@ -50,6 +84,22 @@ class ChatroomService {
       membership: 'owner',
       lastSentMessage: '',
       lastSentTime: '',
+      relationshipType: RelationshipType.values.firstWhere(
+      (e) => e.name.toLowerCase() == relationshipType.toLowerCase(),
+      orElse: () => RelationshipType.friends),
+      fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
+      allowedTypes: allowedTypes.map((t) =>
+        QuestionType.values.firstWhere(
+          (q) => q.name.toLowerCase() == t.toLowerCase(),
+          orElse: () => QuestionType.favorite,
+        )
+      ).toSet(),
+      allowedTopics: allowedTopics.map((t) =>
+        QuestionTopic.values.firstWhere(
+          (q) => q.name.toLowerCase() == t.toLowerCase(),
+          orElse: () => QuestionTopic.personal,
+        )
+      ).toSet(),
     );
   }
 
@@ -65,7 +115,25 @@ class ChatroomService {
 
   // delete /chatroom/delete
   Future<void> deleteChatroom(String chatroomId) async {
-    await api.deleteJson('/chatroom/delete', {'chatroomId': chatroomId});
+    //await api.deleteJson('/chatroom/delete', {'chatroomId': chatroomId});
+    await api.deleteJson('/chatroom/$chatroomId', {});
+  }
+
+  Future<void> updateSettings({
+    required String chatroomId,
+    String? name,
+    String? relationshipType,
+    List<String>? allowedTopics,
+    List<String>? allowedTypes,
+  }) async {
+    final body = {
+      if (name != null) 'name': name,
+      if (relationshipType != null) 'relationshipType': relationshipType,
+      if (allowedTopics != null) 'allowedTopics': allowedTopics,
+      if (allowedTypes != null) 'allowedTypes': allowedTypes,
+    };
+
+    await api.patchJson('/chatroom/$chatroomId/settings', body);
   }
 
   // patch /chatroom/pin
