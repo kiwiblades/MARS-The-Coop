@@ -6,14 +6,13 @@ import ChatRoom from "../models/ChatRoom.js";
 import {
     pickQuestionForRoom,
     today,
-    yesterday,
     notifyRoom,
 } from './dailyQuestion.js';
 
 const MAX_RETRIES = 3; // how many retry attempts for resending failed daily q
 
 // dispatch to rooms that haven't received today's question
-async function dispatchNewQuestions(io, todayStr, yesterdayStr) {
+async function dispatchNewQuestions(io, todayStr) {
     const rooms = await ChatRoom.findAll();
     console.log(`[questionScheduler] checking ${rooms.length} rooms`);
 
@@ -26,10 +25,11 @@ async function dispatchNewQuestions(io, todayStr, yesterdayStr) {
             if (alreadySent) continue;
 
             // skip inactive rooms, new rooms with no history are treated as active
-            const yesterdaysQuestion = await DailyQuestion.findOne({
-                where: { chatId: room.id, date: yesterdayStr },
+            const mostRecentQuestion = await DailyQuestion.findOne({
+                where: { chatId: room.id },
+                order: [['date', 'DESC']],
             });
-            if (yesterdaysQuestion && yesterdaysQuestion.answeredCount < 1) {
+            if (mostRecentQuestion && mostRecentQuestion.answeredCount < 1) {
                 await ChatRoom.update({ isActive: false }, { where: { id: room.id } });
                 console.log(`[questionScheduler] room ${room.id} inactive, skipping...`);
                 continue;
@@ -68,6 +68,22 @@ async function retryFailedDeliveries(io, todayStr) {
         },
         include: [{ association: 'question' }],
     });
+
+    // log the rooms that hit max retries and are being skipped
+    const maxed = await DailyQuestion.findAll({
+        where: {
+            date: todayStr,
+            wasDelivered: false,
+            deliveryAttempts: { [Op.gte]: MAX_RETRIES },
+        }
+    });
+    if (maxed.length) {
+        console.log(`[questionScheduler] ${maxed.length} room(s) have hit MAX_RETRIES, skipping...`);
+        for (const dq of maxed) {
+            console.log(`[questionScheduler] room ${dq.chatId} - attempts: ${dq.deliveryAttempts}/${MAX_RETRIES}`);
+        }
+    }
+
     if (!failed.length) return; // no failed deliveries
 
     for (const dailyQuestion of failed) {
@@ -87,6 +103,10 @@ async function attemptDelivery(io, dailyQuestion, question) {
         lastAttemptedAt: new Date(),
     });
 
+    // simulate failure for testing
+    // console.log(`[questionScheduler] simulated failure for room ${dailyQuestion.chatId}`);
+    // throw new Error('Simulated delivery failure');
+
     console.log(`[questionScheduler] emitting to room: "${dailyQuestion.chatId}"`);
     io.to(dailyQuestion.chatId).emit('daily_question', {
         dailyQuestionId: dailyQuestion.id,
@@ -105,10 +125,9 @@ async function attemptDelivery(io, dailyQuestion, question) {
 export async function dispatchDailyQuestions(io) {
     console.log(`[questionScheduler] tick at ${new Date().toISOString()}`);
     const todayStr = today();
-    const yesterdayStr = yesterday();
 
     // new dispatches
-    await dispatchNewQuestions(io, todayStr, yesterdayStr);
+    await dispatchNewQuestions(io, todayStr);
 
     // retry failures
     await retryFailedDeliveries(io, todayStr);
@@ -124,10 +143,10 @@ export function startQuestionScheduler(io) {
         // initial dispatch at default time (5am)
         dispatchDailyQuestions(io);
 
-        // retry pass 3 times (for testing, TODO: repeat every 15 mins indefinitely)
-        setTimeout(() => retryFailedDeliveries(io, today()), 15*60*1000);
-        setTimeout(() => retryFailedDeliveries(io, today()), 30*60*1000);
-        setTimeout(() => retryFailedDeliveries(io, today()), 60*60*1000);
+        // retry pass 3 times (for testing, do every 15 secs, TODO: repeat every 15 mins indefinitely)
+        setTimeout(() => retryFailedDeliveries(io, today()), 15*1000);
+        setTimeout(() => retryFailedDeliveries(io, today()), 30*1000);
+        setTimeout(() => retryFailedDeliveries(io, today()), 45*1000);
     }, {
         timezone: config.dailyQuestion.timezone,
     });

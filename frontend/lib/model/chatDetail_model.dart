@@ -16,8 +16,6 @@ class ChatDetailModel {
   Set<QuestionTopic> questionTopicPreferenceEdits = {};
   bool isEditingQuestionPreferences = false;
 
-  // TODO (Rye): in case you need to refer back to chatDetail_model
-  // TODO: delete test values once actual values are implemented
   // bool isOwner = true; //for conditional render test
   bool get isOwner => currentChatroom?.membership == 'owner';
 
