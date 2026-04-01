@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/profilePicSelection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
@@ -179,12 +180,12 @@ class ProfileController {
     // The 'async' keyword marks this as a background-compatible function
     print('sign out button pressed');
     //sign out logic
-    // Navigator.pushNamed(state.context, '/signinScreen'); //navigate to sign in page
 
     try {
       // Call backend to invalidate the session/token
       await users.signout();
 
+      SocketClient.instance.disconnect(); // disconnect from socket
       // Confirm status and redirect
       // Using pushNamedAndRemoveUntil ensures the user cannot hit 'back' to return to the profile
       Navigator.pushNamedAndRemoveUntil(

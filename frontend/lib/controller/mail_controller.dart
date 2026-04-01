@@ -50,6 +50,7 @@ class MailController {
       participants: chat.participants,
       membership: chat.membership,
       chatroomService: chatroomService,
+      chatroom: chat,
     )));
     loadChatrooms(); // reload chatrooms on return to display the newest message + sort properly
   }

@@ -1,7 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:frontend/model/chatroom.dart';
+import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/daily_question_service.dart';
+import 'package:frontend/services/message_service.dart';
+import 'package:frontend/services/socket_client.dart';
+import 'package:frontend/view/chatDetail_screen.dart';
+import 'package:frontend/view/prompt_modal.dart';
 import '../constants.dart';
-import '../services/api_client.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_model.dart';
 import '../model/pigeon.dart';
@@ -16,6 +24,7 @@ class ChatPage extends StatefulWidget {
   final List<User> participants;
   final String membership;
   final ChatroomService chatroomService;
+  final Chatroom chatroom;
 
   const ChatPage({
     Key? key,
@@ -24,6 +33,7 @@ class ChatPage extends StatefulWidget {
     required this.participants,
     required this.membership,
     required this.chatroomService,
+    required this.chatroom,
   }) : super(key: key);
 
   @override
@@ -33,12 +43,31 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   late final ChatController _chatController;
   late final UserService _userService;
+  late final DailyQuestionService _dqService;
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  List<PromptQASection> _promptSections = [];
+  late Chatroom _currentChatroom;
+  late String _chatName;
+  
+
+  StreamSubscription<Message>? _messageSubscription;
+  // StreamSubscription? _dqSubscription;
+  StreamSubscription? _dqPushSubscription;
+  StreamSubscription? _messageErrorSubscription;
+  bool _dqServiceReady = false;
+
+  // prompt state
+  // final TextEditingController _promptAnswerController = TextEditingController();
+  // bool _showPromptModal = false;
+  bool _hasAnsweredToday = true;
+  // String? _todaysPromptQuestion;
+  // bool _canSubmitPrompt = false;
+  // bool _isSubmittingPrompt = false;
+  // String? _dailyQuestionId;
 
   List<Message> _messages = [];
-  ChatGroup? _chatGroup;
   bool _hasMore = true;
   User? _currentUser;
 
@@ -47,8 +76,9 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     final apiClient = ApiClient();
     _userService = UserService(api: apiClient);
-  
-    // fetch current user first
+    _currentChatroom = widget.chatroom;
+    _chatName = widget.chatName;
+
     _loadCurrentUser();
     _setupScrollListener();
   }
@@ -57,16 +87,73 @@ class _ChatPageState extends State<ChatPage> {
     print('_loadCurrentUser started');
     try {
       final user = await _userService.getProfile();
-      _chatController = ChatController(ApiClient(), widget.chatId, user.uid, chatroomService: widget.chatroomService);
+      final messageService = MessageService(
+        socket: SocketClient.instance,
+        api: ApiClient(),
+        currentUserId: user.uid,
+      );
+      _chatController = ChatController(
+        messageService,
+        widget.chatId,
+        user.uid,
+        chatroomService: widget.chatroomService,
+      );
       print('chatController initialized, chatId: ${widget.chatId}');
-      setState(() {
-        _currentUser = user;
+
+      _dqService = DailyQuestionService(socket: SocketClient.instance, api: ApiClient());
+      setState(() { _dqServiceReady = true; });
+      // // listen for answer accepted to unlock chat
+      // _dqSubscription = _dqService.onAnswerAccepted().listen((data) {
+      //   setState(() {
+      //     _showPromptModal = false;
+      //     _hasAnsweredToday = true;
+      //     _isSubmittingPrompt = false;
+      //   });
+      //   _promptAnswerController.clear();
+      // });
+
+      // listen for live daily question push if the user has chat open when it runs
+      _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
+        if (!mounted) return;
+        setState(() {
+          _hasAnsweredToday = false;
+          // _todaysPromptQuestion = dq.question;
+          // _dailyQuestionId = dq.dailyQuestionId;
+          // _showPromptModal = true;
+          _promptSections.clear();
+          _messages.removeWhere((m) => m.id.startsWith('prompt_'));
+        });
       });
 
-      // TEMP: mock data for testing
-      //_useMockData();
+      setState(() { _currentUser = user; });
 
-      // load chat data with the current user
+      // join socket room to receive live messages
+      await _chatController.joinRoom();
+
+      // subscribe to incoming msg stream
+      _messageSubscription = _chatController.onReceiveMessage().listen((
+        message,
+      ) {
+        setState(() {
+          _messages.add(message);
+        });
+        _scrollToBottom();
+      });
+
+      // check if user needs to answer today's prompt
+      final alreadyAnswered = await _dqService.getTodaysQuestion(widget.chatId);
+      setState(() {
+        _hasAnsweredToday = alreadyAnswered == null || alreadyAnswered.hasAnswered;
+      });
+      // error listener
+      _messageErrorSubscription = _chatController.onMessageError().listen((e) {
+        if (!mounted) return; // if widget was disposed
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+      });
+
+      // load chat data
       _loadChatData();
     } catch (e) {
       print('Failed to load current user: $e');
@@ -76,68 +163,108 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // void _useMockData() {
-  //   setState(() {
-  //     _chatGroup = ChatGroup(
-  //       id: 1,
-  //       name: 'Test Group Chat',
-  //       memberCount: 3,
-  //       memberAvatars: [],
-  //     );
+//   Future<void> _checkTodaysPrompt() async {
+//     try {
+//       // TODO: API call
+//       // for now, using mock data
+//       setState(() {
+//         _todaysPromptQuestion = "What's your favorite memory from this week?";
+//         _hasAnsweredToday = false; // Set to true when user has answered
+//         _showPromptModal = !_hasAnsweredToday;
+//       });
+//     } catch (e) {
+//       print('Failed to check prompt: $e');
+//     }
+//   }
 
-  //     _messages = [
-  //       Message(
-  //         id: 1,
-  //         content: 'hey',
-  //         senderUsername: 'TestUser1',
-  //         senderId: 999,
-  //         timestamp: DateTime.now().subtract(Duration(hours: 2)),
-  //         isSentByCurrentUser: false,
-  //         senderPigeonId: 1,
-  //       ),
-  //               Message(
-  //         id: 2,
-  //         content: 'everyone',
-  //         senderUsername: 'TestUser1',
-  //         senderId: 999,
-  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 59)),
-  //         isSentByCurrentUser: false,
-  //         senderPigeonId: 1,
-  //       ),
-  //               Message(
-  //         id: 3,
-  //         content: 'Hey everyone!',
-  //         senderUsername: 'TestUser1',
-  //         senderId: 999,
-  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 58)),
-  //         isSentByCurrentUser: false,
-  //         senderPigeonId: 1,
-  //       ),
-  //       Message(
-  //         id: 4,
-  //         content: 'Hi! How are you?',
-  //         senderUsername: 'You',
-  //         senderId: widget.currentUserId,
-  //         timestamp: DateTime.now().subtract(Duration(hours: 1, minutes: 50)),
-  //         isSentByCurrentUser: true,
-  //         senderPigeonId: 3,
-  //       ),
-  //       Message(
-  //         id: 5,
-  //         content: 'This is a longer message to test how the bubble expands when there is more text. This is a longer message to test how the bubble expands when there is more text.',
-  //         senderUsername: 'TestUser2',
-  //         senderId: 998,
-  //         timestamp: DateTime.now().subtract(Duration(minutes: 30)),
-  //         isSentByCurrentUser: false,
-  //         senderPigeonId: 5,
-  //       ),
-  //     ];
-  //   });
-  // }
+//   Future<void> _submitPromptAnswer() async {
+//     final answerText = _promptAnswerController.text.trim();
+//     if (answerText.isEmpty) return;
+
+//     setState(() {
+//       _isSubmittingPrompt = true;
+//     });
+
+//     try {
+//       // TODO: API call
+
+//       // simulate API call
+//       await Future.delayed(Duration(seconds: 1));
+
+//       // mock response
+//       final mockResponses = [
+//         {
+//           'username': 'Alice',
+//           'pigeonId': 1,
+//           'answer': 'Going to the beach with friends',
+//           'userId': 'user1',
+//         },
+//         {
+//           'username': 'Bob',
+//           'pigeonId': 2,
+//           'answer': 'Finishing my project',
+//           'userId': 'user2',
+//         },
+//         {
+//           'username': _currentUser!.username,
+//           'pigeonId': _currentUser!.pigeonId,
+//           'answer': answerText,
+//           'userId': _currentUser!.uid,
+//         },
+//       ];
+
+//       List<String> answerMessageIds = [];
+
+//       setState(() {
+//         // Add each answer as a chat message
+//         for (var response in mockResponses) {
+//           final messageId =
+//               'prompt_${DateTime.now().millisecondsSinceEpoch}_${response['userId']}';
+//           answerMessageIds.add(messageId);
+
+//           _messages.add(
+//             Message(
+//               id: messageId,
+//               senderId: response['userId'] as String,
+//               senderUsername: response['username'] as String,
+//               senderPigeonId: response['pigeonId'] as int,
+//               content: response['answer'] as String,
+//               timestamp: DateTime.now(),
+//               isSentByCurrentUser: response['userId'] == _currentUser!.uid,
+//             ),
+//           );
+//         }
+
+//         // create prompt section
+//         _promptSections.add(
+//           PromptQASection(
+//             questionId: 'q_${DateTime.now().millisecondsSinceEpoch}',
+//             questionText: _todaysPromptQuestion!,
+//             askedAt: DateTime.now(),
+//             answerMessageIds: answerMessageIds,
+//           ),
+//         );
+
+//         _showPromptModal = false;
+//         _hasAnsweredToday = true;
+//         _isSubmittingPrompt = false;
+//       });
+
+//       _promptAnswerController.clear();
+//       _scrollToBottom();
+//     } catch (e) {
+//       setState(() {
+//         _isSubmittingPrompt = false;
+//       });
+
+//       ScaffoldMessenger.of(
+//         context,
+//       ).showSnackBar(SnackBar(content: Text('Failed to submit answer: $e')));
+//     }
+//   }
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
-      // load more messages when scrolling to top
       if (_scrollController.position.pixels == 0 &&
           _hasMore &&
           !_model.isLoading) {
@@ -155,32 +282,18 @@ class _ChatPageState extends State<ChatPage> {
       _model.loadError = null;
     });
 
-    // load chat info and messages
-    // final infoResult = await _chatController.loadChatInfo();
     final messagesResult = await _chatController.loadMessages();
 
-    //if (infoResult['success'] && messagesResult['success']) {
     if (messagesResult['success']) {
       setState(() {
-        // _chatGroup = infoResult['chatGroup'];
-        _chatGroup = ChatGroup( // hardcoded for now
-          id: widget.chatId,
-          name: widget.chatName,
-          memberCount: widget.participants.length+1, // +1 for current user
-          memberAvatars: widget.participants.map((p) {
-            final pigeon = Pigeon.getById(p.pigeonId);
-            return pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-          }).toList(),
-          memberNames: widget.participants.map((p) => p.username).toList(),
-        );
         _messages = messagesResult['messages'];
         _hasMore = messagesResult['hasMore'];
         _model.isLoading = false;
       });
       _scrollToBottom();
+      if (_hasAnsweredToday) await _loadPromptSection();
     } else {
       setState(() {
-        // _model.loadError = infoResult['error'] ?? messagesResult['error'];
         _model.loadError = messagesResult['error'];
         _model.isLoading = false;
       });
@@ -221,36 +334,10 @@ class _ChatPageState extends State<ChatPage> {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
-    // clear input field immediately
     _messageController.clear();
 
-    // TEMP: add message directly for mock testing
-    // setState(() {
-    //   _messages.add(Message(
-    //     id: _messages.length + 1,
-    //     content: content,
-    //     senderUsername: 'You',
-    //     senderId: widget.currentUserId,
-    //     timestamp: DateTime.now(),
-    //     isSentByCurrentUser: true,
-    //     senderPigeonId: 3,
-    //   ));
-    // });
-    // _scrollToBottom();
-
-    // comment while using mock data:
-    final result = await _chatController.sendMessage(content);
-    if (result['success']) {
-      setState(() {
-        _messages.add(result['message']);
-      });
-      _scrollToBottom();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: ${result['error']}')),
-      );
-      _messageController.text = content;
-    }
+    // send message, no need to await. server broadcasts back to the room
+    _chatController.sendMessage(content);
   }
 
   void _onTypingChanged(String text) {
@@ -259,7 +346,6 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {});
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
-    //   _chatController.sendTypingIndicator(isTyping);
     }
   }
 
@@ -269,7 +355,7 @@ class _ChatPageState extends State<ChatPage> {
       builder: (context) => AlertDialog(
         title: Text('Leave Chat'),
         content: Text(
-          _chatGroup?.memberCount == 1
+          widget.participants.length + 1 == 1
               ? 'You are the last member. Leaving will delete this chat.'
               : 'Are you sure you want to leave this chat?',
         ),
@@ -308,10 +394,57 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  Future<void> _loadPromptSection() async {
+    if (!_dqServiceReady || !_hasAnsweredToday || _currentUser == null) return;
+    try {
+      final dqData = await _dqService.getTodaysQuestion(widget.chatId);
+      if (dqData == null) return;
+
+      final answers = await _dqService.getAnswers(widget.chatId);
+      if (answers.isEmpty) return;
+
+      final List<String> answerMessageIds = [];
+      final List<Message> answerMessages = [];
+
+      for (final answer in answers) {
+        final messageId = 'prompt_${answer['id']}';
+        answerMessageIds.add(messageId);
+        answerMessages.add(Message(
+          id:                  messageId,
+          content:             answer['answerText'] as String? ?? '',
+          senderUsername:      answer['username'] as String? ?? 'Unknown',
+          senderId:            answer['userId'] as String? ?? '',
+          timestamp:           DateTime.parse(answer['answeredAt'] as String),
+          isSentByCurrentUser: answer['userId'] == _currentUser!.uid,
+          senderPigeonId:      answer['pigeonId'] as int?,
+        ));
+      }
+
+      setState(() {
+        _messages.addAll(answerMessages);
+        _promptSections.add(PromptQASection(
+          questionId:       dqData.dailyQuestionId,
+          questionText:     dqData.question,
+          askedAt:          DateTime.now(),
+          answerMessageIds: answerMessageIds,
+        ));
+      });
+      _scrollToBottom();
+    } catch (e) {
+      print('[ChatPage] failed to load prompt section: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _messageSubscription?.cancel(); // stop listening for new msgs
+    // _dqSubscription?.cancel(); // stop listening for dq
+    _dqPushSubscription?.cancel();
+    _messageErrorSubscription?.cancel();
+    _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
+    // _promptAnswerController.dispose();
     super.dispose();
   }
 
@@ -319,33 +452,212 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('images/woodGrainTexture.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: _model.isLoading
-                    ? Center(child: CircularProgressIndicator())
-                    : _model.loadError != null
-                    ? _buildErrorView()
-                    : _buildMessageList(),
+      body: Stack(
+        children: [
+          // main chat content
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('images/woodGrainTexture.png'),
+                fit: BoxFit.cover,
               ),
-              _buildInputArea(),
-            ],
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: _model.isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : _model.loadError != null
+                        ? _buildErrorView()
+                        : _buildChatContent(),
+                  ),
+                  _buildInputArea(),
+                ],
+              ),
+            ),
           ),
-        ),
+
+          // prompt modal overlay
+          // if (_showPromptModal) _buildPromptModal(),
+          if (_currentUser != null && !_hasAnsweredToday)
+            DailyPromptModal(
+              chatId: widget.chatId,
+              currentUserId: _currentUser!.uid,
+              dqService: _dqService,
+              onAnswerSubmitted: () {
+                setState(() { _hasAnsweredToday = true; });
+                _loadPromptSection();
+              },
+            ),
+        ],
       ),
     );
   }
+
+//   Widget _buildPromptModal() {
+//     return Stack(
+//       children: [
+//         // blurred background
+//         BackdropFilter(
+//           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+//           child: Container(color: Colors.black.withOpacity(0.3)),
+//         ),
+
+//         // prompt card
+//         Align(
+//           alignment: Alignment.bottomCenter,
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               // tab
+//               Padding(
+//                 padding: EdgeInsets.only(left: AppSpacing.sm, right: 160),
+//                 child: Container(
+//                   padding: EdgeInsets.symmetric(
+//                     horizontal: AppSpacing.xs,
+//                     vertical: AppSpacing.xs,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: AppColors.background,
+//                     borderRadius: BorderRadius.only(
+//                       topLeft: Radius.circular(AppBorderRadius.md),
+//                       topRight: Radius.circular(AppBorderRadius.md),
+//                     ),
+//                     border: Border(
+//                       left: BorderSide(color: AppColors.border, width: 1),
+//                       top: BorderSide(color: AppColors.border, width: 1),
+//                       right: BorderSide(color: AppColors.border, width: 1),
+//                     ),
+//                   ),
+
+//                   child: Row(
+//                     children: [
+//                       IconButton(
+//                         icon: Icon(Icons.arrow_back, size: 20),
+//                         padding: EdgeInsets.symmetric(),
+//                         constraints: BoxConstraints(
+//                           minWidth: 24,
+//                           minHeight: 24,
+//                         ),
+//                         onPressed: () {
+//                           setState(() {
+//                             _showPromptModal = false;
+//                           });
+//                           Navigator.pop(context);
+//                         },
+//                       ),
+//                       SizedBox(width: AppSpacing.xs),
+//                       Text(
+//                         'Daily Question',
+//                         style: Theme.of(
+//                           context,
+//                         ).textTheme.headlineMedium?.copyWith(fontSize: 14),
+//                       ),
+//                     ],
+//                   ), // Close Row
+//                 ), // Close Container
+//               ), // Close Padding
+//               // main card
+//               Container(
+//                 width: double.infinity,
+//                 padding: EdgeInsets.only(
+//                   left: AppSpacing.md,
+//                   right: AppSpacing.md,
+//                   bottom: AppSpacing.lg,
+//                   top: AppSpacing.md,
+//                 ),
+//                 decoration: BoxDecoration(color: AppColors.background),
+//                 child: Column(
+//                   mainAxisSize: MainAxisSize.min,
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     // question text
+//                     Text(
+//                       _todaysPromptQuestion ?? 'Loading question...',
+//                       style: Theme.of(
+//                         context,
+//                       ).textTheme.bodyLarge?.copyWith(fontSize: 20),
+//                     ),
+//                     SizedBox(height: AppSpacing.md),
+
+//                     // input row
+//                     Row(
+//                       children: [
+//                         Expanded(
+//                           child: TextField(
+//                             controller: _promptAnswerController,
+//                             autofocus: true,
+//                             maxLength: 500,
+//                             decoration: InputDecoration(
+//                               hintText: 'Type your answer here...',
+//                               hintStyle: Theme.of(context).textTheme.bodySmall
+//                                   ?.copyWith(fontStyle: FontStyle.italic),
+//                               border: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(
+//                                   AppBorderRadius.lg,
+//                                 ),
+//                                 borderSide: BorderSide(color: AppColors.border),
+//                               ),
+//                               enabledBorder: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(
+//                                   AppBorderRadius.lg,
+//                                 ),
+//                                 borderSide: BorderSide(color: AppColors.border),
+//                               ),
+//                               focusedBorder: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(
+//                                   AppBorderRadius.lg,
+//                                 ),
+//                                 borderSide: BorderSide(
+//                                   color: AppColors.primary,
+//                                   width: 2,
+//                                 ),
+//                               ),
+//                               counterText: '',
+//                               contentPadding: EdgeInsets.symmetric(
+//                                 horizontal: AppSpacing.md,
+//                                 vertical: AppSpacing.sm,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                         SizedBox(width: AppSpacing.sm),
+
+//                         // send button
+//                         IconButton(
+//                           icon: _isSubmittingPrompt
+//                               ? SizedBox(
+//                                   height: 20,
+//                                   width: 20,
+//                                   child: CircularProgressIndicator(
+//                                     color: AppColors.primary,
+//                                     strokeWidth: 2,
+//                                   ),
+//                                 )
+//                               : Icon(Icons.send),
+//                           color: _canSubmitPrompt
+//                               ? AppColors.primary
+//                               : AppColors.textSecondary,
+//                           onPressed: _canSubmitPrompt && !_isSubmittingPrompt
+//                               ? _submitPromptAnswer
+//                               : null,
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//   }
 
   Widget _buildHeader() {
     return Container(
@@ -375,15 +687,15 @@ class _ChatPageState extends State<ChatPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _chatGroup?.name ?? 'Loading...',
+                    _chatName,
                     style: AppTextStyles.heading.copyWith(fontSize: 18),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     _model.showFullGroupName
-                        ? '${_chatGroup?.memberCount ?? 0} members: ${_chatGroup?.memberNames?.join(", ") ?? ""}'
-                        : '${_chatGroup?.memberCount ?? 0} members',
+                        ? '${widget.participants.length + 1} members: ${widget.participants.map((p) => p.username).join(", ")}'
+                        : '${widget.participants.length + 1} members',
                     style: AppTextStyles.label,
                     maxLines: _model.showFullGroupName ? null : 1,
                     overflow: _model.showFullGroupName
@@ -394,24 +706,145 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
-          PopupMenuButton<String>(
+          //icon button for chat detail screen
+          IconButton(
             icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
-            onSelected: (value) {
-              if (value == 'leave') {
-                _showLeaveConfirmation();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
-            ],
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatDetailScreen(
+                  chatroom: _currentChatroom,
+                  onSettingsChanged: (updatedChatroom) {
+                    setState(() {
+                      _currentChatroom = updatedChatroom;
+                      _chatName = updatedChatroom.name; // when name is changed, reflect upon returning to chat screen
+                    });
+                  }
+                )
+              )
+            )
+          ), 
+          // PopupMenuButton<String>(
+          //   icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
+          //   onSelected: (value) {
+          //     if (value == 'leave') {
+          //       _showLeaveConfirmation();
+          //     }
+          //   },
+          //   itemBuilder: (context) => [
+          //     PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
+          //   ],
+          // ),
+        ],
+      ),
+    );
+  }
+
+  // bool _shouldShowPromptResponses() {
+  //   return _hasAnsweredToday && _promptSections.isNotEmpty;
+  // }
+
+  Widget _buildPromptResponsesSection() {
+    if (_promptSections.isEmpty) return SizedBox.shrink();
+
+    final section = _promptSections.last;
+
+    return Container(
+      margin: EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppBorderRadius.lg),
+                topRight: Radius.circular(AppBorderRadius.lg),
+              ),
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    section.questionText,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(AppSpacing.sm),
+            child: Column(
+              children: section.answerMessageIds.map((messageId) {
+                final message = _messages.firstWhere((m) => m.id == messageId);
+                final pigeon = message.senderPigeonId != null
+                    ? Pigeon.getById(message.senderPigeonId!)
+                    : null;
+                final profileImage =
+                    pigeon?.profile ??
+                    'images/pigeonProfile/defaultPigeonProfile.png';
+
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundImage: AssetImage(profileImage),
+                        backgroundColor: Colors.transparent,
+                      ),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.senderUsername,
+                              style: AppTextStyles.label.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              message.content,
+                              style: AppTextStyles.body.copyWith(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
     );
   }
 
+  // Widget _buildPromptDivider() {
+  //   return Container(
+  //     margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
+  //     height: 1,
+  //     color: AppColors.border,
+  //   );
+  // }
+
   Widget _buildMessageList() {
-    if (_messages.isEmpty) {
+    if (_messages.isEmpty && _promptSections.isEmpty) {
       return Center(
         child: Text(
           'No messages yet. Start the conversation!',
@@ -420,46 +853,97 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.all(AppSpacing.md),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) {
-        final message = _messages[index];
-        final showTimestamp = _shouldShowTimestamp(index);
-        final isFirstInGroup = _isFirstInGroup(index);
+    // Build a combined list of regular messages and prompt sections
+    List<Widget> items = [];
+    bool promptSectionAdded = false; // flag to prevent duplicate prompt section
 
-        return Column(
+    // Get regular messages (excluding prompt answers)
+    final regularMessages = _messages.where((message) {
+      for (var section in _promptSections) {
+        if (section.answerMessageIds.contains(message.id)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    // Interleave regular messages and prompt sections by timestamp
+    for (int i = 0; i < regularMessages.length; i++) {
+      final message = regularMessages[i];
+
+      // Check if any prompt section should appear before this message
+      if (!promptSectionAdded && _promptSections.isNotEmpty) {
+        for (var section in _promptSections) {
+          if (section.askedAt.isBefore(message.timestamp)) {
+            items.add(_buildPromptResponsesSection());
+            promptSectionAdded = true;
+            break;
+          }
+        }
+      }
+
+      final showTimestamp =
+          i == regularMessages.length - 1 ||
+          regularMessages[i + 1].timestamp
+                  .difference(message.timestamp)
+                  .inMinutes >=
+              1;
+
+      final isFirstInGroup =
+          i == 0 || message.senderId != regularMessages[i - 1].senderId;
+
+      items.add(
+        Column(
           children: [
             _buildMessageBubble(message, isFirstInGroup),
             if (showTimestamp) _buildTimestamp(message.timestamp),
             SizedBox(height: AppSpacing.sm),
           ],
-        );
-      },
+        ), 
+      );
+    }
+
+    // If prompt section hasn't been added yet, add it at the end
+    if (_promptSections.isNotEmpty && !items.any((item) => item is Container)) {
+      items.add(_buildPromptResponsesSection());
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: EdgeInsets.all(AppSpacing.md),
+      itemCount: items.length,
+      itemBuilder: (context, index) => items[index],
     );
   }
 
-  bool _shouldShowTimestamp(int index) {
-    if (index == _messages.length - 1) return true;
-
-    final currentMessage = _messages[index];
-    final nextMessage = _messages[index + 1];
-
-    final timeDifference = nextMessage.timestamp.difference(
-      currentMessage.timestamp,
+  Widget _buildChatContent() {
+    return Column(
+      children: [
+        Expanded(child: _buildMessageList()),
+      ],
     );
-    return timeDifference.inMinutes >= 1;
   }
 
-  bool _isFirstInGroup(int index) {
-    if (index == 0) return true;
+  // bool _shouldShowTimestamp(int index) {
+  //   if (index == _messages.length - 1) return true;
 
-    final currentMessage = _messages[index];
-    final previousMessage = _messages[index - 1];
+  //   final currentMessage = _messages[index];
+  //   final nextMessage = _messages[index + 1];
 
-    return currentMessage.senderId != previousMessage.senderId;
-  }
+  //   final timeDifference = nextMessage.timestamp.difference(
+  //     currentMessage.timestamp,
+  //   );
+  //   return timeDifference.inMinutes >= 1;
+  // }
+
+  // bool _isFirstInGroup(int index) {
+  //   if (index == 0) return true;
+
+  //   final currentMessage = _messages[index];
+  //   final previousMessage = _messages[index - 1];
+
+  //   return currentMessage.senderId != previousMessage.senderId;
+  // }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
     final pigeon = message.senderPigeonId != null
@@ -477,14 +961,13 @@ class _ChatPageState extends State<ChatPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!message.isSentByCurrentUser) ...[
-            // Show avatar only for first message in group
             isFirstInGroup
                 ? CircleAvatar(
                     radius: 16,
                     backgroundImage: AssetImage(profileImage),
                     backgroundColor: Colors.transparent,
                   )
-                : SizedBox(width: 32), // Placeholder space for alignment
+                : SizedBox(width: 32),
             SizedBox(width: AppSpacing.sm),
           ],
           Flexible(
@@ -493,7 +976,6 @@ class _ChatPageState extends State<ChatPage> {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                // Show username only for first message in group
                 if (!message.isSentByCurrentUser && isFirstInGroup)
                   Padding(
                     padding: EdgeInsets.only(bottom: 4),
@@ -627,4 +1109,35 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
+
+  // Widget _buildPromptHeader(String question) {
+  //   return Center(
+  //     child: Container(
+  //       margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
+  //       padding: EdgeInsets.symmetric(
+  //         horizontal: AppSpacing.md,
+  //         vertical: AppSpacing.sm,
+  //       ),
+  //       decoration: BoxDecoration(
+  //         color: AppColors.primary.withOpacity(0.2),
+  //         borderRadius: BorderRadius.circular(AppBorderRadius.md),
+  //         border: Border.all(color: AppColors.border),
+  //       ),
+  //       child: Column(
+  //         children: [
+  //           Icon(Icons.question_answer, color: AppColors.primary, size: 20),
+  //           SizedBox(height: 4),
+  //           Text(
+  //             question,
+  //             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  //               fontSize: 14,
+  //               fontWeight: FontWeight.w600,
+  //             ),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 }

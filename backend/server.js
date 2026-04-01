@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
 import { initModels } from './src/models/index.js';
+import { startSyncScheduler } from './src/utils/sheetSync.js';
 
 /*
     The server consists of multiple parts:
@@ -25,6 +26,8 @@ import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import chatroomRoutes from './src/routes/chatroomRoutes.js';
 import messageRoutes from './src/routes/messageRoutes.js';
+import syncRoutes from './src/routes/syncRoutes.js';
+import dailyQuestionRoutes from './src/routes/dailyQuestionRoutes.js';
 
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
@@ -32,6 +35,8 @@ app.use('/api/auth', authRoutes); // alias
 app.use('/user', userRoutes);
 app.use('/chatroom', chatroomRoutes);
 app.use('/chat', messageRoutes); //sending
+app.use('/sync', syncRoutes);
+app.use('/daily-question', dailyQuestionRoutes);
 
 // for testing only
 import devRoutes from './src/dev/devRoutes.js';
@@ -40,6 +45,9 @@ app.use('/dev', devRoutes);
 // error-handling middleware muist be attached last
 import AppError from './src/utils/errors/AppError.js';
 import errorHandler from './src/middleware/errorHandler.js';
+import { startQuestionScheduler } from './src/utils/questionScheduler.js';
+import { registerDailyQuestionHandlers } from './src/sockets/dailyQuestionHandler.js';
+import { registerChatHandlers } from './src/sockets/chatHandler.js';
 
 app.get("/favicon.ico", (req, res) => res.status(204).end()); // ignore browser favicon request
 app.use((req, res, next) => next(AppError.notFound('Route not found'))); // 404 for unknown routes
@@ -73,6 +81,9 @@ console.log("Database models recreated and synced successfully");
 io.on('connection', (socket) => {
     console.log('Socket connected: ', socket.id);
 
+    registerChatHandlers(io, socket);
+    registerDailyQuestionHandlers(io, socket);
+
     socket.on('disconnect', () => {
         console.log('Socket disconnected: ', socket.id);
     });
@@ -80,11 +91,13 @@ io.on('connection', (socket) => {
 
 // start server once everything is attached
 const port = config.SV_PORT;
-// server.listen(port, () => console.log(`Server running on port ${port}`)); // display a server status upon startup
+server.listen(port, () => console.log(`Server running on port ${port}`)); // display a server status upon startup
+startSyncScheduler();
+startQuestionScheduler(io);
 
-if (process.env.NODE_ENV !== 'test') {
-    const port = config.SV_PORT;
-    server.listen(port, () => console.log(`Server running on port ${port}`));
-}
+// if (process.env.NODE_ENV !== 'test') {
+//     const port = config.SV_PORT;
+//     server.listen(port, () => console.log(`Server running on port ${port}`));
+// }
 
-export default app; // This allows the test file to see your Express logic
+// export default app; // This allows the test file to see your Express logic

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/constants.dart';
 import 'package:frontend/controller/createChat_controller.dart';
+import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
 
@@ -15,11 +16,23 @@ class CreateChatScreen extends StatefulWidget {
   }
 }
 
+//helper function for question type and relationship type (enums) for readability
+String formatEnumName(String name) {
+  return name
+      .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
+      .replaceFirst(name[0], name[0].toUpperCase());
+}
+
 class CreateChatScreenState extends State<CreateChatScreen> {
   late final CreateChatController controller;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  //form controllers
+  //form controllers/values
   final TextEditingController chatroomNameController = TextEditingController();
+  RelationshipType? selectedRelationship; //selected relationship
+  String? relationshipError;
+  bool fineGrainControlSwitch = false;
+  Set<QuestionType> selectedQuestionTypes = {};
+  Set<QuestionTopic> selectedQuestionTopics = {};
 
   @override
   void initState() {
@@ -27,6 +40,8 @@ class CreateChatScreenState extends State<CreateChatScreen> {
     final chatroomService = ChatroomService(api: ApiClient());
     controller = CreateChatController(this, chatroomService: chatroomService);
   }
+
+  void callSetState(fn) => setState(fn);
 
   @override
   void dispose() {
@@ -82,6 +97,286 @@ class CreateChatScreenState extends State<CreateChatScreen> {
                     validator: controller.chatNameValidator,
                   ),
                   SizedBox(height: 10.0),
+                  Row(
+                    children: [
+                      Text(
+                        'Relationship Type',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 20.0,
+                          color: AppColors.darkBrown,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      IconButton(
+                          alignment: Alignment.centerLeft,
+                          icon: Icon(
+                            Icons.info_outline,
+                            color: AppColors.darkBrown,
+                            size: 20.0,
+                          ),
+                          onPressed: () => showRelationshipTypeInfoPopUp(
+                            context,
+                          ), //show info
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 2.0),
+                  DropdownMenu<RelationshipType>(
+                    width:
+                        MediaQuery.of(context).size.width -
+                        40, // make width of dropdown and input equal
+                    initialSelection: selectedRelationship,
+                    errorText: relationshipError,
+                    onSelected: (value) {
+                      setState(() {
+                        selectedRelationship = value;
+                      });
+                    },
+                    textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.darkBrown,
+                      fontSize: 16,
+                    ),
+                    menuStyle: MenuStyle(
+                      backgroundColor: WidgetStateProperty.all(
+                        AppColors.background,
+                      ),
+                      elevation: WidgetStateProperty.all(1),
+                      shape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    dropdownMenuEntries: RelationshipType.values.map((type) {
+                      return DropdownMenuEntry(
+                        value: type,
+                        label: formatEnumName(type.name),
+                        style: ButtonStyle(
+                          textStyle: WidgetStateProperty.all(
+                            const TextStyle(fontSize: 16),
+                          ),
+                          foregroundColor: WidgetStateProperty.all(
+                            AppColors.darkBrown,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: 10.0),
+                  Row(
+                    //fine-grain control toggle switch
+                    children: [
+                      Text(
+                        'Fine-grain Question Control',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 20.0,
+                          color: AppColors.darkBrown,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      Expanded(
+                        child: IconButton(
+                          alignment: Alignment.centerLeft,
+                          icon: Icon(
+                            Icons.info_outline,
+                            color: AppColors.darkBrown,
+                            size: 20.0,
+                          ),
+                          onPressed: () => showFineGrainControlInfoPopUp(
+                            context,
+                          ), //show info
+                        ),
+                      ),
+                      Transform.scale(
+                        scale: 0.75,
+                        child: Switch(
+                          value: fineGrainControlSwitch,
+                          inactiveThumbColor: AppColors.darkBrown,
+                          inactiveTrackColor: AppColors.background,
+                          activeThumbColor: AppColors.darkBrown,
+                          trackOutlineColor: WidgetStateProperty.resolveWith((
+                            states,
+                          ) {
+                            if (states.contains(WidgetState.selected)) {
+                              return Colors.transparent; // active outline
+                            }
+                            return AppColors.darkBrown; // inactive outline
+                          }),
+
+                          trackOutlineWidth: WidgetStateProperty.all(2.0),
+                          onChanged: (bool value) {
+                            setState(() {
+                              fineGrainControlSwitch = value;
+                              if(!value) { //clear question preferences when fine-grain control is turned off
+                                selectedQuestionTopics = {};
+                                selectedQuestionTypes = {};
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (fineGrainControlSwitch)
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: AppColors.darkBrown, width: 1.5), 
+                          bottom: BorderSide(color: AppColors.darkBrown, width: 1.5)
+                        )
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsetsGeometry.fromLTRB(0.0, 5.0, 0.0, 5.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              //first column: question Type
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Question Type',
+                                    style: Theme.of(context).textTheme.bodyLarge
+                                        ?.copyWith(
+                                          fontSize: 20.0,
+                                          color: AppColors.darkBrown,
+                                        ),
+                                  ),
+                        
+                                  ...QuestionType.values.map((type) {
+                                    return SizedBox(
+                                      height: 20.0,
+                                      child: Row(
+                                        // mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              formatEnumName(type.name),
+                                              style: TextStyle(
+                                                color: AppColors.darkBrown,
+                                              ),
+                                            ),
+                                          ),
+                                          Checkbox(
+                                            value: selectedQuestionTypes.contains(
+                                              type,
+                                            ),
+                        
+                                            fillColor:
+                                                WidgetStateProperty.resolveWith((
+                                                  states,
+                                                ) {
+                                                  if (states.contains(
+                                                    WidgetState.selected,
+                                                  )) {
+                                                    return AppColors.darkBrown;
+                                                  }
+                                                  return AppColors.background;
+                                                }),
+                        
+                                            side: BorderSide(
+                                              color: AppColors.darkBrown,
+                                              width: 1.5,
+                                            ),
+                        
+                                            onChanged: (bool? value) {
+                                              setState(() {
+                                                if (value == true) {
+                                                  selectedQuestionTypes.add(type);
+                                                } else {
+                                                  selectedQuestionTypes.remove(
+                                                    type,
+                                                  );
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 10.0),
+                            Expanded(
+                              //2nd column: question topic
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Question Topic',
+                                    style: Theme.of(context).textTheme.bodyLarge
+                                        ?.copyWith(
+                                          fontSize: 20.0,
+                                          color: AppColors.darkBrown,
+                                        ),
+                                  ),
+                        
+                                  ...QuestionTopic.values.map((topic) {
+                                    return SizedBox(
+                                      height: 20.0,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              formatEnumName(topic.name),
+                                              style: TextStyle(
+                                                color: AppColors.darkBrown,
+                                              ),
+                                            ),
+                                          ),
+                                          Checkbox(
+                                            value: selectedQuestionTopics.contains(
+                                              topic,
+                                            ),
+                        
+                                            fillColor:
+                                                WidgetStateProperty.resolveWith((
+                                                  states,
+                                                ) {
+                                                  if (states.contains(
+                                                    WidgetState.selected,
+                                                  )) {
+                                                    return AppColors.darkBrown;
+                                                  }
+                                                  return AppColors.background;
+                                                }),
+                        
+                                            side: BorderSide(
+                                              color: AppColors.darkBrown,
+                                              width: 1.5,
+                                            ),
+                        
+                                            onChanged: (bool? value) {
+                                              setState(() {
+                                                if (value == true) {
+                                                  selectedQuestionTopics.add(topic);
+                                                } else {
+                                                  selectedQuestionTopics.remove(
+                                                    topic,
+                                                  );
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  SizedBox(height: 10.0),
+
                   Center(
                     child: ElevatedButton(
                       onPressed: controller.onPressCreate,
@@ -104,6 +399,92 @@ class CreateChatScreenState extends State<CreateChatScreen> {
     );
   }
 }
+
+void showRelationshipTypeInfoPopUp(BuildContext context) {
+  //helper function to show dialog for relationship info button
+  showDialog(
+    context: context,
+    builder: (context) {
+      return RelationshipTypeInfo();
+    },
+  );
+}
+
+class RelationshipTypeInfo extends StatelessWidget {
+  //pop up element
+  const RelationshipTypeInfo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.background,
+      title: Text(
+        'Relationship Type',
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontSize: 14.0,
+          color: AppColors.darkBrown,
+        ),
+      ),
+      content: Text(
+        '''Chat relationship type should be selected to match how you and the other chat members are related to eachother. The details of each relationship type are as follows.
+
+Acquaintances: Best for when you are just getting to know someone. Daily questions will include non-invasive icebreakers such as “What is your favorite color?” or “What is the top item on your bucket list?”
+
+Family: Best for when you are chatting with close relatives. Daily questions will pry deeper than with acquaintances but will stay family-friendly, i.e., “What is your favorite  family vacation you have been on?”
+
+Friends: Best for when you are chatting with close friends, maybe someone you’ve known for a good amount of time. Daily questions will cover even broader topics than those given to family chats and may not stay as family-friendly, i.e., “Who is the hottest US president?”
+
+Romantic partners: Best for when you are chatting with romantic partners. Daily questions may broach topics of intimacy and future plans, i.e., “Do you have terms of endearment you hate?” or “What do you wear when you sleep?”
+''',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 12.5,
+          color: AppColors.darkBrown,
+        ),
+      ),
+    );
+  }
+}
+
+//fine grain control info pop up
+void showFineGrainControlInfoPopUp(BuildContext context) {
+  //helper function to show dialog
+  showDialog(
+    context: context,
+    builder: (context) {
+      return FineGrainControlInfo();
+    },
+  );
+}
+
+class FineGrainControlInfo extends StatelessWidget {
+  //pop up element
+  const FineGrainControlInfo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.background,
+      title: Text(
+        'Fine-grain Question Control',
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontSize: 14.0,
+          color: AppColors.darkBrown,
+        ),
+      ),
+      content: Text(
+        '''Turning on fine-grain question control allows you to filter your daily questions by type and topic instead of the default, which is by relationship type.
+Question type corresponds to how a question is formatted or what sort of question is being asked (i.e., an “If you could” question prompts you to imagine a scenario and what you would do within it. For example, “If you could swap bodies with anyone for a day, who would you pick?”). 
+Question topic corresponds to the content of the question (i.e., a question with the topic of personal is going to prompt you to share something about yourself that is a little deeper than surface-level opinions). 
+All unchecked question types and topics will be filtered out of the possible questions you will be asked.''',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontSize: 12.5,
+          color: AppColors.darkBrown,
+        ),
+      ),
+    );
+  }
+}
+
 
 void showCodePopup(BuildContext context, String code) {
   //helper function to show code banner
@@ -154,13 +535,15 @@ class CodeBannerPopup extends StatelessWidget {
                       color: AppColors.darkBrown,
                     ),
                   ),
-                  IconButton( //copy button
+                  IconButton(
+                    //copy button
                     icon: const Icon(
                       Icons.copy,
                       size: 20,
                       color: AppColors.darkBrown,
                     ),
-                    onPressed: () { //show that the code has been copied
+                    onPressed: () {
+                      //show that the code has been copied
                       Clipboard.setData(ClipboardData(text: code));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Code copied!")),

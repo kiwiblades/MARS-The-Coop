@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { sequelize } from "../db/sequelize.js";
 import ChatMembership from "../models/ChatMembership.js";
 import ChatRoom from "../models/ChatRoom.js";
+import ChatSettings from "../models/ChatSettings.js";
 import User from "../models/userModel.js";
 import Message from "../models/Message.js";
 import AppError from "../utils/errors/AppError.js";
@@ -21,10 +22,12 @@ export async function getChatrooms(req, res) {
                 model: User,
                 as: "participants",
                 attributes: ["uid","username","pigeonId"],
-                through: {
-                    // participant membership fields
-                    attributes: ["role","joinedAt"],
-                },
+                through: { attributes: ["role","joinedAt"] }, // participant membership fields
+            }, {
+                model: ChatSettings,
+                as: "settings",
+                attributes: ["relationshipType","allowedTopics","allowedTypes"],
+                required: false, // left join, so rooms without settings aren't excluded
             }],
         }],
         order: [
@@ -65,6 +68,7 @@ export async function getChatrooms(req, res) {
     const payload = chatrooms.map((m) => {
         // look up the last message for the current chatroom, if one exists
         const lastMessage = lastMessageMap[m.chatId];
+        const settings = m.ChatRoom?.settings;
         return {
             chatroom: m.ChatRoom,
             membership: {
@@ -76,6 +80,11 @@ export async function getChatrooms(req, res) {
             participants: (m.ChatRoom?.participants ?? []).filter((u) => u.uid !== uid),
             lastSentMessage: lastMessage?.content ?? '',
             lastSentTime: lastMessage?.createdAt ?? '',
+            settings: {
+                relationshipType: settings?.relationshipType ?? 'Friends',
+                allowedTopics: settings?.allowedTopics ?? [],
+                allowedTypes: settings?.allowedTypes ?? [],
+            }
         }
     });
 
@@ -85,24 +94,36 @@ export async function getChatrooms(req, res) {
 
 export async function createChatroom(req, res) {
     const uid = req.user.uid;
-    const { name } = req.body;
+    const { name, relationshipType, allowedTopics, allowedTypes } = req.body;
     if (!name) throw AppError.badRequest('Name is a required field', { code: 'NAME_MISSING' });
+
+    const normalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : str;
 
     // because multiple queries need to be made, start a transaction (to prevent orphan entries)
     const t = await sequelize.transaction();
     try {
+        // 1. create base room
         // only name is customizable, everything else is generated
         const chatroom = await ChatRoom.create({ 
             name,
             lastMsgSent: new Date(Date.now() + 60*1000), // set 1 min grace period into future to keep new chat at top
         }, { transaction: t });
 
-        // add the user as the owner of the room
-        await ChatMembership.create({
-            // the userId + chatId act as a primary key, so there is no new id
-            userId: uid, // the current user
+        // 2. create settings row for the new chatroom (ChatSettings Table)
+        console.log('[createChatroom] creating settings for chatId:', chatroom.id);
+        await ChatSettings.create({
             chatId: chatroom.id, // the chatroom's generated id
-            role: 'owner', // give the creater ownership permissions
+            relationshipType: normalize(relationshipType) || 'Friends', 
+            allowedTopics: allowedTopics || [], 
+            allowedTypes: allowedTypes || [],
+        }, { transaction: t });
+        console.log('[createChatroom] settings created');
+
+        // 3. Add to Membership as 'owner'
+        await ChatMembership.create({
+            userId: uid,
+            chatId: chatroom.id,
+            role: 'owner' 
         }, { transaction: t });
 
         await t.commit(); // commit the transaction
@@ -181,7 +202,8 @@ export async function leaveChatroom(req, res) {
 
 export async function deleteChatroom(req, res) {
     const uid = req.user.uid;
-    const { chatroomId } = req.body;
+    const chatroomId = req.params.id;
+
     if (!chatroomId) {
         throw AppError.badRequest("chatroomId is required for deleting a chatroom");
     }
@@ -247,4 +269,58 @@ export async function togglePin(req, res) {
     console.log(membership.pinned);
 
     return res.status(204).end();
+}
+
+export async function updateSettings(req, res, next) {
+  const { name, relationshipType, allowedTopics, allowedTypes } = req.body;
+  const chatId = req.params.id;
+
+  const t = await sequelize.transaction();
+
+  try {
+    // 1. Update ChatRoom Name
+    if (name) {
+      console.log('[updateSettings] updating chatroom name');
+      await ChatRoom.update(
+        { name }, 
+        { where: { id: chatId }, transaction: t }
+      );
+    }
+
+    const normalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : str;
+
+    // 2. Update ChatSettings Table
+    console.log('[updateSettings] updating chatroom settings');
+    await ChatSettings.update({ 
+        relationshipType: normalize(relationshipType), 
+        allowedTopics, 
+        allowedTypes 
+    },
+      { where: { chatId }, transaction: t }
+    );
+
+    await t.commit();
+
+    // Fetch the updated settings to return to the frontend
+    const updatedSettings = await ChatSettings.findOne({ where: { chatId } });
+
+    // 3. BROADCAST via Socket.io
+    const io = req.app.get('io');
+    io.to(chatId).emit('room_settings_updated', { 
+      chatId, 
+      newName: name,
+      relationshipType,
+      allowedTopics,
+      allowedTypes,
+    });
+
+    res.status(200).json({ 
+      message: 'Settings updated successfully',
+      settings: updatedSettings
+    });
+
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
 }
