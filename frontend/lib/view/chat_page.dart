@@ -9,6 +9,7 @@ import 'package:frontend/services/message_service.dart';
 import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/view/prompt_modal.dart';
+import 'package:frontend/view/prompt_response.dart';
 import '../constants.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_model.dart';
@@ -47,25 +48,15 @@ class _ChatPageState extends State<ChatPage> {
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  List<PromptQASection> _promptSections = [];
   late Chatroom _currentChatroom;
   late String _chatName;
-  
 
   StreamSubscription<Message>? _messageSubscription;
-  // StreamSubscription? _dqSubscription;
   StreamSubscription? _dqPushSubscription;
   StreamSubscription? _messageErrorSubscription;
-  bool _dqServiceReady = false;
+  int _promptFeedKey = 0;
 
-  // prompt state
-  // final TextEditingController _promptAnswerController = TextEditingController();
-  // bool _showPromptModal = false;
   bool _hasAnsweredToday = true;
-  // String? _todaysPromptQuestion;
-  // bool _canSubmitPrompt = false;
-  // bool _isSubmittingPrompt = false;
-  // String? _dailyQuestionId;
 
   List<Message> _messages = [];
   bool _hasMore = true;
@@ -101,27 +92,12 @@ class _ChatPageState extends State<ChatPage> {
       print('chatController initialized, chatId: ${widget.chatId}');
 
       _dqService = DailyQuestionService(socket: SocketClient.instance, api: ApiClient());
-      setState(() { _dqServiceReady = true; });
-      // // listen for answer accepted to unlock chat
-      // _dqSubscription = _dqService.onAnswerAccepted().listen((data) {
-      //   setState(() {
-      //     _showPromptModal = false;
-      //     _hasAnsweredToday = true;
-      //     _isSubmittingPrompt = false;
-      //   });
-      //   _promptAnswerController.clear();
-      // });
 
       // listen for live daily question push if the user has chat open when it runs
       _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
         if (!mounted) return;
         setState(() {
           _hasAnsweredToday = false;
-          // _todaysPromptQuestion = dq.question;
-          // _dailyQuestionId = dq.dailyQuestionId;
-          // _showPromptModal = true;
-          _promptSections.clear();
-          _messages.removeWhere((m) => m.id.startsWith('prompt_'));
         });
       });
 
@@ -163,106 +139,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-//   Future<void> _checkTodaysPrompt() async {
-//     try {
-//       // TODO: API call
-//       // for now, using mock data
-//       setState(() {
-//         _todaysPromptQuestion = "What's your favorite memory from this week?";
-//         _hasAnsweredToday = false; // Set to true when user has answered
-//         _showPromptModal = !_hasAnsweredToday;
-//       });
-//     } catch (e) {
-//       print('Failed to check prompt: $e');
-//     }
-//   }
-
-//   Future<void> _submitPromptAnswer() async {
-//     final answerText = _promptAnswerController.text.trim();
-//     if (answerText.isEmpty) return;
-
-//     setState(() {
-//       _isSubmittingPrompt = true;
-//     });
-
-//     try {
-//       // TODO: API call
-
-//       // simulate API call
-//       await Future.delayed(Duration(seconds: 1));
-
-//       // mock response
-//       final mockResponses = [
-//         {
-//           'username': 'Alice',
-//           'pigeonId': 1,
-//           'answer': 'Going to the beach with friends',
-//           'userId': 'user1',
-//         },
-//         {
-//           'username': 'Bob',
-//           'pigeonId': 2,
-//           'answer': 'Finishing my project',
-//           'userId': 'user2',
-//         },
-//         {
-//           'username': _currentUser!.username,
-//           'pigeonId': _currentUser!.pigeonId,
-//           'answer': answerText,
-//           'userId': _currentUser!.uid,
-//         },
-//       ];
-
-//       List<String> answerMessageIds = [];
-
-//       setState(() {
-//         // Add each answer as a chat message
-//         for (var response in mockResponses) {
-//           final messageId =
-//               'prompt_${DateTime.now().millisecondsSinceEpoch}_${response['userId']}';
-//           answerMessageIds.add(messageId);
-
-//           _messages.add(
-//             Message(
-//               id: messageId,
-//               senderId: response['userId'] as String,
-//               senderUsername: response['username'] as String,
-//               senderPigeonId: response['pigeonId'] as int,
-//               content: response['answer'] as String,
-//               timestamp: DateTime.now(),
-//               isSentByCurrentUser: response['userId'] == _currentUser!.uid,
-//             ),
-//           );
-//         }
-
-//         // create prompt section
-//         _promptSections.add(
-//           PromptQASection(
-//             questionId: 'q_${DateTime.now().millisecondsSinceEpoch}',
-//             questionText: _todaysPromptQuestion!,
-//             askedAt: DateTime.now(),
-//             answerMessageIds: answerMessageIds,
-//           ),
-//         );
-
-//         _showPromptModal = false;
-//         _hasAnsweredToday = true;
-//         _isSubmittingPrompt = false;
-//       });
-
-//       _promptAnswerController.clear();
-//       _scrollToBottom();
-//     } catch (e) {
-//       setState(() {
-//         _isSubmittingPrompt = false;
-//       });
-
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(SnackBar(content: Text('Failed to submit answer: $e')));
-//     }
-//   }
-
   void _setupScrollListener() {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels == 0 &&
@@ -291,7 +167,6 @@ class _ChatPageState extends State<ChatPage> {
         _model.isLoading = false;
       });
       _scrollToBottom();
-      if (_hasAnsweredToday) await _loadPromptSection();
     } else {
       setState(() {
         _model.loadError = messagesResult['error'];
@@ -394,57 +269,14 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  Future<void> _loadPromptSection() async {
-    if (!_dqServiceReady || !_hasAnsweredToday || _currentUser == null) return;
-    try {
-      final dqData = await _dqService.getTodaysQuestion(widget.chatId);
-      if (dqData == null) return;
-
-      final answers = await _dqService.getAnswers(widget.chatId);
-      if (answers.isEmpty) return;
-
-      final List<String> answerMessageIds = [];
-      final List<Message> answerMessages = [];
-
-      for (final answer in answers) {
-        final messageId = 'prompt_${answer['id']}';
-        answerMessageIds.add(messageId);
-        answerMessages.add(Message(
-          id:                  messageId,
-          content:             answer['answerText'] as String? ?? '',
-          senderUsername:      answer['username'] as String? ?? 'Unknown',
-          senderId:            answer['userId'] as String? ?? '',
-          timestamp:           DateTime.parse(answer['answeredAt'] as String),
-          isSentByCurrentUser: answer['userId'] == _currentUser!.uid,
-          senderPigeonId:      answer['pigeonId'] as int?,
-        ));
-      }
-
-      setState(() {
-        _messages.addAll(answerMessages);
-        _promptSections.add(PromptQASection(
-          questionId:       dqData.dailyQuestionId,
-          questionText:     dqData.question,
-          askedAt:          DateTime.now(),
-          answerMessageIds: answerMessageIds,
-        ));
-      });
-      _scrollToBottom();
-    } catch (e) {
-      print('[ChatPage] failed to load prompt section: $e');
-    }
-  }
-
   @override
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
-    // _dqSubscription?.cancel(); // stop listening for dq
     _dqPushSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
-    // _promptAnswerController.dispose();
     super.dispose();
   }
 
@@ -481,183 +313,19 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-          // prompt modal overlay
-          // if (_showPromptModal) _buildPromptModal(),
           if (_currentUser != null && !_hasAnsweredToday)
             DailyPromptModal(
               chatId: widget.chatId,
               currentUserId: _currentUser!.uid,
               dqService: _dqService,
               onAnswerSubmitted: () {
-                setState(() { _hasAnsweredToday = true; });
-                _loadPromptSection();
+                setState(() { _hasAnsweredToday = true; _promptFeedKey++; });
               },
             ),
         ],
       ),
     );
   }
-
-//   Widget _buildPromptModal() {
-//     return Stack(
-//       children: [
-//         // blurred background
-//         BackdropFilter(
-//           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-//           child: Container(color: Colors.black.withOpacity(0.3)),
-//         ),
-
-//         // prompt card
-//         Align(
-//           alignment: Alignment.bottomCenter,
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               // tab
-//               Padding(
-//                 padding: EdgeInsets.only(left: AppSpacing.sm, right: 160),
-//                 child: Container(
-//                   padding: EdgeInsets.symmetric(
-//                     horizontal: AppSpacing.xs,
-//                     vertical: AppSpacing.xs,
-//                   ),
-//                   decoration: BoxDecoration(
-//                     color: AppColors.background,
-//                     borderRadius: BorderRadius.only(
-//                       topLeft: Radius.circular(AppBorderRadius.md),
-//                       topRight: Radius.circular(AppBorderRadius.md),
-//                     ),
-//                     border: Border(
-//                       left: BorderSide(color: AppColors.border, width: 1),
-//                       top: BorderSide(color: AppColors.border, width: 1),
-//                       right: BorderSide(color: AppColors.border, width: 1),
-//                     ),
-//                   ),
-
-//                   child: Row(
-//                     children: [
-//                       IconButton(
-//                         icon: Icon(Icons.arrow_back, size: 20),
-//                         padding: EdgeInsets.symmetric(),
-//                         constraints: BoxConstraints(
-//                           minWidth: 24,
-//                           minHeight: 24,
-//                         ),
-//                         onPressed: () {
-//                           setState(() {
-//                             _showPromptModal = false;
-//                           });
-//                           Navigator.pop(context);
-//                         },
-//                       ),
-//                       SizedBox(width: AppSpacing.xs),
-//                       Text(
-//                         'Daily Question',
-//                         style: Theme.of(
-//                           context,
-//                         ).textTheme.headlineMedium?.copyWith(fontSize: 14),
-//                       ),
-//                     ],
-//                   ), // Close Row
-//                 ), // Close Container
-//               ), // Close Padding
-//               // main card
-//               Container(
-//                 width: double.infinity,
-//                 padding: EdgeInsets.only(
-//                   left: AppSpacing.md,
-//                   right: AppSpacing.md,
-//                   bottom: AppSpacing.lg,
-//                   top: AppSpacing.md,
-//                 ),
-//                 decoration: BoxDecoration(color: AppColors.background),
-//                 child: Column(
-//                   mainAxisSize: MainAxisSize.min,
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     // question text
-//                     Text(
-//                       _todaysPromptQuestion ?? 'Loading question...',
-//                       style: Theme.of(
-//                         context,
-//                       ).textTheme.bodyLarge?.copyWith(fontSize: 20),
-//                     ),
-//                     SizedBox(height: AppSpacing.md),
-
-//                     // input row
-//                     Row(
-//                       children: [
-//                         Expanded(
-//                           child: TextField(
-//                             controller: _promptAnswerController,
-//                             autofocus: true,
-//                             maxLength: 500,
-//                             decoration: InputDecoration(
-//                               hintText: 'Type your answer here...',
-//                               hintStyle: Theme.of(context).textTheme.bodySmall
-//                                   ?.copyWith(fontStyle: FontStyle.italic),
-//                               border: OutlineInputBorder(
-//                                 borderRadius: BorderRadius.circular(
-//                                   AppBorderRadius.lg,
-//                                 ),
-//                                 borderSide: BorderSide(color: AppColors.border),
-//                               ),
-//                               enabledBorder: OutlineInputBorder(
-//                                 borderRadius: BorderRadius.circular(
-//                                   AppBorderRadius.lg,
-//                                 ),
-//                                 borderSide: BorderSide(color: AppColors.border),
-//                               ),
-//                               focusedBorder: OutlineInputBorder(
-//                                 borderRadius: BorderRadius.circular(
-//                                   AppBorderRadius.lg,
-//                                 ),
-//                                 borderSide: BorderSide(
-//                                   color: AppColors.primary,
-//                                   width: 2,
-//                                 ),
-//                               ),
-//                               counterText: '',
-//                               contentPadding: EdgeInsets.symmetric(
-//                                 horizontal: AppSpacing.md,
-//                                 vertical: AppSpacing.sm,
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                         SizedBox(width: AppSpacing.sm),
-
-//                         // send button
-//                         IconButton(
-//                           icon: _isSubmittingPrompt
-//                               ? SizedBox(
-//                                   height: 20,
-//                                   width: 20,
-//                                   child: CircularProgressIndicator(
-//                                     color: AppColors.primary,
-//                                     strokeWidth: 2,
-//                                   ),
-//                                 )
-//                               : Icon(Icons.send),
-//                           color: _canSubmitPrompt
-//                               ? AppColors.primary
-//                               : AppColors.textSecondary,
-//                           onPressed: _canSubmitPrompt && !_isSubmittingPrompt
-//                               ? _submitPromptAnswer
-//                               : null,
-//                         ),
-//                       ],
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ],
-//     );
-//   }
 
   Widget _buildHeader() {
     return Container(
@@ -724,127 +392,13 @@ class _ChatPageState extends State<ChatPage> {
               )
             )
           ), 
-          // PopupMenuButton<String>(
-          //   icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
-          //   onSelected: (value) {
-          //     if (value == 'leave') {
-          //       _showLeaveConfirmation();
-          //     }
-          //   },
-          //   itemBuilder: (context) => [
-          //     PopupMenuItem(value: 'leave', child: Text('Leave Chat')),
-          //   ],
-          // ),
         ],
       ),
     );
   }
-
-  // bool _shouldShowPromptResponses() {
-  //   return _hasAnsweredToday && _promptSections.isNotEmpty;
-  // }
-
-  Widget _buildPromptResponsesSection() {
-    if (_promptSections.isEmpty) return SizedBox.shrink();
-
-    final section = _promptSections.last;
-
-    return Container(
-      margin: EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(AppBorderRadius.lg),
-                topRight: Radius.circular(AppBorderRadius.lg),
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    section.questionText,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(AppSpacing.sm),
-            child: Column(
-              children: section.answerMessageIds.map((messageId) {
-                final message = _messages.firstWhere((m) => m.id == messageId);
-                final pigeon = message.senderPigeonId != null
-                    ? Pigeon.getById(message.senderPigeonId!)
-                    : null;
-                final profileImage =
-                    pigeon?.profile ??
-                    'images/pigeonProfile/defaultPigeonProfile.png';
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundImage: AssetImage(profileImage),
-                        backgroundColor: Colors.transparent,
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message.senderUsername,
-                              style: AppTextStyles.label.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              message.content,
-                              style: AppTextStyles.body.copyWith(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Widget _buildPromptDivider() {
-  //   return Container(
-  //     margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
-  //     height: 1,
-  //     color: AppColors.border,
-  //   );
-  // }
 
   Widget _buildMessageList() {
-    if (_messages.isEmpty && _promptSections.isEmpty) {
+    if (_messages.isEmpty && !_hasAnsweredToday) {
       return Center(
         child: Text(
           'No messages yet. Start the conversation!',
@@ -853,44 +407,20 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    // Build a combined list of regular messages and prompt sections
     List<Widget> items = [];
-    bool promptSectionAdded = false; // flag to prevent duplicate prompt section
 
-    // Get regular messages (excluding prompt answers)
-    final regularMessages = _messages.where((message) {
-      for (var section in _promptSections) {
-        if (section.answerMessageIds.contains(message.id)) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
-
-    // Interleave regular messages and prompt sections by timestamp
-    for (int i = 0; i < regularMessages.length; i++) {
-      final message = regularMessages[i];
-
-      // Check if any prompt section should appear before this message
-      if (!promptSectionAdded && _promptSections.isNotEmpty) {
-        for (var section in _promptSections) {
-          if (section.askedAt.isBefore(message.timestamp)) {
-            items.add(_buildPromptResponsesSection());
-            promptSectionAdded = true;
-            break;
-          }
-        }
-      }
+    for (int i = 0; i < _messages.length; i++) {
+      final message = _messages[i];
 
       final showTimestamp =
-          i == regularMessages.length - 1 ||
-          regularMessages[i + 1].timestamp
+          i == _messages.length - 1 ||
+          _messages[i + 1].timestamp
                   .difference(message.timestamp)
                   .inMinutes >=
               1;
 
       final isFirstInGroup =
-          i == 0 || message.senderId != regularMessages[i - 1].senderId;
+          i == 0 || message.senderId != _messages[i - 1].senderId;
 
       items.add(
         Column(
@@ -899,13 +429,17 @@ class _ChatPageState extends State<ChatPage> {
             if (showTimestamp) _buildTimestamp(message.timestamp),
             SizedBox(height: AppSpacing.sm),
           ],
-        ), 
+        ),
       );
     }
 
-    // If prompt section hasn't been added yet, add it at the end
-    if (_promptSections.isNotEmpty && !items.any((item) => item is Container)) {
-      items.add(_buildPromptResponsesSection());
+    if (_hasAnsweredToday && _currentUser != null) {
+      items.add(PromptResponseFeed(
+        key: ValueKey(_promptFeedKey),
+        chatId: widget.chatId,
+        currentUserId: _currentUser!.uid,
+        dqService: _dqService,
+      ));
     }
 
     return ListView.builder(
@@ -923,27 +457,6 @@ class _ChatPageState extends State<ChatPage> {
       ],
     );
   }
-
-  // bool _shouldShowTimestamp(int index) {
-  //   if (index == _messages.length - 1) return true;
-
-  //   final currentMessage = _messages[index];
-  //   final nextMessage = _messages[index + 1];
-
-  //   final timeDifference = nextMessage.timestamp.difference(
-  //     currentMessage.timestamp,
-  //   );
-  //   return timeDifference.inMinutes >= 1;
-  // }
-
-  // bool _isFirstInGroup(int index) {
-  //   if (index == 0) return true;
-
-  //   final currentMessage = _messages[index];
-  //   final previousMessage = _messages[index - 1];
-
-  //   return currentMessage.senderId != previousMessage.senderId;
-  // }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
     final pigeon = message.senderPigeonId != null
@@ -1110,34 +623,4 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // Widget _buildPromptHeader(String question) {
-  //   return Center(
-  //     child: Container(
-  //       margin: EdgeInsets.symmetric(vertical: AppSpacing.md),
-  //       padding: EdgeInsets.symmetric(
-  //         horizontal: AppSpacing.md,
-  //         vertical: AppSpacing.sm,
-  //       ),
-  //       decoration: BoxDecoration(
-  //         color: AppColors.primary.withOpacity(0.2),
-  //         borderRadius: BorderRadius.circular(AppBorderRadius.md),
-  //         border: Border.all(color: AppColors.border),
-  //       ),
-  //       child: Column(
-  //         children: [
-  //           Icon(Icons.question_answer, color: AppColors.primary, size: 20),
-  //           SizedBox(height: 4),
-  //           Text(
-  //             question,
-  //             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-  //               fontSize: 14,
-  //               fontWeight: FontWeight.w600,
-  //             ),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 }

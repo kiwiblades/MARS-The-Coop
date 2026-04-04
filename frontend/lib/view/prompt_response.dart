@@ -83,9 +83,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
           else if (_responses.isEmpty)
             _buildEmptyState()
           else
-            Expanded(
-              child: _buildResponseList()
-            ),
+            _buildResponseList(),
         ],
       ),
     );
@@ -124,16 +122,11 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
   }
 
   Widget _buildResponseList() {
-    return ListView.builder(
-      padding: EdgeInsets.only(bottom: AppSpacing.md),
-      itemCount: _responses.length,
-      itemBuilder: (context, index) {
-        final response = _responses[index];
-        return Padding(
-          padding: EdgeInsets.only(bottom: AppSpacing.md),
-          child: _buildResponseBubble(response),
-        );
-      },
+    return Column(
+      children: _responses.map((response) => Padding(
+        padding: EdgeInsets.only(bottom: AppSpacing.md),
+        child: _buildResponseBubble(response),
+      )).toList(),
     );
   }
 
