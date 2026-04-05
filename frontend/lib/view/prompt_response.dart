@@ -134,7 +134,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
     final pigeon = response.pigeonId != null 
         ? Pigeon.getById(response.pigeonId!)
         : null;
-    final profileImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+    final profileImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     
     return Align(
       alignment: response.isSentByCurrentUser

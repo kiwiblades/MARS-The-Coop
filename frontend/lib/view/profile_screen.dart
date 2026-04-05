@@ -44,12 +44,12 @@ class ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final pigeonId = currentUser?.pigeonId ?? 0;
     final pigeon = Pigeon.getById(pigeonId);
-    final profileImagePath = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+    final profileImagePath = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
 
     return Container(
       decoration: const BoxDecoration( //background wood text
         image: DecorationImage(
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
@@ -70,7 +70,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       decoration: const BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage('images/skyProfileBG.png'),
+                          image: AssetImage('images/skyProfileBG.webp'),
                           fit: BoxFit.cover,
                         ),
                       ),

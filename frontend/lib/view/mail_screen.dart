@@ -43,7 +43,7 @@ class MailScreenState extends State<MailScreen> {
       decoration: const BoxDecoration(
         image: DecorationImage(
           //background wood text
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
@@ -153,14 +153,14 @@ class MailScreenState extends State<MailScreen> {
     if (chat.participants.isEmpty) {
       final pigeonId = model.currentUser?.pigeonId ?? 0;
       final pigeon = Pigeon.getById(pigeonId);
-      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else if (chat.participants.length == 1) {
       final pigeonId = chat.participants[0].pigeonId;
       final pigeon = Pigeon.getById(pigeonId);
-      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else {
       //if there are more than 1 participants
-      chatImage = 'images/group.png';
+      chatImage = 'images/group.webp';
     }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
