@@ -53,8 +53,8 @@ class _ChatPageState extends State<ChatPage> {
   
 
   StreamSubscription<Message>? _messageSubscription;
-  // StreamSubscription? _dqSubscription;
   StreamSubscription? _dqPushSubscription;
+  StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
   bool _dqServiceReady = false;
 
@@ -102,15 +102,6 @@ class _ChatPageState extends State<ChatPage> {
 
       _dqService = DailyQuestionService(socket: SocketClient.instance, api: ApiClient());
       setState(() { _dqServiceReady = true; });
-      // // listen for answer accepted to unlock chat
-      // _dqSubscription = _dqService.onAnswerAccepted().listen((data) {
-      //   setState(() {
-      //     _showPromptModal = false;
-      //     _hasAnsweredToday = true;
-      //     _isSubmittingPrompt = false;
-      //   });
-      //   _promptAnswerController.clear();
-      // });
 
       // listen for live daily question push if the user has chat open when it runs
       _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
@@ -123,6 +114,12 @@ class _ChatPageState extends State<ChatPage> {
           _promptSections.clear();
           _messages.removeWhere((m) => m.id.startsWith('prompt_'));
         });
+      });
+      
+      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
+        if (!mounted) return;
+        // refetch answers so the new one appears in the prompt section
+        if (_hasAnsweredToday) _loadPromptSection();
       });
 
       setState(() { _currentUser = user; });
@@ -421,6 +418,7 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       setState(() {
+
         _messages.addAll(answerMessages);
         _promptSections.add(PromptQASection(
           questionId:       dqData.dailyQuestionId,
@@ -440,6 +438,7 @@ class _ChatPageState extends State<ChatPage> {
     _messageSubscription?.cancel(); // stop listening for new msgs
     // _dqSubscription?.cancel(); // stop listening for dq
     _dqPushSubscription?.cancel();
+    _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
@@ -460,7 +459,7 @@ class _ChatPageState extends State<ChatPage> {
             height: double.infinity,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('images/woodGrainTexture.png'),
+                image: AssetImage('images/woodGrainTexture.webp'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -793,7 +792,7 @@ class _ChatPageState extends State<ChatPage> {
                     : null;
                 final profileImage =
                     pigeon?.profile ??
-                    'images/pigeonProfile/defaultPigeonProfile.png';
+                    'images/pigeonProfile/defaultPigeonProfile.webp';
 
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -950,7 +949,7 @@ class _ChatPageState extends State<ChatPage> {
         ? Pigeon.getById(message.senderPigeonId!)
         : null;
     final profileImage =
-        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
 
     return Align(
       alignment: message.isSentByCurrentUser
