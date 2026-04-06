@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
+import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/view/mail_screen.dart';
@@ -7,7 +8,8 @@ import 'package:frontend/view/mail_screen.dart';
 class ChatDetailController {
   ChatDetailScreenState state;
   final ChatroomService chatroomService;
-  ChatDetailController(this.state, {required this.chatroomService});
+  final UserService userService;
+  ChatDetailController(this.state, {required this.chatroomService, required this.userService});
 
   // Helper to get current chat ID
   String get _chatId => state.model.currentChatroom!.id;

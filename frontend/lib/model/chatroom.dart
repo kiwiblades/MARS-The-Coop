@@ -25,7 +25,7 @@ class Chatroom {
   final String name;
   final String inviteCode;
   final List<User> participants;
-  final User? owner;
+  final User owner;
   bool pinned;
   final String membership;
   final String lastSentMessage;

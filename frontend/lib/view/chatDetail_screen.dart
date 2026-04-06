@@ -7,6 +7,7 @@ import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/profile_model.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/user_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   static const String routeName = '/chatDetailScreen';
@@ -34,18 +35,21 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
   late final ChatDetailController controller;
   late ChatDetailModel model;
 
-  User? currentUser; //TODO: current user for role and conditional rendering
+  User? currentUser;
   Chatroom? currentChat; //TODO: current chatroom to grab details from
   final GlobalKey<FormState> formKeyChatName = GlobalKey<FormState>();
   final GlobalKey<FormState> formKeyRelationshipType = GlobalKey<FormState>();
 
   @override
-  void initState() {
+  void initState() async {
     super.initState();
-    final chatroomService = ChatroomService(api: ApiClient());
+    final apiClient = ApiClient();
+    final chatroomService = ChatroomService(api: apiClient);
+    final userService = UserService(api: apiClient);
     model = ChatDetailModel();
-    controller = ChatDetailController(this, chatroomService: chatroomService);
+    controller = ChatDetailController(this, chatroomService: chatroomService, userService: userService);
     controller.init(widget.chatroom);
+    currentUser = await userService.getProfile();
   }
 
   void callSetState(fn) => setState(fn);

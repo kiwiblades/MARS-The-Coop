@@ -71,13 +71,15 @@ export async function getChatrooms(req, res) {
         const settings = m.ChatRoom?.settings;
         const participants = m.ChatRoom?.participants ?? [];
 
+        console.log(participants.username);
+
         // find the owner from participants
         const ownerRecord = participants.find(u => u.ChatMembership?.role === 'owner');
-        const owner = ownerRecord && ownerRecord.uid !== uid ? {
+        const owner = {
             uid: ownerRecord.uid,
             username: ownerRecord.username,
             pigeonId: ownerRecord.pigeonId,
-        } : null; // set null if current user is the owner
+        };
 
         return {
             chatroom: m.ChatRoom,
@@ -88,7 +90,6 @@ export async function getChatrooms(req, res) {
             },
             // add participants for each chatroom EXCLUDING the current user
             participants: participants
-                .filter((u) => u.uid !== uid)
                 .sort((a,b) => {
                     // always place owner first
                     const aIsOwner = a.ChatMembership?.role === 'owner';
