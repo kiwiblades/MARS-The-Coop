@@ -731,6 +731,16 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ],
                   ),
                 SizedBox(height: 10),
+                //MEMBER LIST: For all
+                Text(
+                  "Members", //label
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 16.0,
+                    color: AppColors.darkBrown,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                SizedBox(height: 10),
                 //LEAVE For non-owner
                 if (!model
                     .isOwner) //TODO: replace with actual value for conditional rendering
