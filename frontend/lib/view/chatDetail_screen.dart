@@ -25,6 +25,7 @@ class ChatDetailScreen extends StatefulWidget {
   }
 }
 
+
 String formatEnumName(String name) {
   return name
       .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
@@ -33,6 +34,7 @@ String formatEnumName(String name) {
 
 class ChatDetailScreenState extends State<ChatDetailScreen> {
   late final ChatDetailController controller;
+  late final UserService userService;
   late ChatDetailModel model;
 
   User? currentUser;
@@ -41,15 +43,25 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
   final GlobalKey<FormState> formKeyRelationshipType = GlobalKey<FormState>();
 
   @override
-  void initState() async {
+  void initState() {
     super.initState();
     final apiClient = ApiClient();
     final chatroomService = ChatroomService(api: apiClient);
-    final userService = UserService(api: apiClient);
+    userService = UserService(api: apiClient);
     model = ChatDetailModel();
     controller = ChatDetailController(this, chatroomService: chatroomService, userService: userService);
     controller.init(widget.chatroom);
-    currentUser = await userService.getProfile();
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await userService.getProfile();
+
+    if (mounted) {
+      setState(() {
+        currentUser = user;
+      });
+    }
   }
 
   void callSetState(fn) => setState(fn);
