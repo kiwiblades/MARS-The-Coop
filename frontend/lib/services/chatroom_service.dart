@@ -21,6 +21,7 @@ class ChatroomService {
       final participants = (entry['participants'] as List<dynamic>? ?? [])
         .map((p) => User.fromJson(p as Map<String, dynamic>))
         .toList();
+      final owner = entry['owner'] as Map<String, dynamic>?;
       final settings = entry['settings'] as Map<String, dynamic>? ?? {};
       final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
         .map((t) => t as String)
@@ -34,6 +35,7 @@ class ChatroomService {
         name: chatroom['name'] as String,
         inviteCode: chatroom['inviteCode'] as String,
         participants: participants,
+        owner: owner != null ? User.fromJson(owner) : null,
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
         lastSentMessage: entry['lastSentMessage'] as String? ?? '',
@@ -80,6 +82,7 @@ class ChatroomService {
       inviteCode: data['inviteCode'] as String,
       // the values from here aren't really important, they'll be fetched when needed later
       participants: [],
+      owner: null,
       pinned: false,
       membership: 'owner',
       lastSentMessage: '',

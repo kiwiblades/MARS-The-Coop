@@ -69,6 +69,16 @@ export async function getChatrooms(req, res) {
         // look up the last message for the current chatroom, if one exists
         const lastMessage = lastMessageMap[m.chatId];
         const settings = m.ChatRoom?.settings;
+        const participants = m.ChatRoom?.participants ?? [];
+
+        // find the owner from participants
+        const ownerRecord = participants.find(u => u.ChatMembership?.role === 'owner');
+        const owner = ownerRecord && ownerRecord.uid !== uid ? {
+            uid: ownerRecord.uid,
+            username: ownerRecord.username,
+            pigeonId: ownerRecord.pigeonId,
+        } : null; // set null if current user is the owner
+
         return {
             chatroom: m.ChatRoom,
             membership: {
@@ -77,7 +87,18 @@ export async function getChatrooms(req, res) {
                 joinedAt: m.joinedAt,
             },
             // add participants for each chatroom EXCLUDING the current user
-            participants: (m.ChatRoom?.participants ?? []).filter((u) => u.uid !== uid),
+            participants: participants
+                .filter((u) => u.uid !== uid)
+                .sort((a,b) => {
+                    // always place owner first
+                    const aIsOwner = a.ChatMembership?.role === 'owner';
+                    const bIsOwner = b.ChatMembership?.role === 'owner';
+                    if (aIsOwner) return -1; // a before b
+                    if (bIsOwner) return 1; // b before a
+                    // otherwise, sort alphabetically by username
+                    return a.username.localeCompare(b.username);
+                }),
+            owner,
             lastSentMessage: lastMessage?.content ?? '',
             lastSentTime: lastMessage?.createdAt ?? '',
             settings: {
@@ -87,6 +108,8 @@ export async function getChatrooms(req, res) {
             }
         }
     });
+
+    console.log(payload);
 
     // attach and return the payload w/ res
     return res.json(payload);

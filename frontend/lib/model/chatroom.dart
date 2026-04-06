@@ -25,6 +25,7 @@ class Chatroom {
   final String name;
   final String inviteCode;
   final List<User> participants;
+  final User? owner;
   bool pinned;
   final String membership;
   final String lastSentMessage;
@@ -39,6 +40,7 @@ class Chatroom {
     required this.name,
     required this.inviteCode,
     required this.participants,
+    required this.owner,
     required this.pinned,
     required this.membership,
     required this.lastSentMessage,

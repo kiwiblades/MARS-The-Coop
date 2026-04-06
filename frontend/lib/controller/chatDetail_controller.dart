@@ -9,7 +9,6 @@ class ChatDetailController {
   final ChatroomService chatroomService;
   ChatDetailController(this.state, {required this.chatroomService});
 
-  //TODO: chat needs to be fetched for currentChat in view and also to set all the model editing values to what they are already
   // Helper to get current chat ID
   String get _chatId => state.model.currentChatroom!.id;
   
@@ -59,18 +58,19 @@ class ChatDetailController {
     // TODO: there's probably a better way to do this, fix later
     
     final updated = Chatroom(
-      id:                      state.model.currentChatroom!.id,
-      name:                    newChatName,
-      inviteCode:              state.model.currentChatroom!.inviteCode,
-      participants:            state.model.currentChatroom!.participants,
-      pinned:                  state.model.currentChatroom!.pinned,
-      membership:              state.model.currentChatroom!.membership,
-      lastSentMessage:         state.model.currentChatroom!.lastSentMessage,
-      lastSentTime:            state.model.currentChatroom!.lastSentTime,
-      relationshipType:        state.model.currentChatroom!.relationshipType,
-      fineGrainControl:        state.model.currentChatroom!.fineGrainControl,
-      allowedTypes:            state.model.currentChatroom!.allowedTypes,
-      allowedTopics:           state.model.currentChatroom!.allowedTopics,
+      id: state.model.currentChatroom!.id,
+      name: newChatName,
+      inviteCode: state.model.currentChatroom!.inviteCode,
+      participants: state.model.currentChatroom!.participants,
+      owner: state.model.currentChatroom!.owner,
+      pinned: state.model.currentChatroom!.pinned,
+      membership: state.model.currentChatroom!.membership,
+      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+      lastSentTime: state.model.currentChatroom!.lastSentTime,
+      relationshipType: state.model.currentChatroom!.relationshipType,
+      fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+      allowedTypes: state.model.currentChatroom!.allowedTypes,
+      allowedTopics: state.model.currentChatroom!.allowedTopics,
     );
     state.callSetState(() {
       state.model.currentChatroom = updated;
@@ -150,18 +150,19 @@ class ChatDetailController {
     if (newRelationshipType == null) return;
 
     final updated = Chatroom(
-      id:               state.model.currentChatroom!.id,
-      name:             state.model.currentChatroom!.name,
-      inviteCode:       state.model.currentChatroom!.inviteCode,
-      participants:     state.model.currentChatroom!.participants,
-      pinned:           state.model.currentChatroom!.pinned,
-      membership:       state.model.currentChatroom!.membership,
-      lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
-      lastSentTime:     state.model.currentChatroom!.lastSentTime,
+      id: state.model.currentChatroom!.id,
+      name: state.model.currentChatroom!.name,
+      inviteCode: state.model.currentChatroom!.inviteCode,
+      participants: state.model.currentChatroom!.participants,
+      owner: state.model.currentChatroom!.owner,
+      pinned: state.model.currentChatroom!.pinned,
+      membership: state.model.currentChatroom!.membership,
+      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+      lastSentTime: state.model.currentChatroom!.lastSentTime,
       relationshipType: newRelationshipType, // updated
       fineGrainControl: state.model.currentChatroom!.fineGrainControl,
-      allowedTypes:     state.model.currentChatroom!.allowedTypes,
-      allowedTopics:    state.model.currentChatroom!.allowedTopics,
+      allowedTypes: state.model.currentChatroom!.allowedTypes,
+      allowedTopics: state.model.currentChatroom!.allowedTopics,
     );
 
     state.callSetState(() {
@@ -232,18 +233,19 @@ class ChatDetailController {
 
       // clear the allowed types/topics on backend + local
       final updated = Chatroom(
-        id:               state.model.currentChatroom!.id,
-        name:             state.model.currentChatroom!.name,
-        inviteCode:       state.model.currentChatroom!.inviteCode,
-        participants:     state.model.currentChatroom!.participants,
-        pinned:           state.model.currentChatroom!.pinned,
-        membership:       state.model.currentChatroom!.membership,
-        lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
-        lastSentTime:     state.model.currentChatroom!.lastSentTime,
+        id: state.model.currentChatroom!.id,
+        name: state.model.currentChatroom!.name,
+        inviteCode: state.model.currentChatroom!.inviteCode,
+        participants: state.model.currentChatroom!.participants,
+        owner: state.model.currentChatroom!.owner,
+        pinned: state.model.currentChatroom!.pinned,
+        membership: state.model.currentChatroom!.membership,
+        lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+        lastSentTime: state.model.currentChatroom!.lastSentTime,
         relationshipType: state.model.currentChatroom!.relationshipType,
         fineGrainControl: false,
-        allowedTypes:     const {},
-        allowedTopics:    const {},
+        allowedTypes: const {},
+        allowedTopics: const {},
       );
 
       state.callSetState(() {
@@ -309,18 +311,19 @@ class ChatDetailController {
   ) async {
 
     final updated = Chatroom(
-      id:               state.model.currentChatroom!.id,
-      name:             state.model.currentChatroom!.name,
-      inviteCode:       state.model.currentChatroom!.inviteCode,
-      participants:     state.model.currentChatroom!.participants,
-      pinned:           state.model.currentChatroom!.pinned,
-      membership:       state.model.currentChatroom!.membership,
-      lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
-      lastSentTime:     state.model.currentChatroom!.lastSentTime,
+      id: state.model.currentChatroom!.id,
+      name: state.model.currentChatroom!.name,
+      inviteCode: state.model.currentChatroom!.inviteCode,
+      participants: state.model.currentChatroom!.participants,
+      owner: state.model.currentChatroom!.owner,
+      pinned: state.model.currentChatroom!.pinned,
+      membership: state.model.currentChatroom!.membership,
+      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+      lastSentTime: state.model.currentChatroom!.lastSentTime,
       relationshipType: state.model.currentChatroom!.relationshipType,
       fineGrainControl: fineGrainControl,
-      allowedTypes:     types.toSet(),
-      allowedTopics:    topics.toSet(),
+      allowedTypes: types.toSet(),
+      allowedTopics: topics.toSet(),
     );
 
     state.callSetState(() {
@@ -401,25 +404,4 @@ class ChatDetailController {
       print('Leave chat failed: $e');
     }
   }
-  //   if (_currentUser == null) return;
-
-  //   final result = await _chatController.leaveChat();
-
-  //   if (result['success']) {
-  //     Navigator.pop(state.context);
-  //     ScaffoldMessenger.of(
-  //       state.context,
-  //     ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
-  //     );
-  //   }
-  // }
-
-  // @override
-  // void dispose() {
-  //   _messageController.dispose();
-  //   _scrollController.dispose();
-  //   super.dispose();
 }
