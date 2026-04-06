@@ -54,6 +54,7 @@ class _ChatPageState extends State<ChatPage> {
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription? _dqPushSubscription;
   StreamSubscription? _messageErrorSubscription;
+  StreamSubscription? _typingSubscription;
   int _promptFeedKey = 0;
 
   bool _hasAnsweredToday = true;
@@ -61,6 +62,7 @@ class _ChatPageState extends State<ChatPage> {
   List<Message> _messages = [];
   bool _hasMore = true;
   User? _currentUser;
+  Set<String> _typingUsers = {};
 
   @override
   void initState() {
@@ -91,7 +93,10 @@ class _ChatPageState extends State<ChatPage> {
       );
       print('chatController initialized, chatId: ${widget.chatId}');
 
-      _dqService = DailyQuestionService(socket: SocketClient.instance, api: ApiClient());
+      _dqService = DailyQuestionService(
+        socket: SocketClient.instance,
+        api: ApiClient(),
+      );
 
       // listen for live daily question push if the user has chat open when it runs
       _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
@@ -101,7 +106,9 @@ class _ChatPageState extends State<ChatPage> {
         });
       });
 
-      setState(() { _currentUser = user; });
+      setState(() {
+        _currentUser = user;
+      });
 
       // join socket room to receive live messages
       await _chatController.joinRoom();
@@ -116,10 +123,26 @@ class _ChatPageState extends State<ChatPage> {
         _scrollToBottom();
       });
 
+      _typingSubscription = _chatController.onUserTyping().listen((data) {
+        final userId = data['userId'] as String;
+        final isTyping = data['isTyping'] as bool;
+
+        if (isTyping) {
+          setState(() {
+            _typingUsers.add(userId);
+          });
+        } else {
+          setState(() {
+            _typingUsers.remove(userId);
+          });
+        }
+      });
+
       // check if user needs to answer today's prompt
       final alreadyAnswered = await _dqService.getTodaysQuestion(widget.chatId);
       setState(() {
-        _hasAnsweredToday = alreadyAnswered == null || alreadyAnswered.hasAnswered;
+        _hasAnsweredToday =
+            alreadyAnswered == null || alreadyAnswered.hasAnswered;
       });
       // error listener
       _messageErrorSubscription = _chatController.onMessageError().listen((e) {
@@ -221,6 +244,7 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {});
     if (isTyping != _model.isTyping) {
       _model.isTyping = isTyping;
+      _chatController.sendTypingIndicator(isTyping);
     }
   }
 
@@ -277,6 +301,7 @@ class _ChatPageState extends State<ChatPage> {
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
+    _typingSubscription?.cancel();
     super.dispose();
   }
 
@@ -319,7 +344,10 @@ class _ChatPageState extends State<ChatPage> {
               currentUserId: _currentUser!.uid,
               dqService: _dqService,
               onAnswerSubmitted: () {
-                setState(() { _hasAnsweredToday = true; _promptFeedKey++; });
+                setState(() {
+                  _hasAnsweredToday = true;
+                  _promptFeedKey++;
+                });
               },
             ),
         ],
@@ -385,13 +413,14 @@ class _ChatPageState extends State<ChatPage> {
                   onSettingsChanged: (updatedChatroom) {
                     setState(() {
                       _currentChatroom = updatedChatroom;
-                      _chatName = updatedChatroom.name; // when name is changed, reflect upon returning to chat screen
+                      _chatName = updatedChatroom
+                          .name; // when name is changed, reflect upon returning to chat screen
                     });
-                  }
-                )
-              )
-            )
-          ), 
+                  },
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -408,15 +437,26 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     List<Widget> items = [];
+    bool promptAdded = false;
 
     for (int i = 0; i < _messages.length; i++) {
       final message = _messages[i];
 
+      if (!promptAdded && _hasAnsweredToday && _currentUser != null && i == 2) {
+        items.add(
+          PromptResponseFeed(
+            key: ValueKey(_promptFeedKey),
+            chatId: widget.chatId,
+            currentUserId: _currentUser!.uid,
+            dqService: _dqService,
+          ),
+        );
+        promptAdded = true;
+      }
+
       final showTimestamp =
           i == _messages.length - 1 ||
-          _messages[i + 1].timestamp
-                  .difference(message.timestamp)
-                  .inMinutes >=
+          _messages[i + 1].timestamp.difference(message.timestamp).inMinutes >=
               1;
 
       final isFirstInGroup =
@@ -433,13 +473,16 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    if (_hasAnsweredToday && _currentUser != null) {
-      items.add(PromptResponseFeed(
-        key: ValueKey(_promptFeedKey),
-        chatId: widget.chatId,
-        currentUserId: _currentUser!.uid,
-        dqService: _dqService,
-      ));
+    // If prompt wasn't added yet and should be shown, add at end
+    if (!promptAdded && _hasAnsweredToday && _currentUser != null) {
+      items.add(
+        PromptResponseFeed(
+          key: ValueKey(_promptFeedKey),
+          chatId: widget.chatId,
+          currentUserId: _currentUser!.uid,
+          dqService: _dqService,
+        ),
+      );
     }
 
     return ListView.builder(
@@ -451,11 +494,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildChatContent() {
-    return Column(
-      children: [
-        Expanded(child: _buildMessageList()),
-      ],
-    );
+    return Column(children: [Expanded(child: _buildMessageList())]);
   }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
@@ -622,5 +661,4 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
-
 }

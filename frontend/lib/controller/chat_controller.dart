@@ -86,14 +86,16 @@ class ChatController {
     }
   }
 
-  // // typing indicator
-  // Future<void> sendTypingIndicator(bool isTyping) async {
-  //   try {
-  //     //TODO: API
-  //     await _apiClient.postJson('/chat/$chatId/typing', {
-  //       'isTyping': isTyping,
-  //     });
-  //   } catch (e) {
-  //   }
-  // }
+// typing indicator
+Stream<Map<String, dynamic>> onUserTyping() {
+  return _messageService.socket.on('user_typing');
+}
+
+void sendTypingIndicator(bool isTyping) {
+  _messageService.socket.emit('typing_indicator', {
+    'chatId': chatId,
+    'userId': currentUserId,
+    'isTyping': isTyping,
+  });
+}
 }
