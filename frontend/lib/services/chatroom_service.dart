@@ -21,6 +21,7 @@ class ChatroomService {
       final participants = (entry['participants'] as List<dynamic>? ?? [])
         .map((p) => User.fromJson(p as Map<String, dynamic>))
         .toList();
+      final owner = entry['owner'] as Map<String, dynamic>;
       final settings = entry['settings'] as Map<String, dynamic>? ?? {};
       final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
         .map((t) => t as String)
@@ -34,6 +35,7 @@ class ChatroomService {
         name: chatroom['name'] as String,
         inviteCode: chatroom['inviteCode'] as String,
         participants: participants,
+        owner: User.fromJson(owner),
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
         lastSentMessage: entry['lastSentMessage'] as String? ?? '',
@@ -64,6 +66,7 @@ class ChatroomService {
   // the invite code is immediately provided with the new chatroom, though
   Future<Chatroom> createChatroom({
     required String name,
+    required User creator,
     required String relationshipType,
     List<String> allowedTopics = const [],
     List<String> allowedTypes = const [],
@@ -79,7 +82,8 @@ class ChatroomService {
       name: data['name'] as String,
       inviteCode: data['inviteCode'] as String,
       // the values from here aren't really important, they'll be fetched when needed later
-      participants: [],
+      participants: [creator],
+      owner: creator,
       pinned: false,
       membership: 'owner',
       lastSentMessage: '',
