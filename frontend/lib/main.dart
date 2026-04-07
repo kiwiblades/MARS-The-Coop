@@ -29,6 +29,8 @@ Future<void> main() async {
   // socket-dependent features are init later in _connectIfNeeded after socket connection is established
   await NotificationService.instance.initializeFcm(ApiClient());
 
+  await _connectIfNeeded(); // eager connect before first frame to ensure socket is ready before load
+
   runApp(const MyApp());
 }
 
