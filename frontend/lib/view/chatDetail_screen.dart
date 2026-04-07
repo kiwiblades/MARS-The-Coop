@@ -25,7 +25,6 @@ class ChatDetailScreen extends StatefulWidget {
   }
 }
 
-
 String formatEnumName(String name) {
   return name
       .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
@@ -49,7 +48,11 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
     final chatroomService = ChatroomService(api: apiClient);
     userService = UserService(api: apiClient);
     model = ChatDetailModel();
-    controller = ChatDetailController(this, chatroomService: chatroomService, userService: userService);
+    controller = ChatDetailController(
+      this,
+      chatroomService: chatroomService,
+      userService: userService,
+    );
     controller.init(widget.chatroom);
     _loadCurrentUser();
   }
@@ -433,7 +436,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                         ),
                       ),
                     //if editing and toggle is off
-                    if (model.isEditingQuestionPreferences && !model.fineGrainControlEdit) //if editing, toggle
+                    if (model.isEditingQuestionPreferences &&
+                        !model.fineGrainControlEdit) //if editing, toggle
                       IconButton(
                         //relationship type edit save
                         onPressed: controller.onPressedEditFineGrainControlSave,
@@ -442,12 +446,17 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           color: AppColors.darkBrown,
                         ),
                       ),
-                    if (model.isEditingQuestionPreferences && !model.fineGrainControlEdit) //if editing, toggle
-                    IconButton(
-                      //relationship type cancel
-                      onPressed: controller.onPressedEditFineGrainControlCancel,
-                      icon: const Icon(Icons.close, color: AppColors.darkBrown),
-                    ),
+                    if (model.isEditingQuestionPreferences &&
+                        !model.fineGrainControlEdit) //if editing, toggle
+                      IconButton(
+                        //relationship type cancel
+                        onPressed:
+                            controller.onPressedEditFineGrainControlCancel,
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.darkBrown,
+                        ),
+                      ),
                   ],
                 ),
                 //bullet pointed list if not editing
@@ -549,9 +558,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
                     ],
                   ),
-                if (model
-                    .isEditingQuestionPreferences &&
-                    model.fineGrainControlEdit )
+                if (model.isEditingQuestionPreferences &&
+                    model.fineGrainControlEdit)
                   Column(
                     children: [
                       if (model.fineGrainControlEdit)
@@ -755,6 +763,72 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     color: AppColors.darkBrown,
                   ),
                   textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: AppColors.darkBrown, width: 1.5),
+                      bottom: BorderSide(
+                        color: AppColors.darkBrown,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...?model.currentChatroom?.participants.map((user) {
+                        final isOwner =
+                            model.currentChatroom?.owner.username ==
+                            user.username;
+
+                        return SizedBox(
+                          height: 34,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Row(children: [
+                                if (isOwner)
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 16,
+                                    color: AppColors.darkBrown,
+                                  ),
+                                
+                                Text(
+                                  user.username,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontSize: 20.0,
+                                        color: AppColors.darkBrown,
+                                      ),
+                                ),
+                                ],),
+                              ),
+
+                              if (model.currentChatroom?.owner.username ==
+                                  currentUser?.username)
+                                Expanded(
+                                  flex: 3,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.more_vert, size: 20, color: AppColors.darkBrown),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
                 ),
                 SizedBox(height: 10),
                 //LEAVE For non-owner
