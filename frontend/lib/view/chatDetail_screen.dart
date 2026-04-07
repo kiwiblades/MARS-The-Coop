@@ -894,7 +894,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                                 );
 
                                             if (selected != null) {
-                                              controller.onMemberMoreActions( //Controller listener connection
+                                              controller.onMemberMoreActions(
+                                                //Controller listener connection
                                                 selected,
                                                 user,
                                               );
@@ -941,6 +942,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // if (model.currentChatroom?.bannedUsers?.isEmpty) //TODO: Once bannedUsers is implemented this should just be able to be uncommented
                       Center(
@@ -956,6 +958,95 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           ),
                         ),
                       ),
+                      // ...?model.currentChatroom?.bannedUsers.map((user) { //TODO: This whole section should be able to just be uncommented once the bannedUsers attribute is implemented, if anything isn't looking right just pass code back to me
+                      //   return SizedBox(
+                      //     height: 34, //control row height
+                      //     child: Row(
+                      //       crossAxisAlignment: CrossAxisAlignment.center,
+                      //       children: [
+                      //         Expanded(
+                      //           flex: 2,
+                      //           child: Row(
+                      //             children: [
+                      //               Text(
+                      //                 user.username,
+                      //                 style: Theme.of(context)
+                      //                     .textTheme
+                      //                     .bodySmall
+                      //                     ?.copyWith(
+                      //                       fontSize: 20.0,
+                      //                       color: AppColors.darkBrown,
+                      //                     ),
+                      //               ),
+                      //             ],
+                      //           ),
+                      //         ),
+                      //         Expanded(
+                      //           flex: 3,
+                      //           child: Align(
+                      //             alignment: Alignment.centerRight,
+                      //             child: Builder(
+                      //               builder: (context) {
+                      //                 return IconButton(
+                      //                   onPressed: () async {
+                      //                     final confirmed =
+                      //                         await showDialog<bool>(
+                      //                           context: context,
+                      //                           builder: (context) {
+                      //                             return AlertDialog(
+                      //                               title: const Text(
+                      //                                 "Unban User",
+                      //                               ),
+                      //                               content: Text(
+                      //                                 "Unban ${user.username}?",
+                      //                               ),
+                      //                               actions: [
+                      //                                 TextButton(
+                      //                                   onPressed: () =>
+                      //                                       Navigator.pop(
+                      //                                         context,
+                      //                                         false,
+                      //                                       ),
+                      //                                   child: const Text(
+                      //                                     "Cancel",
+                      //                                   ),
+                      //                                 ),
+                      //                                 TextButton(
+                      //                                   onPressed: () =>
+                      //                                       Navigator.pop(
+                      //                                         context,
+                      //                                         true,
+                      //                                       ),
+                      //                                   child: const Text(
+                      //                                     "Unban",
+                      //                                   ),
+                      //                                 ),
+                      //                               ],
+                      //                             );
+                      //                           },
+                      //                         );
+
+                      //                     if (confirmed == true) {
+                      //                       controller.onBannedUserMoreActions(
+                      //                         'unban',
+                      //                         user,
+                      //                       );
+                      //                     }
+                      //                   },
+                      //                   icon: const Icon(
+                      //                     Icons.more_vert,
+                      //                     size: 20,
+                      //                     color: AppColors.darkBrown,
+                      //                   ),
+                      //                 );
+                      //               },
+                      //             ),
+                      //           ),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   );
+                      // }).toList(),
                     ],
                   ),
                 ),
