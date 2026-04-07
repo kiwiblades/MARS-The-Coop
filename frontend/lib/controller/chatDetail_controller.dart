@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
+import 'package:frontend/model/profile_model.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/services/chatroom_service.dart';
@@ -351,6 +352,31 @@ class ChatDetailController {
       state.model.isEditingQuestionPreferences = false;
     });
   }
+
+  //MEMBER LIST
+  void onMemberMoreActions(String action, User user) async {
+  switch (action) {
+    case 'ban':
+      print('Ban ${user.username}');
+      // TODO: backend integration 
+      // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
+      // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
+      break;
+
+    case 'promote':
+
+      final confirmed = await showPromoteConfirmationPopUp(state.context);
+
+      if(confirmed == true) {
+        print('Promote ${user.username} to owner');
+        // TODO: backend integration
+        // Chatroom should be updated, owner attribute should be changed from the previous user to the selected user (passed to this function)
+        // state.model also needs to be updated (same reasons as above)
+      }
+      
+      break;
+  }
+}
 
   //DELETE
   void onPressedDeleteChat() async {

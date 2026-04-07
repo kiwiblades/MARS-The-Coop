@@ -767,6 +767,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
+                    //Top and bottom border of member list
                     border: Border(
                       top: BorderSide(color: AppColors.darkBrown, width: 1.5),
                       bottom: BorderSide(
@@ -784,42 +785,128 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                             user.username;
 
                         return SizedBox(
-                          height: 34,
+                          height: 34, //control row height
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 flex: 2,
-                                child: Row(children: [
-                                if (isOwner)
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    size: 16,
-                                    color: AppColors.darkBrown,
-                                  ),
-                                
-                                Text(
-                                  user.username,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        fontSize: 20.0,
+                                child: Row(
+                                  children: [
+                                    if (isOwner) //special mark if the listed member is the owner
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 16,
                                         color: AppColors.darkBrown,
                                       ),
-                                ),
-                                ],),
-                              ),
 
+                                    Text(
+                                      user.username,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: 20.0,
+                                            color: AppColors.darkBrown,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              //If the current user is the owner, they should see the "more" buttons
                               if (model.currentChatroom?.owner.username ==
                                   currentUser?.username)
                                 Expanded(
                                   flex: 3,
                                   child: Align(
                                     alignment: Alignment.centerRight,
-                                    child: IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.more_vert, size: 20, color: AppColors.darkBrown),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
+                                    child: Builder(
+                                      builder: (context) {
+                                        return IconButton(
+                                          onPressed: () async {
+                                            final RenderBox button =
+                                                context.findRenderObject()
+                                                    as RenderBox;
+                                            final RenderBox overlay =
+                                                Overlay.of(
+                                                      context,
+                                                    ).context.findRenderObject()
+                                                    as RenderBox;
+
+                                            final position =
+                                                RelativeRect.fromRect(
+                                                  Rect.fromPoints(
+                                                    button.localToGlobal(
+                                                      Offset.zero,
+                                                      ancestor: overlay,
+                                                    ),
+                                                    button.localToGlobal(
+                                                      button.size.bottomRight(
+                                                        Offset.zero,
+                                                      ),
+                                                      ancestor: overlay,
+                                                    ),
+                                                  ),
+                                                  Offset.zero & overlay.size,
+                                                );
+
+                                            final selected =
+                                                await showMenu<String>(
+                                                  context: context,
+                                                  position: position,
+                                                  color: AppColors.background,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                  ),
+                                                  items: [
+                                                    PopupMenuItem(
+                                                      value: 'promote',
+                                                      child: Text(
+                                                        'Promote to Owner',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              fontSize: 16.0,
+                                                              color: AppColors
+                                                                  .darkBrown,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    PopupMenuItem(
+                                                      value: 'ban',
+                                                      child: Text(
+                                                        'Ban User',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              fontSize: 16.0,
+                                                              color: AppColors
+                                                                  .darkBrown,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+
+                                            if (selected != null) {
+                                              controller.onMemberMoreActions( //Controller listener connection
+                                                selected,
+                                                user,
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.more_vert,
+                                            size: 20,
+                                            color: AppColors.darkBrown,
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -827,6 +914,48 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           ),
                         );
                       }).toList(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                //BANNED LIST: For owner
+                if (model.currentChatroom?.owner.username ==
+                    currentUser?.username)
+                  Text(
+                    "Banned Users", //label
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 16.0,
+                      color: AppColors.darkBrown,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: AppColors.darkBrown, width: 1.5),
+                      bottom: BorderSide(
+                        color: AppColors.darkBrown,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // if (model.currentChatroom?.bannedUsers?.isEmpty) //TODO: Once bannedUsers is implemented this should just be able to be uncommented
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "No one is currently banned from this chat.",
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  fontSize: 16.0,
+                                  color: AppColors.darkBrown,
+                                ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -884,6 +1013,40 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+//PROMOTE TO OWNER confimation
+Future<bool?> showPromoteConfirmationPopUp(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return PromoteConfirmationPopUp();
+    },
+  );
+}
+
+class PromoteConfirmationPopUp extends StatelessWidget {
+  const PromoteConfirmationPopUp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Promote to Owner'),
+      content: Text(
+        'Are you sure you want to promote the selected user to owner? In doing so you relinquish the title and all subsequence privileges.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text('Promote', style: TextStyle(color: AppColors.error)),
+        ),
+      ],
     );
   }
 }
