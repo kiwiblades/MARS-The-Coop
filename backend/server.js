@@ -5,6 +5,8 @@ import { Server } from 'socket.io';
 import { sequelize } from './src/db/sequelize.js';
 import { initModels } from './src/models/index.js';
 import { startSyncScheduler } from './src/utils/sheetSync.js';
+import admin from 'firebase-admin';
+import { createRequire } from 'module';
 
 /*
     The server consists of multiple parts:
@@ -20,7 +22,14 @@ const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
 app.set('io', io); // Allows controllers to use req.app.get('io')
 
-// TODO: attach API routes here
+const require = createRequire(import.meta.url); // create require anchored to the file location
+const serviceAccount = require(config.firebase.keyFilePath); // load the private key json file
+// initialie firebase admin sdk, needed for push notifications
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+// attach API routes here
 import healthRoutes from './src/routes/healthRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
@@ -34,7 +43,7 @@ app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes); // alias
 app.use('/user', userRoutes);
 app.use('/chatroom', chatroomRoutes);
-app.use('/chat', messageRoutes); //sending
+app.use('/chat', messageRoutes);
 app.use('/sync', syncRoutes);
 app.use('/daily-question', dailyQuestionRoutes);
 

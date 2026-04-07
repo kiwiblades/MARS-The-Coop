@@ -53,7 +53,6 @@ class _ChatPageState extends State<ChatPage> {
 
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription? _dqPushSubscription;
-  StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
   StreamSubscription? _typingSubscription;
   int _promptFeedKey = 0;
@@ -306,7 +305,6 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
     _dqPushSubscription?.cancel();
-    _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
