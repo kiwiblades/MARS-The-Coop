@@ -485,7 +485,7 @@ class _ChatPageState extends State<ChatPage> {
 
       final showTimestamp =
           i == _messages.length - 1 ||
-          _messages[i + 1].timestamp.difference(message.timestamp).inMinutes >=
+          _messages[i + 1].timestamp.difference(message.timestamp).inMinutes.abs() >=
               1;
 
       final isFirstInGroup =
@@ -596,19 +596,22 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildTimestamp(DateTime timestamp) {
+    final local = timestamp.toLocal();
     final now = DateTime.now();
-    final difference = now.difference(timestamp);
+
+    final today = DateTime(now.year, now.month, now.day);
+    final msgDay = DateTime(local.year, local.month, local.day);
+    final dayDiff = today.difference(msgDay).inDays;
+
+    final time = '${local.hour}:${local.minute.toString().padLeft(2,'0')}';
 
     String timeText;
-    if (difference.inDays == 0) {
-      timeText =
-          '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-    } else if (difference.inDays == 1) {
-      timeText =
-          'Yesterday ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+    if (dayDiff == 0) {
+      timeText = time;
+    } else if (dayDiff == 1) {
+      timeText = 'Yesterday $time';
     } else {
-      timeText =
-          '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText = '${local.month}/${local.day} $time';
     }
 
     return Center(
