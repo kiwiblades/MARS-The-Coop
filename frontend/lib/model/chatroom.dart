@@ -27,14 +27,14 @@ class Chatroom {
   final List<User> participants;
   bool pinned;
   final String membership;
-  final String lastSentMessage;
-  final String lastSentTime;
+  String lastSentMessage;
+  String lastSentTime;
   final RelationshipType relationshipType;
   final bool fineGrainControl;
   final Set<QuestionTopic> allowedTopics;
   final Set<QuestionType> allowedTypes;
-  final int unreadCount;
-  final bool hasPendingQuestion;
+  int unreadCount;
+  bool hasPendingQuestion;
 
   Chatroom({
     required this.id,

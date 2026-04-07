@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/profile_model.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/notification_service.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/chat_page.dart';
 import 'package:frontend/view/mail_screen.dart';
@@ -10,7 +13,64 @@ class MailController {
   MailScreenState state;
   final ChatroomService chatroomService;
   final UserService userService;
+  
+  StreamSubscription? _unreadSubscription;
+  StreamSubscription? _pendingQuestionSubscription;
+  StreamSubscription? _chatUpdatedSubscription;
+
   MailController(this.state, {required this.chatroomService, required this.userService});
+
+  void initNotificationListeners() {
+    final notifService = NotificationService.instance;
+
+    // emits when another user sends a msg in a chat, updates the chat notif badge
+    _unreadSubscription = notifService.onUnreadCountUpdate().listen((data) {
+      final chatId = data['chatId'] as String;
+      final count = data['unreadCount'] as int;
+      final chats = state.model.chatroomList ?? [];
+      final index = chats.indexWhere((c) => c.id == chatId);
+      if (index != -1) {
+        state.callSetState(() {
+          chats[index].unreadCount = count;
+        });
+      }
+    });
+
+    // emits when a daily question is dispatched or when the user answers
+    _pendingQuestionSubscription = notifService.onPendingQuestionUpdate().listen((data) {
+      final chatId = data['chatId'] as String;
+      final hasPending = data['hasPendingQuestion'] as bool;
+      final chats = state.model.chatroomList ?? [];
+      final index = chats.indexWhere((c) => c.id == chatId);
+      if (index != -1) {
+        state.callSetState(() {
+          chats[index].hasPendingQuestion = hasPending;
+        });
+      }
+    });
+
+    // emits when a new msg arrives, updates preview text and timestamp
+    _chatUpdatedSubscription = notifService.onChatUpdated().listen((data) {
+      final chatId = data['chatId'] as String;
+      final lastMessage = data['lastSentMessage'] as String;
+      final lastTime = data['lastSentTime'] as String;
+      final chats = state.model.chatroomList ?? [];
+      final index = chats.indexWhere((c) => c.id == chatId);
+      if (index != 1) {
+        state.callSetState(() {
+          chats[index].lastSentMessage = lastMessage;
+          chats[index].lastSentTime = lastTime;
+        });
+      }
+    });
+  }
+
+  // cancel subscriptions when mail screen is disposed
+  void dispose() {
+    _unreadSubscription?.cancel();
+    _pendingQuestionSubscription?.cancel();
+    _chatUpdatedSubscription?.cancel();
+  }
 
   Future<void> loadChatrooms() async {
     try {

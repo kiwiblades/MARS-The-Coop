@@ -36,6 +36,16 @@ const ChatMembership = sequelize.define('ChatMembership', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+    // for tracking unread messages on this chatroom
+    unreadCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
+    // for tracking unanswered question on this chatroom
+    hasPendingQuestion: {
+        type: DataTypes.BOOLEAN,
+        default: false,
+    },
 }, {
     tableName: 'chatmembership',
     timestamps: true,

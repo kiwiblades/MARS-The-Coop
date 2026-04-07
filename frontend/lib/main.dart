@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/notification_service.dart';
 import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/services/token_manager.dart';
 import 'package:frontend/view/addChat_screen.dart';
@@ -20,6 +22,12 @@ Future<void> main() async {
   await Firebase.initializeApp();
   // load frontend config from .env
   await dotenv.load(fileName: ".env");  
+  final apiClient = ApiClient();
+  SocketClient.instance.init(apiClient);
+
+  // initialize fcm, local notifs, and token saving
+  // socket-dependent features are init later in _connectIfNeeded after socket connection is established
+  await NotificationService.instance.initializeFcm(ApiClient());
 
   runApp(const MyApp());
 }
@@ -104,6 +112,13 @@ Future<bool> _connectIfNeeded() async {
   final loggedIn = await TokenManager.instance.hasSession();
   if (loggedIn) {
     await SocketClient.instance.connect();
+    // once connected, set up socket-dependent notif listeners
+    if (SocketClient.instance.isConnected) {
+      NotificationService.instance.initializeSocket();
+    } else {
+      print('[_connectIfNeeded] socket failed to connect');
+    }
+    
   }
   return loggedIn;
 }

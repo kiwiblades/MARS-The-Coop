@@ -6,6 +6,7 @@ import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/services/daily_question_service.dart';
 import 'package:frontend/services/message_service.dart';
+import 'package:frontend/services/notification_service.dart';
 import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/view/prompt_modal.dart';
@@ -45,6 +46,7 @@ class _ChatPageState extends State<ChatPage> {
   late final ChatController _chatController;
   late final UserService _userService;
   late final DailyQuestionService _dqService;
+  final notifService = NotificationService.instance;
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -55,6 +57,7 @@ class _ChatPageState extends State<ChatPage> {
   StreamSubscription? _dqPushSubscription;
   StreamSubscription? _messageErrorSubscription;
   StreamSubscription? _typingSubscription;
+  StreamSubscription? _notifSubscription;
   int _promptFeedKey = 0;
 
   bool _hasAnsweredToday = true;
@@ -120,6 +123,14 @@ class _ChatPageState extends State<ChatPage> {
       // join socket room to receive live messages
       await _chatController.joinRoom();
 
+      // clear unread count for the chat now that the user has opened it
+      if (_currentUser != null) {
+        NotificationService.instance.markChatRead(
+          chatId: widget.chatId,
+          userId: user.uid,
+        );
+      }
+
       // subscribe to incoming msg stream
       _messageSubscription = _chatController.onReceiveMessage().listen((
         message,
@@ -143,6 +154,15 @@ class _ChatPageState extends State<ChatPage> {
             _typingUsers.remove(userId);
           });
         }
+      });
+
+      _notifSubscription = notifService.onPendingQuestionUpdate().listen((data) {
+        if (!mounted) return;
+        if (data['chatId'] != widget.chatId) return;
+        setState(() {
+          _hasDailyQuestion = true;
+          _hasAnsweredToday = false;
+        });
       });
 
       // check if user needs to answer today's prompt
@@ -310,6 +330,7 @@ class _ChatPageState extends State<ChatPage> {
     _messageController.dispose();
     _scrollController.dispose();
     _typingSubscription?.cancel();
+    _notifSubscription?.cancel();
     super.dispose();
   }
 

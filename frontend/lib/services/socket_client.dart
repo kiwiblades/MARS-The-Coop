@@ -6,6 +6,7 @@
 */
 
 import 'dart:async';
+import 'package:frontend/services/api_client.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/services/token_manager.dart';
 import '../config/env.dart';
@@ -18,6 +19,11 @@ class SocketClient {
 
   IO.Socket? _socket;
   final TokenManager _tokens = TokenManager.instance; // fetch single TokenManager instance
+  late final ApiClient _api;
+
+  void init(ApiClient api) {
+    _api = api;
+  }
 
   bool get isConnected => _socket?.connected ?? false;
 
@@ -25,6 +31,9 @@ class SocketClient {
   Future<void> connect() async {
     // skip if already connected, so the fcn is safe to call repeatedly (no need to check isConnected externally)
     if (isConnected) return;
+
+    // force refresh before reading token
+    await _tokens.refreshOnce(() => _api.auth.refresh());
 
     final token = await _tokens.getAccessToken();
 

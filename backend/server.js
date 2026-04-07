@@ -21,6 +21,8 @@ app.use(express.json()); // attach json parsing middleware
 const server = createServer(app); // create the HTTP server
 const io = new Server(server); // attach socket.io to the server object
 app.set('io', io); // Allows controllers to use req.app.get('io')
+import { socketAuth } from './src/middleware/socketAuth.js';
+io.use(socketAuth); // attach socket auth middleware
 
 const require = createRequire(import.meta.url); // create require anchored to the file location
 const serviceAccount = require(config.firebase.keyFilePath); // load the private key json file
@@ -51,13 +53,15 @@ app.use('/daily-question', dailyQuestionRoutes);
 import devRoutes from './src/dev/devRoutes.js';
 app.use('/dev', devRoutes);
 
-// error-handling middleware muist be attached last
+
 import AppError from './src/utils/errors/AppError.js';
 import errorHandler from './src/middleware/errorHandler.js';
 import { startQuestionScheduler } from './src/utils/questionScheduler.js';
 import { registerDailyQuestionHandlers } from './src/sockets/dailyQuestionHandler.js';
 import { registerChatHandlers } from './src/sockets/chatHandler.js';
+import { registerNotificationHandlers } from './src/sockets/notificationHandler.js';
 
+// error-handling middleware muist be attached last
 app.get("/favicon.ico", (req, res) => res.status(204).end()); // ignore browser favicon request
 app.use((req, res, next) => next(AppError.notFound('Route not found'))); // 404 for unknown routes
 app.use(errorHandler);
@@ -89,9 +93,19 @@ console.log("Database models recreated and synced successfully");
 // listen on connection events for the incoming socket
 io.on('connection', (socket) => {
     console.log('Socket connected: ', socket.id);
+    // join personal room immedaitely upon connect: used for direct events
+    // such as unread counts + chat updates before they open any chatroom
+    const userId = socket.user?.uid;
+    if (userId) {
+        socket.join(userId);
+        console.log(`[socket] user ${userId} joined personal room`);
+    } else {
+        console.warn(`[socket] no userId on socket at connection time`);
+    }
 
     registerChatHandlers(io, socket);
     registerDailyQuestionHandlers(io, socket);
+    registerNotificationHandlers(io, socket);
 
     socket.on('disconnect', () => {
         console.log('Socket disconnected: ', socket.id);
