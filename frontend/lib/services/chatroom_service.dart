@@ -55,6 +55,8 @@ class ChatroomService {
             orElse: () => QuestionTopic.personal,
           )
         ).toSet(),
+        unreadCount: entry['unreadCount'] as int? ?? _getMockUnreadCount(chatroom['id'] as String),
+        hasPendingQuestion: entry['hasPendingQuestion'] as bool? ?? _getMockHasPendingQuestion(chatroom['id'] as String),
       );
     }).toList();
   }
@@ -100,6 +102,8 @@ class ChatroomService {
           orElse: () => QuestionTopic.personal,
         )
       ).toSet(),
+      unreadCount: 0,
+      hasPendingQuestion: false,
     );
   }
 
@@ -139,5 +143,15 @@ class ChatroomService {
   // patch /chatroom/pin
   Future<void> togglePin(String chatroomId) async {
     await api.patchJson('/chatroom/pin', {'chatroomId': chatroomId});
+  }
+
+  // mock notification data for testing badges
+  // remove when backend is implemented
+  int _getMockUnreadCount(String chatId) {
+    return 6; 
+  }
+
+  bool _getMockHasPendingQuestion(String chatId) {
+    return true;  
   }
 }

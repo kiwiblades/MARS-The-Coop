@@ -419,8 +419,6 @@ class _JournalPageState extends State<JournalPage> {
                         ),
                       )
                     : Text(entry.content, style: AppTextStyles.body),
-                // SizedBox(height: AppSpacing.sm),
-                // "edited" indicator at bottom if needed
                 if (entry.isEdited && !isEditing)
                   Align(
                     alignment: Alignment.bottomRight,

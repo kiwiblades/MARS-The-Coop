@@ -71,6 +71,8 @@ class ChatDetailController {
       fineGrainControl:        state.model.currentChatroom!.fineGrainControl,
       allowedTypes:            state.model.currentChatroom!.allowedTypes,
       allowedTopics:           state.model.currentChatroom!.allowedTopics,
+      unreadCount:      state.model.currentChatroom!.unreadCount,
+      hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
     );
     state.callSetState(() {
       state.model.currentChatroom = updated;
@@ -162,6 +164,8 @@ class ChatDetailController {
       fineGrainControl: state.model.currentChatroom!.fineGrainControl,
       allowedTypes:     state.model.currentChatroom!.allowedTypes,
       allowedTopics:    state.model.currentChatroom!.allowedTopics,
+      unreadCount:      state.model.currentChatroom!.unreadCount,
+      hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
     );
 
     state.callSetState(() {
@@ -244,6 +248,8 @@ class ChatDetailController {
         fineGrainControl: false,
         allowedTypes:     const {},
         allowedTopics:    const {},
+        unreadCount:      state.model.currentChatroom!.unreadCount,
+        hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
       );
 
       state.callSetState(() {
@@ -321,6 +327,8 @@ class ChatDetailController {
       fineGrainControl: fineGrainControl,
       allowedTypes:     types.toSet(),
       allowedTopics:    topics.toSet(),
+      unreadCount:      state.model.currentChatroom!.unreadCount,
+      hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
     );
 
     state.callSetState(() {
