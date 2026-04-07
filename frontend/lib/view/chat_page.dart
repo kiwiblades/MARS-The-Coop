@@ -59,6 +59,7 @@ class _ChatPageState extends State<ChatPage> {
   int _promptFeedKey = 0;
 
   bool _hasAnsweredToday = true;
+  bool _hasDailyQuestion = false; // to prevent hiding chat if no daily question has ever been sent
 
   List<Message> _messages = [];
   bool _hasMore = true;
@@ -148,6 +149,7 @@ class _ChatPageState extends State<ChatPage> {
       // check if user needs to answer today's prompt
       final alreadyAnswered = await _dqService.getTodaysQuestion(widget.chatId);
       setState(() {
+        _hasDailyQuestion = alreadyAnswered != null;
         _hasAnsweredToday =
             alreadyAnswered == null || alreadyAnswered.hasAnswered;
       });
@@ -435,7 +437,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageList() {
-    if (_messages.isEmpty && !_hasAnsweredToday) {
+    if (_messages.isEmpty && (!_hasAnsweredToday || !_hasDailyQuestion)) {
       return Center(
         child: Text(
           'No messages yet. Start the conversation!',
@@ -450,7 +452,7 @@ class _ChatPageState extends State<ChatPage> {
     for (int i = 0; i < _messages.length; i++) {
       final message = _messages[i];
 
-      if (!promptAdded && _hasAnsweredToday && _currentUser != null && i == 2) {
+      if (!promptAdded && _hasAnsweredToday && _hasDailyQuestion && _currentUser != null && i == 2) {
         items.add(
           PromptResponseFeed(
             key: ValueKey(_promptFeedKey),
@@ -482,7 +484,7 @@ class _ChatPageState extends State<ChatPage> {
     }
 
     // If prompt wasn't added yet and should be shown, add at end
-    if (!promptAdded && _hasAnsweredToday && _currentUser != null) {
+    if (!promptAdded && _hasAnsweredToday && _hasDailyQuestion && _currentUser != null) {
       items.add(
         PromptResponseFeed(
           key: ValueKey(_promptFeedKey),
