@@ -56,7 +56,7 @@ class MailController {
       final lastTime = data['lastSentTime'] as String;
       final chats = state.model.chatroomList ?? [];
       final index = chats.indexWhere((c) => c.id == chatId);
-      if (index != 1) {
+      if (index != -1) {
         state.callSetState(() {
           chats[index].lastSentMessage = lastMessage;
           chats[index].lastSentTime = lastTime;

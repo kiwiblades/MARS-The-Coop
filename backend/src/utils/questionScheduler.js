@@ -8,6 +8,7 @@ import {
     today,
     notifyRoom,
 } from './dailyQuestion.js';
+import ChatMembership from '../models/ChatMembership.js';
 
 const MAX_RETRIES = 3; // how many retry attempts for resending failed daily q
 
@@ -114,6 +115,18 @@ async function attemptDelivery(io, dailyQuestion, question) {
         date: dailyQuestion.date,
     });
     console.log(`[questionScheduler] emit fired`);
+
+    // emit to each member's personal room so it appears on mail screen
+    const members = await ChatMembership.findAll({
+        where: { chatId: dailyQuestion.chatId },
+        attributes: ['userId'],
+    });
+    for (const member of members) {
+        io.to(member.userId).emit('pending_question_update', {
+            chatId: dailyQuestion.chatId,
+            hasPendingQuestion: true,
+        })
+    }
 
     await dailyQuestion.update({ wasDelivered: true });
     await notifyRoom(dailyQuestion.chatId, question);
