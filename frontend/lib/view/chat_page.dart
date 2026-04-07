@@ -53,6 +53,7 @@ class _ChatPageState extends State<ChatPage> {
 
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription? _dqPushSubscription;
+  StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
   StreamSubscription? _typingSubscription;
   int _promptFeedKey = 0;
@@ -104,6 +105,12 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _hasAnsweredToday = false;
         });
+      });
+      
+      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
+        if (!mounted) return;
+        // refetch answers so the new one appears in the prompt section
+        if (_hasAnsweredToday) _loadPromptSection();
       });
 
       setState(() {
@@ -297,6 +304,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
     _dqPushSubscription?.cancel();
+    _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
@@ -317,7 +325,7 @@ class _ChatPageState extends State<ChatPage> {
             height: double.infinity,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('images/woodGrainTexture.png'),
+                image: AssetImage('images/woodGrainTexture.webp'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -502,7 +510,7 @@ class _ChatPageState extends State<ChatPage> {
         ? Pigeon.getById(message.senderPigeonId!)
         : null;
     final profileImage =
-        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
 
     return Align(
       alignment: message.isSentByCurrentUser
