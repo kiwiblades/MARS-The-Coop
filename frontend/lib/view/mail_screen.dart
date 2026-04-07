@@ -368,7 +368,7 @@ Widget _buildSummaryBanner() {
                     shape: BoxShape.rectangle,
                   ),
                   child: Image.asset(
-                    'images/pigeonSide/pinkNeckedGreenPigeonSide.png',
+                    'images/pigeonSide/pinkNeckedGreenPigeonSide.webp',
                     fit: BoxFit.contain,
                   ),
                 ),

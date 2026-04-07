@@ -120,7 +120,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
                     ? Pigeon.getById(response.pigeonId!)
                     : null;
                 final profileImage =
-                    pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+                    pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
 
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),

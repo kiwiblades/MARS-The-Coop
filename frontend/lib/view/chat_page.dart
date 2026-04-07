@@ -107,11 +107,11 @@ class _ChatPageState extends State<ChatPage> {
         });
       });
       
-      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
-        if (!mounted) return;
-        // refetch answers so the new one appears in the prompt section
-        if (_hasAnsweredToday) _loadPromptSection();
-      });
+      // _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
+      //   if (!mounted) return;
+      //   // refetch answers so the new one appears in the prompt section
+      //   if (_hasAnsweredToday) _loadPromptSection();
+      // });
 
       setState(() {
         _currentUser = user;
