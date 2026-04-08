@@ -42,7 +42,7 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
       decoration: const BoxDecoration(
         color: Color(0xFFD1A681),
         image: DecorationImage(
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
