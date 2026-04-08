@@ -81,6 +81,7 @@ class ChatDetailController {
       fineGrainControl: state.model.currentChatroom!.fineGrainControl,
       allowedTypes: state.model.currentChatroom!.allowedTypes,
       allowedTopics: state.model.currentChatroom!.allowedTopics,
+      bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
     state.callSetState(() {
       state.model.currentChatroom = updated;
@@ -176,6 +177,7 @@ class ChatDetailController {
       fineGrainControl: state.model.currentChatroom!.fineGrainControl,
       allowedTypes: state.model.currentChatroom!.allowedTypes,
       allowedTopics: state.model.currentChatroom!.allowedTopics,
+      bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
 
     state.callSetState(() {
@@ -267,6 +269,7 @@ class ChatDetailController {
         fineGrainControl: false,
         allowedTypes: const {},
         allowedTopics: const {},
+        bannedUsers: state.model.currentChatroom!.bannedUsers,
       );
 
       state.callSetState(() {
@@ -347,6 +350,7 @@ class ChatDetailController {
       fineGrainControl: fineGrainControl,
       allowedTypes: types.toSet(),
       allowedTopics: topics.toSet(),
+      bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
 
     state.callSetState(() {
@@ -399,7 +403,8 @@ class ChatDetailController {
 
   //BANNED USERS list
   void onBannedUserMoreActions(String action, User user) async {
-    switch (action) { //for possible later expansion
+    switch (action) {
+      //for possible later expansion
       case 'unban':
         print('unban ${user.username}');
         // TODO: backend integration
