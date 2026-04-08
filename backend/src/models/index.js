@@ -83,8 +83,4 @@ export function initModels() {
     // a user has many daily answers (over many days)
     User.hasMany(UserDailyAnswer, { foreignKey: 'userId', as: 'dailyAnswers' });
     UserDailyAnswer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-
-    // models/index.js
-    User.hasMany(Journal, { foreignKey: 'ownerId', as: 'WrittenJournals' });
-    Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' });
 }
