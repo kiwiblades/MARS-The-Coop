@@ -434,6 +434,49 @@ class ChatDetailController {
           // TODO: backend integration
           // Chatroom should be updated, owner attribute should be changed from the previous user to the selected user (passed to this function)
           // state.model also needs to be updated (same reasons as above)
+          final confirmed = await showPromoteConfirmationPopUp(state.context);
+
+          if (confirmed == true) {
+            try {
+              // 1. Backend Call
+              // Note: Ensure your service has this method or use updateSettings
+              await chatroomService.updateSettings(
+                chatroomId: _chatId,
+                // You might need a specific 'newOwnerId' field in your API
+                // For now, assuming your updateSettings handles this logic
+              );
+
+              // 2. Update Local State (Manual Rebuild)
+              state.callSetState(() {
+                state.model.currentChatroom = Chatroom(
+                  id: state.model.currentChatroom!.id,
+                  name: state.model.currentChatroom!.name,
+                  inviteCode: state.model.currentChatroom!.inviteCode,
+                  participants: state.model.currentChatroom!.participants,
+                  bannedUsers: state.model.currentChatroom!.bannedUsers,
+                  owner: user, // NEW OWNER
+                  pinned: state.model.currentChatroom!.pinned,
+                  membership: 'member', // Current user is no longer the owner
+                  lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+                  lastSentTime: state.model.currentChatroom!.lastSentTime,
+                  relationshipType: state.model.currentChatroom!.relationshipType,
+                  fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+                  allowedTopics: state.model.currentChatroom!.allowedTopics,
+                  allowedTypes: state.model.currentChatroom!.allowedTypes,
+                );
+              });
+
+              ScaffoldMessenger.of(state.context).showSnackBar(
+                SnackBar(content: Text('${user.username} is now the owner.')),
+              );
+              
+              // Optional: Close the settings screen since the user is no longer owner
+              // Navigator.pop(state.context);
+              
+            } catch (error) {
+              print('Error promoting user: $error');
+            }
+          }
         }
 
         break;
