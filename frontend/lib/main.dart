@@ -7,7 +7,7 @@ import 'package:frontend/view/auth_check.dart';
 import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/createChat_screen.dart';
 import 'package:frontend/view/mail_screen.dart';
-import 'package:frontend/view/mycoop_screen.dart';
+import 'package:frontend/view/myCoop_screen.dart';
 import 'package:frontend/view/profilePicSelection_screen.dart';
 import 'package:frontend/view/profile_screen.dart';
 import 'package:frontend/view/resetPassword_screen.dart';

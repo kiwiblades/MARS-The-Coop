@@ -4,13 +4,14 @@ import 'package:frontend/model/profile_model.dart';
 class MyCoopModel {
   List<Journal>? journalList;
   User? currentUser;
+  List<User>? friendList; //list of user's the current user shares a chat with, should exclude journals they already have
 
   //TEST VALUES: TODO Delete
   // --- Test Users ---
   final User user1 = User(
     uid: 'u1',
     email: 'alice@example.com',
-    username: 'Alice',
+    username: 'AliceAliceAliceAlice',
     pigeonId: 1,
   );
 
@@ -53,6 +54,7 @@ class MyCoopModel {
       testJournal3,
       testJournal3,
     ];
+    friendList = [user1, user2, user3,];
 
     currentUser = user1; // optional default
   }
