@@ -442,8 +442,6 @@ class ChatDetailController {
               // Note: Ensure your service has this method or use updateSettings
               await chatroomService.updateSettings(
                 chatroomId: _chatId,
-                // You might need a specific 'newOwnerId' field in your API
-                // For now, assuming your updateSettings handles this logic
               );
 
               // 2. Update Local State (Manual Rebuild)
@@ -469,9 +467,7 @@ class ChatDetailController {
               ScaffoldMessenger.of(state.context).showSnackBar(
                 SnackBar(content: Text('${user.username} is now the owner.')),
               );
-              
-              // Optional: Close the settings screen since the user is no longer owner
-              // Navigator.pop(state.context);
+            
               
             } catch (error) {
               print('Error promoting user: $error');
@@ -492,6 +488,47 @@ class ChatDetailController {
         // TODO: backend integration
         // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
         // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
+        try {
+          // 1. Backend Call
+          await chatroomService.unbanUser(
+            chatroomId: _chatId,
+            userId: user.uid,
+          );
+
+          // 2. Update Local State
+          // Filter out the user from the current banned list
+          final updatedBannedList = state.model.currentChatroom!.bannedUsers
+              .where((u) => u.uid != user.uid)
+              .toList();
+
+          state.callSetState(() {
+            state.model.currentChatroom = Chatroom(
+              id: state.model.currentChatroom!.id,
+              name: state.model.currentChatroom!.name,
+              inviteCode: state.model.currentChatroom!.inviteCode,
+              participants: state.model.currentChatroom!.participants,
+              bannedUsers: updatedBannedList, // Updated list without the unbanned user
+              owner: state.model.currentChatroom!.owner,
+              pinned: state.model.currentChatroom!.pinned,
+              membership: state.model.currentChatroom!.membership,
+              lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+              lastSentTime: state.model.currentChatroom!.lastSentTime,
+              relationshipType: state.model.currentChatroom!.relationshipType,
+              fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+              allowedTopics: state.model.currentChatroom!.allowedTopics,
+              allowedTypes: state.model.currentChatroom!.allowedTypes,
+            );
+          });
+
+          ScaffoldMessenger.of(state.context).showSnackBar(
+            SnackBar(content: Text('${user.username} has been unbanned.')),
+          );
+        } catch (error) {
+          print('Error unbanning user: $error');
+          ScaffoldMessenger.of(state.context).showSnackBar(
+            const SnackBar(content: Text('Failed to unban user. Please try again.')),
+          );
+        }
         break;
     }
   }
