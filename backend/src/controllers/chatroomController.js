@@ -6,6 +6,7 @@ import ChatSettings from "../models/ChatSettings.js";
 import User from "../models/userModel.js";
 import Message from "../models/Message.js";
 import AppError from "../utils/errors/AppError.js";
+import BannedUser from "../models/BannedUser.js"; 
 
 export async function getChatrooms(req, res) {
     const uid = req.user.uid;
@@ -347,4 +348,53 @@ export async function updateSettings(req, res, next) {
     await t.rollback();
     next(error);
   }
+}
+
+// Ban a user (Owner Only)
+export async function banUser(req, res) {
+    const ownerUid = req.user.uid;
+    const chatId = req.params.id;
+    const { userIdToBan } = req.body;
+
+    if (!userIdToBan) throw AppError.badRequest("userIdToBan is required");
+
+    // 1. Verify requester is the owner
+    const membership = await ChatMembership.findOne({ where: { userId: ownerUid, chatId } });
+    if (!membership || membership.role !== 'owner') {
+        throw AppError.forbidden("Only the owner can ban users");
+    }
+
+    const t = await sequelize.transaction();
+    try {
+        // 2. Add to BannedUser table
+        await BannedUser.findOrCreate({
+            where: { chatId, userId: userIdToBan },
+            transaction: t
+        });
+
+        // 3. Kick from Chat (Delete Membership)
+        await ChatMembership.destroy({
+            where: { chatId, userId: userIdToBan },
+            transaction: t
+        });
+
+        await t.commit();
+        return res.status(200).json({ message: "User has been banned and removed from the chat." });
+    } catch (e) {
+        await t.rollback();
+        throw e;
+    }
+}
+
+// Unban a user
+export async function unbanUser(req, res) {
+    const ownerUid = req.user.uid;
+    const chatId = req.params.id;
+    const { userIdToUnban } = req.body;
+
+    const membership = await ChatMembership.findOne({ where: { userId: ownerUid, chatId } });
+    if (!membership || membership.role !== 'owner') throw AppError.forbidden("Only the owner can unban users");
+
+    await BannedUser.destroy({ where: { chatId, userId: userIdToUnban } });
+    return res.status(200).json({ message: "User unbanned." });
 }
