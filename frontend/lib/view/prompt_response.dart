@@ -26,7 +26,6 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
   final DailyPromptModel _model = DailyPromptModel();
   
   List<PromptResponse> _responses = [];
-  DailyPrompt? _prompt;
 
   @override
   void initState() {
@@ -36,29 +35,27 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
       widget.chatId,
       widget.currentUserId,
     );
-    _loadPromptAndResponses();
+    _loadResponses();
   }
 
-  Future<void> _loadPromptAndResponses() async {
+  Future<void> _loadResponses() async {
     if (!mounted) return;
     setState(() {
       _model.isLoading = true;
       _model.loadError = null;
     });
 
-    final promptResult = await _controller.getTodaysPrompt();
-    final responsesResult = await _controller.getTodaysResponses();
+    final result = await _controller.getTodaysResponses();
 
     if (!mounted) return;
-    if (promptResult['success'] && responsesResult['success']) {
+    if (result['success']) {
       setState(() {
-        _prompt = promptResult['prompt'];
-        _responses = responsesResult['responses'];
+        _responses = result['responses'];
         _model.isLoading = false;
       });
     } else {
       setState(() {
-        _model.loadError = promptResult['error'] ?? responsesResult['error'];
+        _model.loadError = result['error'];
         _model.isLoading = false;
       });
     }
@@ -66,102 +63,29 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
 
   @override
   Widget build(BuildContext context) {
-    if (_model.isLoading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
-    }
-
-    if (_model.loadError != null) {
-      return _buildErrorView();
-    }
-
-    if (_responses.isEmpty || _prompt == null) {
-      return SizedBox.shrink();
-    }
-
     return Container(
       margin: EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(AppBorderRadius.lg),
-                topRight: Radius.circular(AppBorderRadius.lg),
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    _prompt!.questionText,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          // Header
+          Text(
+            'Today\'s Responses',
+            style: AppTextStyles.heading.copyWith(fontSize: 18),
           ),
-          Padding(
-            padding: EdgeInsets.all(AppSpacing.sm),
-            child: Column(
-              children: _responses.map((response) {
-                final pigeon = response.pigeonId != null
-                    ? Pigeon.getById(response.pigeonId!)
-                    : null;
-                final profileImage =
-                    pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundImage: AssetImage(profileImage),
-                        backgroundColor: Colors.transparent,
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              response.username,
-                              style: AppTextStyles.label.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              response.answerText,
-                              style: AppTextStyles.body.copyWith(fontSize: 14),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              _formatTimestamp(response.answeredAt),
-                              style: AppTextStyles.label.copyWith(fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+          SizedBox(height: AppSpacing.md),
+          
+          // Content
+          if (_model.isLoading)
+            Center(child: CircularProgressIndicator(color: AppColors.primary))
+          else if (_model.loadError != null)
+            _buildErrorView()
+          else if (_responses.isEmpty)
+            _buildEmptyState()
+          else
+            Expanded(
+              child: _buildResponseList()
             ),
-          ),
         ],
       ),
     );
@@ -178,12 +102,106 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
           ),
           SizedBox(height: AppSpacing.md),
           ElevatedButton(
-            onPressed: _loadPromptAndResponses,
+            onPressed: _loadResponses,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.background,
             ),
             child: Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Text(
+        'No responses yet. You\'re the first!',
+        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+      ),
+    );
+  }
+
+  Widget _buildResponseList() {
+    return ListView.builder(
+      padding: EdgeInsets.only(bottom: AppSpacing.md),
+      itemCount: _responses.length,
+      itemBuilder: (context, index) {
+        final response = _responses[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.md),
+          child: _buildResponseBubble(response),
+        );
+      },
+    );
+  }
+
+  Widget _buildResponseBubble(PromptResponse response) {
+    final pigeon = response.pigeonId != null 
+        ? Pigeon.getById(response.pigeonId!)
+        : null;
+    final profileImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+    
+    return Align(
+      alignment: response.isSentByCurrentUser
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!response.isSentByCurrentUser) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: AssetImage(profileImage),
+              backgroundColor: Colors.transparent,
+            ),
+            SizedBox(width: AppSpacing.sm),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: response.isSentByCurrentUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                if (!response.isSentByCurrentUser)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      response.username,
+                      style: AppTextStyles.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: response.isSentByCurrentUser
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                    borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+                  ),
+                  child: Text(
+                    response.answerText,
+                    style: AppTextStyles.body.copyWith(
+                      color: response.isSentByCurrentUser
+                          ? AppColors.background
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  _formatTimestamp(response.answeredAt),
+                  style: AppTextStyles.label.copyWith(fontSize: 12),
+                ),
+              ],
+            ),
           ),
         ],
       ),

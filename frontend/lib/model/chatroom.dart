@@ -33,8 +33,6 @@ class Chatroom {
   final bool fineGrainControl;
   final Set<QuestionTopic> allowedTopics;
   final Set<QuestionType> allowedTypes;
-  final int unreadCount;
-  final bool hasPendingQuestion;
 
   Chatroom({
     required this.id,
@@ -49,7 +47,5 @@ class Chatroom {
     required this.fineGrainControl,
     required this.allowedTopics,
     required this.allowedTypes,
-    required this.unreadCount,
-    required this.hasPendingQuestion,
   });
 }

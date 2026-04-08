@@ -39,7 +39,7 @@ class AddChatScreenState extends State<AddChatScreen> {
       decoration: const BoxDecoration(
         color: Color(0xFFD1A681),
         image: DecorationImage(
-          image: AssetImage('images/woodGrainTexture.webp'),
+          image: AssetImage('images/woodGrainTexture.png'),
           fit: BoxFit.cover,
         ),
       ),
