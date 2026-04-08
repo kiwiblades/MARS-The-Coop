@@ -71,6 +71,10 @@ flutter:
     - images/codeBanner.png
   #   - images/a_dot_ham.jpeg
     - images/skyProfileBG.png
+    - images/leftSideCoopBG.png
+    - images/middleCoopBG.png
+    - images/rightSideCoopBG.png
+    - images/addPigeon.png
     #Side view of pigeons (for journal)
     # - images/pigeonSide/nicobarPigeonSide.png
     # - images/pigeonSide/thickBilledPigeonSide.png
