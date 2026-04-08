@@ -25,7 +25,8 @@ class Chatroom {
   final String name;
   final String inviteCode;
   final List<User> participants;
-  // final List<User> bannedUsers; //TODO: list of users to store who is not allowed in a chat
+  final List<User>
+  bannedUsers; //TODO: list of users to store who is not allowed in a chat
   final User owner;
   bool pinned;
   final String membership;
@@ -41,7 +42,7 @@ class Chatroom {
     required this.name,
     required this.inviteCode,
     required this.participants,
-    // required this.bannedUsers,
+    required this.bannedUsers,
     required this.owner,
     required this.pinned,
     required this.membership,
