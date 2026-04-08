@@ -385,6 +385,45 @@ class ChatDetailController {
         // TODO: backend integration
         // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
         // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
+        try {
+          // 1. Backend Call
+          await chatroomService.banUser(chatroomId: _chatId, userId: user.uid);
+          // 2. Update Local State
+          // Remove from participants and add to bannedUsers
+          final currentParticipants = state.model.currentChatroom!.participants;
+          final currentBanned = state.model.currentChatroom!.bannedUsers;
+
+          final updatedParticipants = currentParticipants
+              .where((u) => u.uid != user.uid)
+              .toList();
+          final updatedBanned = [...currentBanned, user];
+
+          state.callSetState(() {
+            state.model.currentChatroom = Chatroom(
+              id: state.model.currentChatroom!.id,
+              name: state.model.currentChatroom!.name,
+              inviteCode: state.model.currentChatroom!.inviteCode,
+              participants:
+                  updatedParticipants, // The one thing you actually changed
+              bannedUsers: updatedBanned, // The other thing you changed
+              owner: state.model.currentChatroom!.owner,
+              pinned: state.model.currentChatroom!.pinned,
+              membership: state.model.currentChatroom!.membership,
+              lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+              lastSentTime: state.model.currentChatroom!.lastSentTime,
+              relationshipType: state.model.currentChatroom!.relationshipType,
+              fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+              allowedTopics: state.model.currentChatroom!.allowedTopics,
+              allowedTypes: state.model.currentChatroom!.allowedTypes,
+            );
+          });
+
+          ScaffoldMessenger.of(state.context).showSnackBar(
+            SnackBar(content: Text('${user.username} has been banned.')),
+          );
+        } catch (error) {
+          print('Error banning user: $error');
+        }
         break;
 
       case 'promote':
