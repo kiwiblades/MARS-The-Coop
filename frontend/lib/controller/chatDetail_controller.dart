@@ -65,7 +65,7 @@ class ChatDetailController {
     if (newChatName == null || newChatName.isEmpty) return;
 
     // immediately update local model to reflect changes
-    // TODO: there's probably a better way to do this, fix later
+    // TODO: there's probably a better way to do this, fix later - POTENTIAL: copywith method on the Chatroom model 
 
     final updated = Chatroom(
       id: state.model.currentChatroom!.id,

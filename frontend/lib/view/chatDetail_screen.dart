@@ -37,7 +37,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
   late ChatDetailModel model;
 
   User? currentUser;
-  Chatroom? currentChat; //TODO: current chatroom to grab details from
+  Chatroom? currentChatroom;
   final GlobalKey<FormState> formKeyChatName = GlobalKey<FormState>();
   final GlobalKey<FormState> formKeyRelationshipType = GlobalKey<FormState>();
 
@@ -464,7 +464,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     model.fineGrainControlEdit)
                   Column(
                     children: [
-                      if (!model.isOwner)
+                      if (model.currentChatroom?.membership != 'owner')
                         SizedBox(
                           height: 15,
                         ), //TODO: replace isOwner with role info
@@ -1077,8 +1077,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                   ),
                 //DELETE only for owner
-                if (model
-                    .isOwner) //TODO: replace with actual value for conditional rendering
+                if (model.currentChatroom?.membership ==
+                    'owner') //TODO: replace with actual value for conditional rendering
                   InkWell(
                     onTap: controller.onPressedDeleteChat,
                     child: Row(
