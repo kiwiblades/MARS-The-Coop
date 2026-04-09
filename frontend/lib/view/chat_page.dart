@@ -135,13 +135,19 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       // subscribe to incoming msg stream
-      _messageSubscription = _chatController.onReceiveMessage().listen((
-        message,
-      ) {
+      _messageSubscription = _chatController.onReceiveMessage().listen((message) {
         setState(() {
           _messages.add(message);
         });
         _scrollToBottom();
+
+        // clear unread immediately if user has chat open
+        if (_currentUser != null) {
+          NotificationService.instance.markChatRead(
+            chatId: widget.chatId,
+            userId: _currentUser!.uid,
+          );
+        }
       });
 
       _typingSubscription = _chatController.onUserTyping().listen((data) {
@@ -330,11 +336,11 @@ class _ChatPageState extends State<ChatPage> {
     _dqPushSubscription?.cancel();
     _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
+    _typingSubscription?.cancel();
+    _notifSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
-    _typingSubscription?.cancel();
-    _notifSubscription?.cancel();
     super.dispose();
   }
 
