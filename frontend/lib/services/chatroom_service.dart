@@ -107,6 +107,15 @@ class ChatroomService {
     );
   }
 
+  // when a notification is clicked, the chatId is passed through the notif
+  // we can then use it to fetch the specific chatroom and push it with the navigator,
+  // so the chatroom immediately loads upon navigation from a notif popup
+  // get /chatroom/$chatId
+  Future<Chatroom> getChatroomById(String chatId) async {
+    final data = await api.getJson('/chatroom/$chatId');
+    return Chatroom.fromJson(data);
+  }
+
   // post /chatroom/join
   Future<void> joinChatroom(String inviteCode) async {
     await api.postJson('/chatroom/join', {'inviteCode': inviteCode});

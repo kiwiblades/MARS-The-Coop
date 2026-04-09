@@ -1,7 +1,15 @@
+import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/socket_client.dart';
+
+import '../view/chat_page.dart';
+import '../view/mail_screen.dart';
+import 'chatroom_service.dart';
 
 // handles background messages
 @pragma('vm:entry-point')
@@ -40,8 +48,21 @@ class NotificationService {
 
     // set up local notifs for foreground display
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    // foreground notif with tap handler
     await _localNotifications.initialize(
       settings: const InitializationSettings(android: androidSettings),
+      onDidReceiveNotificationResponse: (details) {
+        if (details.payload != null) {
+          // reconstruct a RemoteMessage from payload
+          final data = Map<String, String>.from(
+            (jsonDecode(details.payload!) as Map).map(
+              (k,v) => MapEntry(k.toString(), v.toString()),
+            ),
+          );
+          onNotificationTap(RemoteMessage(data: data));
+        }
+      }
     );
 
     // create notifications channel
@@ -50,7 +71,8 @@ class NotificationService {
       'General Notifications',
       importance: Importance.high,
     );
-    await _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+    await _localNotifications
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
     
     // listen for token refresh
@@ -59,9 +81,19 @@ class NotificationService {
     });
 
     // foreground msgs don't show by default on android, so it must be handled manually
-    FirebaseMessaging.onMessage.listen((message) {
-      _showLocalNotification(message);
-    });
+    // FirebaseMessaging.onMessage.listen((message) {
+    //   _showLocalNotification(message);
+    // });
+
+    // notification cases:
+    // app was terminated, launched by tapping notif
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      await onNotificationTap(initialMessage);
+    }
+
+    // app was backgrounded, brought to foreground by tapping notif
+    FirebaseMessaging.onMessageOpenedApp.listen(onNotificationTap);
   }
 
   // called in _connectIfNeeded in main.dart after socket.connect() completes
@@ -87,6 +119,7 @@ class NotificationService {
       id: notification.hashCode,
       title: notification.title,
       body: notification.body,
+      payload: jsonEncode(message.data),
       notificationDetails:  NotificationDetails(
         android: AndroidNotificationDetails(
           'default_channel',
@@ -96,6 +129,58 @@ class NotificationService {
         ),
       ),
     );
+  }
+
+  // when a notif is tapped, we should navigate to the chatroom it originated from
+  Future<void> onNotificationTap(RemoteMessage message) async {
+    final chatId = message.data['chatId']; // grab the chatId from the message data
+    if (chatId == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) {
+        print('[NotificationService] navigator not ready');
+        return;
+      }
+
+      // to avoid odd nav stack behavior, pop until mailscreen is found OR if not found,
+      // pop until the first screen which is technically AuthCheck
+      // to access the notif chat, we want MailScreen to be the prerequisite
+
+      // track whether mail screen was found in the stack
+      bool mailScreenFound = false;
+      navigator.popUntil((route) {
+        if (route.settings.name == MailScreen.routeName) {
+          mailScreenFound = true;
+          return true; // stop popping here
+        }
+        return route.isFirst; // if not found, pop to bottom of stack
+      });
+
+      try {
+        final chatroomService = ChatroomService(api: _api);
+        final chatroom = await chatroomService.getChatroomById(chatId); // fetch the notif chatroom
+
+        // if mail screen wasn't in stack, push it first
+        if (!mailScreenFound) {
+          await navigator.pushNamed(MailScreen.routeName);
+        }
+
+        // then push the chat on top
+        navigator.push(MaterialPageRoute(
+          builder: (_) => ChatPage(
+            chatId: chatroom.id,
+            chatName: chatroom.name,
+            participants: chatroom.participants,
+            membership: chatroom.membership,
+            chatroomService: chatroomService,
+            chatroom: chatroom,
+          ),
+        ));
+      } catch(e) {
+        print('[NotificationService] failed to navigate to chat: $e');
+      }
+    });
   }
 
   // --- REST

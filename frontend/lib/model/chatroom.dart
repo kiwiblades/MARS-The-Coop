@@ -52,4 +52,43 @@ class Chatroom {
     required this.unreadCount,
     required this.hasPendingQuestion,
   });
+
+  factory Chatroom.fromJson(Map<String, dynamic> json) {
+    final chatroom = json['chatroom'] as Map<String, dynamic>? ?? json;
+    final membership = json['membership'] as Map<String, dynamic>? ?? {};
+    final participants = (json['participants'] as List<dynamic>? ?? [])
+      .map((p) => User.fromJson(p as Map<String, dynamic>))
+      .toList();
+    final settings = json['settings'] as Map<String, dynamic>? ?? {};
+    final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
+      .map((t) => t as String).toList();
+    final allowedTypes = (settings['allowedTypes'] as List<dynamic>? ?? [])
+      .map((t) => t as String).toList();
+
+    return Chatroom(
+      id: chatroom['id'] as String,
+      name: chatroom['name'] as String,
+      inviteCode: chatroom['inviteCode'] as String? ?? '',
+      participants: participants,
+      pinned: membership['pinned'] as bool? ?? false,
+      membership: membership['role'] as String? ?? 'member',
+      lastSentMessage: json['lastSentMessage'] as String? ?? '',
+      lastSentTime: json['lastSentTime'] as String? ?? '',
+      relationshipType: RelationshipType.values.firstWhere(
+        (e) => e.name.toLowerCase() == (settings['relationshipType'] as String? ?? 'friends').toLowerCase(),
+        orElse: () => RelationshipType.friends,
+      ),
+      fineGrainControl: allowedTypes.isNotEmpty || allowedTypes.isNotEmpty,
+      allowedTypes: allowedTypes.map((t) => QuestionType.values.firstWhere(
+        (q) => q.name.toLowerCase() == t.toLowerCase(),
+        orElse: () => QuestionType.favorite,
+      )).toSet(),
+      allowedTopics: allowedTopics.map((t) => QuestionTopic.values.firstWhere(
+        (q) => q.name.toLowerCase() == t.toLowerCase(),
+        orElse: () => QuestionTopic.personal,
+      )).toSet(),
+      unreadCount: json['unreadCount'] as int? ?? 0,
+      hasPendingQuestion: json['hasPendingQuestion'] as bool? ?? false,
+    );
+  }
 }

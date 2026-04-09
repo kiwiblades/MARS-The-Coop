@@ -41,6 +41,8 @@ const protectedRoutes = <String>{
   ProfilePicSelectionScreen.routeName,
 };
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
  
@@ -50,6 +52,7 @@ class MyApp extends StatelessWidget {
       title: 'The Coop',
       debugShowCheckedModeBanner: false, //gets rid of the little red debug in the upper right corner
       home: const AuthCheck(),
+      navigatorKey: navigatorKey,
 
       //styling
       theme: ThemeData(
