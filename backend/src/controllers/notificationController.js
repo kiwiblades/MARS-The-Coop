@@ -5,12 +5,9 @@ import ChatMembership from "../models/ChatMembership.js";
 
 export async function updateFcmToken(req, res) {
     const { fcmToken } = req.body;
-    if (!fcmToken) {
-        throw AppError.badRequest("fcmToken is required for update");
-    }
 
     await User.update(
-        { fcmToken },
+        { fcmToken: fcmToken ?? null }, // null case clears the token
         { where: { uid: req.user.uid } }
     );
 

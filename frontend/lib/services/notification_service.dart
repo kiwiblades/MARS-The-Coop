@@ -111,25 +111,25 @@ class NotificationService {
     }
   }
 
-  void _showLocalNotification(RemoteMessage message) {
-    final notification = message.notification;
-    if (notification == null) return;
+  // void _showLocalNotification(RemoteMessage message) {
+  //   final notification = message.notification;
+  //   if (notification == null) return;
 
-    _localNotifications.show(
-      id: notification.hashCode,
-      title: notification.title,
-      body: notification.body,
-      payload: jsonEncode(message.data),
-      notificationDetails:  NotificationDetails(
-        android: AndroidNotificationDetails(
-          'default_channel',
-          'General Notifications',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-      ),
-    );
-  }
+  //   _localNotifications.show(
+  //     id: notification.hashCode,
+  //     title: notification.title,
+  //     body: notification.body,
+  //     payload: jsonEncode(message.data),
+  //     notificationDetails:  NotificationDetails(
+  //       android: AndroidNotificationDetails(
+  //         'default_channel',
+  //         'General Notifications',
+  //         importance: Importance.high,
+  //         priority: Priority.high,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // when a notif is tapped, we should navigate to the chatroom it originated from
   Future<void> onNotificationTap(RemoteMessage message) async {
