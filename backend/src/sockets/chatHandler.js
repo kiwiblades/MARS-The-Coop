@@ -97,20 +97,21 @@ export const registerChatHandlers = (io, socket) => {
             }
             console.log(`[chatHandler] message sent in room ${chat_id} by ${sender_id}`);
 
+            // fetch online users
+            const socketsInRoom = await io.in(chat_id).fetchSockets();
+            const onlineIds = new Set(socketsInRoom.map(s => s.user?.uid));
+
             // determine which members are offline/aren't connected to the live socket
-            const offlineMembers = [];
-            for (const member of updatedMembers) {
-                const socketsInRoom = await io.in(chat_id).fetchSockets();
-                const onlineIds = new Set(socketsInRoom.map(s => s.user?.uid));
-                if (!onlineIds.has(member.userId)) {
-                    offlineMembers.push(member.userId);
-                }
-            }
+            const offlineMembers = [...new Set(
+                updatedMembers.map(m => m.userId).filter(uid => !onlineIds.has(uid))
+            )];
+
+            const chatroom = await ChatRoom.findByPk(chat_id, { attributes: ['name'] });
 
             // send push notifications to users who were offline
             await notifyUsers(offlineMembers, {
-                title: sender?.username ?? 'New Message',
-                body: content,
+                title: `${chatroom?.name ?? 'New Message'}`,
+                body: `${sender?.username ?? 'Someone'}: ${content}`,
                 data: { chatId: chat_id },
             });
 

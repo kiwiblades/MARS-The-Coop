@@ -183,6 +183,11 @@ class NotificationService {
     });
   }
 
+  // to clear the badge on android's app
+  // void clearNotificationsForChat(String chatId) {
+  //   _localNotifications.cancel(id: chatId.hashCode);
+  // }
+
   // --- REST
 
   Future<void> _sendTokenToServer(String token) async {
