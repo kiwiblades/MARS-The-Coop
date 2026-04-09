@@ -9,7 +9,6 @@ export async function updateFcmToken(req, res) {
         throw AppError.badRequest("fcmToken is required for update");
     }
 
-    
     await User.update(
         { fcmToken },
         { where: { uid: req.user.uid } }
@@ -18,16 +17,7 @@ export async function updateFcmToken(req, res) {
     return res.status(204).end(); // success w/ no return content
 }
 
-export async function markChatRead(req, res) {
-    await ChatMembership.update(
-        { unreadCount: 0 },
-        { where: { chatId: req.params.chatId, userId: req.user.uid } }
-    );
-
-    return res.status(204).end();
-}
-
-// get unread counts and question status for all user's chats
+// get unread counts and question status for user chats
 export async function getNotificationSummary(req, res) {
     const memberships = await ChatMembership.findAll({
         where: { userId: req.user.uid },

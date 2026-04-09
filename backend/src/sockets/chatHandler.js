@@ -7,7 +7,7 @@ import ChatMembership from "../models/ChatMembership.js";
 import ChatRoom from "../models/ChatRoom.js";
 import Message from "../models/Message.js";
 import User from "../models/userModel.js";
-import { incrementUnread } from "../utils/notify.js";
+import { incrementUnread, notifyUsers } from "../utils/notify.js";
 
 export const registerChatHandlers = (io, socket) => {
 
@@ -96,6 +96,24 @@ export const registerChatHandlers = (io, socket) => {
                 });
             }
             console.log(`[chatHandler] message sent in room ${chat_id} by ${sender_id}`);
+
+            // determine which members are offline/aren't connected to the live socket
+            const offlineMembers = [];
+            for (const member of updatedMembers) {
+                const socketsInRoom = await io.in(chat_id).fetchSockets();
+                const onlineIds = new Set(socketsInRoom.map(s => s.user?.uid));
+                if (!onlineIds.has(member.userId)) {
+                    offlineMembers.push(member.userId);
+                }
+            }
+
+            // send push notifications to users who were offline
+            await notifyUsers(offlineMembers, {
+                title: sender?.username ?? 'New Message',
+                body: content,
+                data: { chatId: chat_id },
+            });
+
         } catch(e) {
             console.error('[chatHandler] error saving message:', e.message);
             socket.emit('message_error', { message: 'Failed to send message.' });

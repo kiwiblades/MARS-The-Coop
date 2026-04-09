@@ -55,6 +55,7 @@ class _ChatPageState extends State<ChatPage> {
 
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription? _dqPushSubscription;
+  StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
   StreamSubscription? _typingSubscription;
   StreamSubscription? _notifSubscription;
@@ -110,11 +111,13 @@ class _ChatPageState extends State<ChatPage> {
         });
       });
       
-      // _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
-      //   if (!mounted) return;
-      //   // refetch answers so the new one appears in the prompt section
-      //   if (_hasAnsweredToday) _loadPromptSection();
-      // });
+      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((data) {
+        if (!mounted) return;
+        // refetch answers so the new one appears in the prompt section
+        setState(() {
+          _promptFeedKey++; // rebuilds PromptResponseFeed
+        });
+      });
 
       setState(() {
         _currentUser = user;
@@ -325,6 +328,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
     _dqPushSubscription?.cancel();
+    _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();

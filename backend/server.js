@@ -39,6 +39,7 @@ import chatroomRoutes from './src/routes/chatroomRoutes.js';
 import messageRoutes from './src/routes/messageRoutes.js';
 import syncRoutes from './src/routes/syncRoutes.js';
 import dailyQuestionRoutes from './src/routes/dailyQuestionRoutes.js';
+import notificationRoutes from './src/routes/notificationRoutes.js';
 
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
@@ -48,6 +49,7 @@ app.use('/chatroom', chatroomRoutes);
 app.use('/chat', messageRoutes);
 app.use('/sync', syncRoutes);
 app.use('/daily-question', dailyQuestionRoutes);
+app.use('/notifications', notificationRoutes);
 
 // for testing only
 import devRoutes from './src/dev/devRoutes.js';

@@ -78,9 +78,25 @@ class MailController {
       final results = await Future.wait([
         chatroomService.getChatrooms(),
         userService.getProfile(),
+        NotificationService.instance.getNotificationSummary(),
       ]);
       final chatrooms = results[0] as List<Chatroom>;
       final user = results[1] as User;
+      final summary = results[2] as List<Map<String, dynamic>>;
+      // create lookup map for notif summary access
+      final summaryMap = {
+        for (final m in summary) m['chatId'] as String: m
+      };
+
+      // apply unread counts and pending question state from summary
+      for (final chat in chatrooms) {
+        final entry = summaryMap[chat.id];
+        if (entry != null) {
+          chat.unreadCount = (entry['unreadCount'] as int?) ?? 0;
+          chat.hasPendingQuestion = (entry['hasPendingQuestion'] as bool?) ?? false;
+        }
+      }
+      
       state.callSetState(() {
         state.model.chatroomList = chatrooms;
         state.model.currentUser = user;

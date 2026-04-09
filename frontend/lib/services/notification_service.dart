@@ -17,12 +17,15 @@ class NotificationService {
   final _localNotifications = FlutterLocalNotificationsPlugin();
   final _socket = SocketClient.instance;
 
+  late ApiClient _api;
+
   bool _fcmInitialized = false;
   bool _socketInitialized = false;
 
   Future<void> initializeFcm(ApiClient api) async {
     if (_fcmInitialized) return;
     _fcmInitialized = true;
+    _api = api;
 
     // register background handler
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -49,13 +52,10 @@ class NotificationService {
     );
     await _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
-
-    // get token and save to server
-    await _saveToken(api);
     
     // listen for token refresh
     _messaging.onTokenRefresh.listen((token) {
-      _sendTokenToServer(api, token);
+      _sendTokenToServer(token);
     });
 
     // foreground msgs don't show by default on android, so it must be handled manually
@@ -72,19 +72,10 @@ class NotificationService {
     print('[NotificationService] socket listeners ready');
   }
 
-  Future<void> _saveToken(ApiClient api) async {
+  Future<void> saveToken() async {
     final token = await _messaging.getToken();
     if (token != null) {
-      await _sendTokenToServer(api, token);
-    }
-  }
-
-  Future<void> _sendTokenToServer(ApiClient api, String token) async {
-    try {
-      await api.postJson('users/fcm-token', {'fcmToken' : token});
-      print('[NotificationService] token saved to server');
-    } catch(e) {
-      print('[NotificationService] failed to save token: $e');
+      await _sendTokenToServer(token);
     }
   }
 
@@ -105,6 +96,28 @@ class NotificationService {
         ),
       ),
     );
+  }
+
+  // --- REST
+
+  Future<void> _sendTokenToServer(String token) async {
+    try {
+      await _api.postJson('/notifications/fcm-token', {'fcmToken' : token});
+      print('[NotificationService] token saved to server');
+    } catch(e) {
+      print('[NotificationService] failed to save token: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationSummary() async {
+    try {
+      final data = await _api.getJson('/notifications/summary');
+      final summary = data['memberships'] as List<dynamic>;
+      return summary.map((m) => m as Map<String, dynamic>).toList();
+    } catch(e) {
+      print('[NotificationService] getNotificationSummary failed: $e');
+      return []; // return empty list
+    }
   }
 
   // --- socket
@@ -135,6 +148,4 @@ class NotificationService {
   Stream<String> onError() {
     return _socket.on('notification_error').map((data) => data['message'] as String);
   }
-
-  
 }
