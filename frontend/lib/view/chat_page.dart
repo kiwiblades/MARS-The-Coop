@@ -67,6 +67,8 @@ class _ChatPageState extends State<ChatPage> {
   List<Message> _messages = [];
   bool _hasMore = true;
   User? _currentUser;
+  Timer? _typingTimer;
+  final Map<String, Timer> _typingTimers = {};
   Set<String> _typingUsers = {};
 
   @override
@@ -155,13 +157,16 @@ class _ChatPageState extends State<ChatPage> {
         final isTyping = data['isTyping'] as bool;
 
         if (isTyping) {
-          setState(() {
-            _typingUsers.add(userId);
+          setState(() => _typingUsers.add(userId));
+            
+          // auto-clear after 3s in case stop event is missed
+          _typingTimers[userId]?.cancel();
+          _typingTimers[userId] = Timer(const Duration(seconds: 3), () {
+            setState(() => _typingUsers.remove(userId));
           });
         } else {
-          setState(() {
-            _typingUsers.remove(userId);
-          });
+          _typingTimers[userId]?.cancel();
+          setState(() => _typingUsers.remove(userId));
         }
       });
 
@@ -263,6 +268,12 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  // username helper for displaying typing indicator
+  String _getUsername(String userId) {
+    final match = widget.participants.where((p) => p.uid == userId).firstOrNull;
+    return match?.username ?? 'Someone';
+  }
+
   Future<void> _sendMessage() async {
     if (_currentUser == null) return;
 
@@ -271,6 +282,11 @@ class _ChatPageState extends State<ChatPage> {
 
     _messageController.clear();
 
+    // clear typing indicators on send
+    _typingTimer?.cancel();
+    _model.isTyping = false;
+    _chatController.sendTypingIndicator(false);
+
     // send message, no need to await. server broadcasts back to the room
     _chatController.sendMessage(content);
   }
@@ -278,11 +294,30 @@ class _ChatPageState extends State<ChatPage> {
   void _onTypingChanged(String text) {
     if (_currentUser == null) return;
     final isTyping = text.isNotEmpty;
-    setState(() {});
-    if (isTyping != _model.isTyping) {
-      _model.isTyping = isTyping;
-      _chatController.sendTypingIndicator(isTyping);
+    
+    if (isTyping) {
+      // emit typing start only once per burst, not on every keystroke to prevent event flooding
+      if (!_model.isTyping) {
+        _model.isTyping = true;
+        _chatController.sendTypingIndicator(true);
+      }
+      // reset timer each keystroke, stop after 2s of no input
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 2), () {
+        _model.isTyping = false;
+        _chatController.sendTypingIndicator(false);
+      });
+    } else {
+      // input cleared, stop immediately
+      _typingTimer?.cancel();
+      if (_model.isTyping) {
+        if (_model.isTyping) {
+          _model.isTyping = false;
+          _chatController.sendTypingIndicator(false);
+        }
+      }
     }
+    setState(() {});
   }
 
   Future<void> _showLeaveConfirmation() async {
@@ -338,6 +373,10 @@ class _ChatPageState extends State<ChatPage> {
     _messageErrorSubscription?.cancel();
     _typingSubscription?.cancel();
     _notifSubscription?.cancel();
+    _typingTimer?.cancel();
+    for (final timer in _typingTimers.values) {
+      timer.cancel();
+    }
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
@@ -533,7 +572,36 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildChatContent() {
-    return Column(children: [Expanded(child: _buildMessageList())]);
+    return Column(
+      children: [
+        Expanded(child: _buildMessageList()),
+        if (_typingUsers.isNotEmpty) _buildTypingIndicator(),
+      ]
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    final String text;
+    if (_typingUsers.length == 1) {
+      text = '${_getUsername(_typingUsers.first)} is typing...';
+    } else {
+      text = 'Multiple people are typing...';
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: AppTextStyles.label.copyWith(
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {

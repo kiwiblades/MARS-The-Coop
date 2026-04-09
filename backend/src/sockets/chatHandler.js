@@ -133,5 +133,7 @@ export const registerChatHandlers = (io, socket) => {
         });
     });
 
-
+    socket.on('typing_indicator', ({ chatId, userId, isTyping }) => {
+        socket.to(chatId).emit('user_typing', { userId, isTyping });
+    });
 };
