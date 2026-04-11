@@ -65,7 +65,7 @@ class ChatDetailController {
     if (newChatName == null || newChatName.isEmpty) return;
 
     // immediately update local model to reflect changes
-    // TODO: there's probably a better way to do this, fix later - POTENTIAL: copywith method on the Chatroom model 
+    // TODO: there's probably a better way to do this, fix later - POTENTIAL: copywith method on the Chatroom model
 
     final updated = Chatroom(
       id: state.model.currentChatroom!.id,
@@ -382,7 +382,7 @@ class ChatDetailController {
     switch (action) {
       case 'ban':
         print('Ban ${user.username}');
-        // TODO: backend integration
+        // backend integration
         // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
         // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
         try {
@@ -431,7 +431,7 @@ class ChatDetailController {
 
         if (confirmed == true) {
           print('Promote ${user.username} to owner');
-          // TODO: backend integration
+          // backend integration
           // Chatroom should be updated, owner attribute should be changed from the previous user to the selected user (passed to this function)
           // state.model also needs to be updated (same reasons as above)
           final confirmed = await showPromoteConfirmationPopUp(state.context);
@@ -440,9 +440,7 @@ class ChatDetailController {
             try {
               // 1. Backend Call
               // Note: Ensure your service has this method or use updateSettings
-              await chatroomService.updateSettings(
-                chatroomId: _chatId,
-              );
+              await chatroomService.updateSettings(chatroomId: _chatId);
 
               // 2. Update Local State (Manual Rebuild)
               state.callSetState(() {
@@ -457,8 +455,10 @@ class ChatDetailController {
                   membership: 'member', // Current user is no longer the owner
                   lastSentMessage: state.model.currentChatroom!.lastSentMessage,
                   lastSentTime: state.model.currentChatroom!.lastSentTime,
-                  relationshipType: state.model.currentChatroom!.relationshipType,
-                  fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+                  relationshipType:
+                      state.model.currentChatroom!.relationshipType,
+                  fineGrainControl:
+                      state.model.currentChatroom!.fineGrainControl,
                   allowedTopics: state.model.currentChatroom!.allowedTopics,
                   allowedTypes: state.model.currentChatroom!.allowedTypes,
                 );
@@ -467,8 +467,6 @@ class ChatDetailController {
               ScaffoldMessenger.of(state.context).showSnackBar(
                 SnackBar(content: Text('${user.username} is now the owner.')),
               );
-            
-              
             } catch (error) {
               print('Error promoting user: $error');
             }
@@ -485,7 +483,7 @@ class ChatDetailController {
       //for possible later expansion
       case 'unban':
         print('unban ${user.username}');
-        // TODO: backend integration
+        // backend integration
         // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
         // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
         try {
@@ -507,7 +505,8 @@ class ChatDetailController {
               name: state.model.currentChatroom!.name,
               inviteCode: state.model.currentChatroom!.inviteCode,
               participants: state.model.currentChatroom!.participants,
-              bannedUsers: updatedBannedList, // Updated list without the unbanned user
+              bannedUsers:
+                  updatedBannedList, // Updated list without the unbanned user
               owner: state.model.currentChatroom!.owner,
               pinned: state.model.currentChatroom!.pinned,
               membership: state.model.currentChatroom!.membership,
@@ -526,7 +525,9 @@ class ChatDetailController {
         } catch (error) {
           print('Error unbanning user: $error');
           ScaffoldMessenger.of(state.context).showSnackBar(
-            const SnackBar(content: Text('Failed to unban user. Please try again.')),
+            const SnackBar(
+              content: Text('Failed to unban user. Please try again.'),
+            ),
           );
         }
         break;

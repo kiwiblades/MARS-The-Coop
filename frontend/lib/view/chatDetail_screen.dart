@@ -465,9 +465,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   Column(
                     children: [
                       if (model.currentChatroom?.membership != 'owner')
-                        SizedBox(
-                          height: 15,
-                        ), //TODO: replace isOwner with role info
+                        SizedBox(height: 15),
                       Container(
                         decoration: BoxDecoration(
                           border: Border(
@@ -944,22 +942,22 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // if (model.currentChatroom?.bannedUsers?.isEmpty) //TODO: Once bannedUsers is implemented this should just be able to be uncommented
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            "No one is currently banned from this chat.",
-                            style: Theme.of(context).textTheme.headlineLarge
-                                ?.copyWith(
-                                  fontSize: 16.0,
-                                  color: AppColors.darkBrown,
-                                ),
+                      //if (model.currentChatroom?.bannedUsers?.isEmpty)
+                      if (model.currentChatroom?.bannedUsers.isEmpty ?? true)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              "No one is currently banned from this chat.",
+                              style: Theme.of(context).textTheme.headlineLarge
+                                  ?.copyWith(
+                                    fontSize: 16.0,
+                                    color: AppColors.darkBrown,
+                                  ),
+                            ),
                           ),
                         ),
-                      ),
                       ...?model.currentChatroom?.bannedUsers.map((user) {
-                        //TODO: This whole section should be able to just be uncommented once the bannedUsers attribute is implemented, if anything isn't looking right just pass code back to me
                         return SizedBox(
                           height: 34, //control row height
                           child: Row(
@@ -1053,8 +1051,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                 ),
                 SizedBox(height: 10),
                 //LEAVE For non-owner
-                if (!model
-                    .isOwner) //TODO: replace with actual value for conditional rendering
+                if (model.currentChatroom?.membership != null &&
+                    model.currentChatroom?.membership != 'owner')
                   InkWell(
                     onTap: controller.onPressedLeaveChat,
                     child: Row(
@@ -1077,8 +1075,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                   ),
                 //DELETE only for owner
-                if (model.currentChatroom?.membership ==
-                    'owner') //TODO: replace with actual value for conditional rendering
+                if (model.currentChatroom?.membership == 'owner')
                   InkWell(
                     onTap: controller.onPressedDeleteChat,
                     child: Row(

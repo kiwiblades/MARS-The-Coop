@@ -25,7 +25,7 @@ class Chatroom {
   final String name;
   final String inviteCode;
   final List<User> participants;
-  final List<User> bannedUsers; //TODO: list of users to store who is not allowed in a chat
+  final List<User> bannedUsers;
   final User owner;
   bool pinned;
   final String membership;
