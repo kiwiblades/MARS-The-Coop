@@ -17,6 +17,7 @@ import UserDailyAnswer from "./UserDailyAnswer.js";
 import Question from "./Question.js";
 import ChatSettings from "./ChatSettings.js";
 import BannedUser from "./BannedUser.js";
+import { Journal } from "./journal.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -85,8 +86,12 @@ export function initModels() {
     UserDailyAnswer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
     // models/index.js
+    // User.hasMany(Journal, { foreignKey: 'ownerId', as: 'WrittenJournals' });
+    // Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' });
     User.hasMany(Journal, { foreignKey: 'ownerId', as: 'WrittenJournals' });
-    Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' });
+    Journal.belongsTo(User, { foreignKey: 'ownerId', as: 'Owner' }); // The writer
+    Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' }); // The "Bird"
+
 
     // Add Ban Associations
     User.hasMany(BannedUser, { foreignKey: 'userId' });
