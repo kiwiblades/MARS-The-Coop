@@ -77,7 +77,7 @@ class JournalController {
   // delete entry
   Future<Map<String, dynamic>> deleteEntry(String entryId) async {
     try {
-      await api.deleteJson('/journals/entry/$entryId');
+      await api.deleteJson('/journals/entry/$entryId', {});
 
       //await Future.delayed(Duration(milliseconds: 300));
       return {'success': true};
