@@ -261,7 +261,7 @@ class _ChatPageState extends State<ChatPage> {
       builder: (context) => AlertDialog(
         title: Text('Leave Chat'),
         content: Text(
-          widget.participants.length + 1 == 1
+          widget.participants.length == 1
               ? 'You are the last member. Leaving will delete this chat.'
               : 'Are you sure you want to leave this chat?',
         ),
@@ -398,8 +398,8 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   Text(
                     _model.showFullGroupName
-                        ? '${widget.participants.length + 1} members: ${widget.participants.map((p) => p.username).join(", ")}'
-                        : '${widget.participants.length + 1} members',
+                        ? '${widget.participants.length} members: ${widget.participants.map((p) => p.username).join(", ")}'
+                        : '${widget.participants.length} members',
                     style: AppTextStyles.label,
                     maxLines: _model.showFullGroupName ? null : 1,
                     overflow: _model.showFullGroupName
