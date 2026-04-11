@@ -16,8 +16,8 @@ export const createJournalEntry = async (req, res, next) => {
     const sharedChat = await ChatMembership.findOne({
       where: {
         userId: ownerId,
-        chatroomId: {
-          [Op.in]: sequelize.literal(`(SELECT "chatroomId" FROM chatmemberships WHERE "userId" = '${subjectId}')`)
+        chatId: {
+          [Op.in]: sequelize.literal(`(SELECT "chatId" FROM "chatmembership" WHERE "userId" = '${subjectId}')`)
         }
       }
     });
@@ -73,11 +73,13 @@ export const getJournalSubjects = async (req, res, next) => {
   try {
     const subjects = await Journal.findAll({
       where: { ownerId },
-      attributes: [[sequelize.fn('DISTINCT', sequelize.col('subjectId')), 'subjectId']],
+      //attributes: [[sequelize.fn('DISTINCT', sequelize.col('subjectId')), 'subjectId']],
+	  attributes: ['subjectId'],
+      group: ['subjectId', 'SubjectProfile.uid'],
       include: [{
         model: User,
         as: 'SubjectProfile',
-        attributes: ['username', 'pigeonId'] // Fixed: matching your user model 'pigeonId'
+        attributes: ['uid', 'username', 'pigeonId'] // Fixed: matching your user model 'pigeonId'
       }]
     });
 
@@ -104,11 +106,11 @@ export const getEligibleSubjects = async (req, res, next) => {
         uid: { 
           [Op.ne]: userId,
           [Op.in]: sequelize.literal(`(
-            SELECT DISTINCT "userId" FROM chatmemberships 
-            WHERE "chatroomId" IN (SELECT "chatroomId" FROM chatmemberships WHERE "userId" = '${userId}')
+            SELECT DISTINCT "userId" FROM "chatmembership" 
+            WHERE "chatId" IN (SELECT "chatId" FROM "chatmembership" WHERE "userId" = '${userId}')
           )`),
           [Op.notIn]: sequelize.literal(`(
-            SELECT DISTINCT "subjectId" FROM journals WHERE "ownerId" = '${userId}'
+            SELECT DISTINCT "subjectId" FROM "journals" WHERE "ownerId" = '${userId}'
           )`)
         },
         ...(search && { username: { [Op.iLike]: `%${search}%` } })
