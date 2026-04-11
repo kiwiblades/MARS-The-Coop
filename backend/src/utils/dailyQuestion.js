@@ -6,6 +6,9 @@ import ChatRoom from "../models/ChatRoom.js";
 import AppError from "./errors/AppError.js";
 import ChatSettings from "../models/ChatSettings.js";
 
+// relatinship type filtering, least inclusive to most inclusive
+const RELATIONSHIP_HIERARCHY = ['Acquaintances', 'Family', 'Friends', 'Romantic'];
+
 // helper to return today's date as yyyy-mm-dd
 export function today() {
     return new Date().toISOString().split('T')[0];
@@ -46,6 +49,18 @@ export async function pickQuestionForRoom(chatId) {
 
     const settings = await ChatSettings.findOne({ where: { chatId } });
 
+    // build list of all relationship types up to and including the selected one
+    let relationshipFilter = {};
+    if (settings?.relationshipType) {
+        const selectedIndex = RELATIONSHIP_HIERARCHY.findIndex(
+            r => r.toLowerCase()  === settings.relationshipType.toLowerCase()
+        );
+        if (selectedIndex !== -1) {
+            const allowedTypes = RELATIONSHIP_HIERARCHY.slice(0, selectedIndex+1);
+            relationshipFilter = { relationshipType: { [Op.in]: allowedTypes } };
+        }
+    }
+
     // find questionIds already used in this room within the thirty day window
     const recentlyUsed = await DailyQuestion.findAll({
         where: {
@@ -57,7 +72,7 @@ export async function pickQuestionForRoom(chatId) {
     const excludedIds = recentlyUsed.map(dq => dq.questionId);
 
     const preferenceFilter = {
-        ...(settings?.relationshipType ? { relationshipType: { [Op.iLike]: settings.relationshipType } } : {}),
+        ...relationshipFilter,
         ...(settings?.allowedTopics?.length ? { topics: { [Op.overlap]: settings.allowedTopics.map(t =>
             t.charAt(0).toUpperCase() + t.slice(1)
         ) } } : {}),
@@ -87,7 +102,6 @@ export async function pickQuestionForRoom(chatId) {
 
         console.log('[pickQuestion] settings:', settings?.relationshipType);
         console.log('[pickQuestion] preferenceFilter:', preferenceFilter);
-        console.log('[pickQuestion] eligible count:', eligible.length);
         
         if (!fallback) { // no eligible questions
             console.log(`[dailyQuestion] no eligible questions for chatroom ${chatId} found`);

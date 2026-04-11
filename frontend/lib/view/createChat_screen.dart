@@ -58,7 +58,7 @@ class CreateChatScreenState extends State<CreateChatScreen> {
       decoration: const BoxDecoration(
         color: Color(0xFFD1A681),
         image: DecorationImage(
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
@@ -517,7 +517,7 @@ class CodeBannerPopup extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Image.asset(
-            'images/codeBanner.png',
+            'images/codeBanner.webp',
             width: screenWidth,
             fit: BoxFit.fitWidth,
           ),

@@ -68,19 +68,21 @@ class ChatDetailController {
     // TODO: there's probably a better way to do this, fix later - POTENTIAL: copywith method on the Chatroom model
 
     final updated = Chatroom(
-      id: state.model.currentChatroom!.id,
-      name: newChatName,
-      inviteCode: state.model.currentChatroom!.inviteCode,
-      participants: state.model.currentChatroom!.participants,
-      owner: state.model.currentChatroom!.owner,
-      pinned: state.model.currentChatroom!.pinned,
-      membership: state.model.currentChatroom!.membership,
-      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
-      lastSentTime: state.model.currentChatroom!.lastSentTime,
-      relationshipType: state.model.currentChatroom!.relationshipType,
-      fineGrainControl: state.model.currentChatroom!.fineGrainControl,
-      allowedTypes: state.model.currentChatroom!.allowedTypes,
-      allowedTopics: state.model.currentChatroom!.allowedTopics,
+      id:                      state.model.currentChatroom!.id,
+      name:                    newChatName,
+      inviteCode:              state.model.currentChatroom!.inviteCode,
+      participants:            state.model.currentChatroom!.participants,
+      owner:                   state.model.currentChatroom!.owner,
+      pinned:                  state.model.currentChatroom!.pinned,
+      membership:              state.model.currentChatroom!.membership,
+      lastSentMessage:         state.model.currentChatroom!.lastSentMessage,
+      lastSentTime:            state.model.currentChatroom!.lastSentTime,
+      relationshipType:        state.model.currentChatroom!.relationshipType,
+      fineGrainControl:        state.model.currentChatroom!.fineGrainControl,
+      allowedTypes:            state.model.currentChatroom!.allowedTypes,
+      allowedTopics:           state.model.currentChatroom!.allowedTopics,
+      unreadCount:      state.model.currentChatroom!.unreadCount,
+      hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
       bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
     state.callSetState(() {
@@ -175,8 +177,10 @@ class ChatDetailController {
       lastSentTime: state.model.currentChatroom!.lastSentTime,
       relationshipType: newRelationshipType, // updated
       fineGrainControl: state.model.currentChatroom!.fineGrainControl,
-      allowedTypes: state.model.currentChatroom!.allowedTypes,
-      allowedTopics: state.model.currentChatroom!.allowedTopics,
+      allowedTypes:     state.model.currentChatroom!.allowedTypes,
+      allowedTopics:    state.model.currentChatroom!.allowedTopics,
+      unreadCount:      state.model.currentChatroom!.unreadCount,
+      hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
       bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
 
@@ -267,8 +271,10 @@ class ChatDetailController {
         lastSentTime: state.model.currentChatroom!.lastSentTime,
         relationshipType: state.model.currentChatroom!.relationshipType,
         fineGrainControl: false,
-        allowedTypes: const {},
-        allowedTopics: const {},
+        allowedTypes:     const {},
+        allowedTopics:    const {},
+        unreadCount:      state.model.currentChatroom!.unreadCount,
+        hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
         bannedUsers: state.model.currentChatroom!.bannedUsers,
       );
 
@@ -348,8 +354,10 @@ class ChatDetailController {
       lastSentTime: state.model.currentChatroom!.lastSentTime,
       relationshipType: state.model.currentChatroom!.relationshipType,
       fineGrainControl: fineGrainControl,
-      allowedTypes: types.toSet(),
-      allowedTopics: topics.toSet(),
+      allowedTypes:     types.toSet(),
+      allowedTopics:    topics.toSet(),
+      unreadCount:      state.model.currentChatroom!.unreadCount,
+      hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
       bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
 
