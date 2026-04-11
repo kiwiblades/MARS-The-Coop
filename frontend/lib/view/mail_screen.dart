@@ -23,6 +23,7 @@ class MailScreen extends StatefulWidget {
 class MailScreenState extends State<MailScreen> {
   late MailController controller;
   late MailModel model;
+  bool _bannerCollapsed = false;
 
   @override
   void initState() {
@@ -31,11 +32,24 @@ class MailScreenState extends State<MailScreen> {
     final apiClient = ApiClient();
     final chatroomService = ChatroomService(api: apiClient);
     final userService = UserService(api: apiClient);
-    controller = MailController(this, chatroomService: chatroomService, userService: userService);
+    controller = MailController(
+      this,
+      chatroomService: chatroomService,
+      userService: userService,
+    );
     controller.loadChatrooms(); // fetch the user's chatrooms on screen load
   }
 
   void callSetState(fn) => setState(fn);
+  int get _totalUnreadMessages {
+    if (model.chatroomList == null) return 0;
+    return model.chatroomList!.fold(0, (sum, chat) => sum + chat.unreadCount);
+  }
+
+  int get _totalPendingQuestions {
+    if (model.chatroomList == null) return 0;
+    return model.chatroomList!.where((chat) => chat.hasPendingQuestion).length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +57,7 @@ class MailScreenState extends State<MailScreen> {
       decoration: const BoxDecoration(
         image: DecorationImage(
           //background wood text
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
@@ -69,10 +83,12 @@ class MailScreenState extends State<MailScreen> {
   }
 
   Widget bodyView() {
-    if (model.chatroomList == null) { // still loading
+    if (model.chatroomList == null) {
+      // still loading
       return const Center(child: CircularProgressIndicator());
     }
-    if (model.chatroomList!.isEmpty) { //if user does not have any chats yet
+    if (model.chatroomList!.isEmpty) {
+      //if user does not have any chats yet
       print('chats empty, view reached');
       return Padding(
         padding: const EdgeInsets.all(20.0),
@@ -98,53 +114,109 @@ class MailScreenState extends State<MailScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-        if(pinnedChats.isNotEmpty) ... [Container( //pinned
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.darkBrown, width: 2.5),
-              borderRadius: BorderRadius.circular(12.0), //round corners
-            ),
-            child: ListView.separated(
-              //list for pinned chats
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: pinnedChats.length,
-              itemBuilder: (context, index) {
-                return buildChatroomTile(pinnedChats[index]);
-              },
-              separatorBuilder: (context, index) => const Divider(
-                height: 1,
-                thickness: 1,
-                color: AppColors.darkBrown,
+          if (_totalUnreadMessages > 0 || _totalPendingQuestions > 0)
+            _buildSummaryBanner(),
+          if (pinnedChats.isNotEmpty) ...[
+            Container(
+              //pinned
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.darkBrown, width: 2.5),
+                borderRadius: BorderRadius.circular(12.0), //round corners
+              ),
+              child: ListView.separated(
+                //list for pinned chats
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: pinnedChats.length,
+                itemBuilder: (context, index) {
+                  return buildChatroomTile(pinnedChats[index]);
+                },
+                separatorBuilder: (context, index) => const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.darkBrown,
+                ),
               ),
             ),
-          ),],
-          if(unpinnedChats.isNotEmpty) ... [ SizedBox(height: 10.0),
-          Container( //unpinned
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.darkBrown, width: 2.5),
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: ListView.separated(
-              //list for unpinned chats
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: unpinnedChats.length,
-              itemBuilder: (context, index) {
-                return buildChatroomTile(unpinnedChats[index]);
-              },
-              separatorBuilder: (context, index) => const Divider(
-                height: 1,
-                thickness: 1,
-                color: AppColors.darkBrown,
+          ],
+          if (unpinnedChats.isNotEmpty) ...[
+            SizedBox(height: 10.0),
+            Container(
+              //unpinned
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.darkBrown, width: 2.5),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: ListView.separated(
+                //list for unpinned chats
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: unpinnedChats.length,
+                itemBuilder: (context, index) {
+                  return buildChatroomTile(unpinnedChats[index]);
+                },
+                separatorBuilder: (context, index) => const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.darkBrown,
+                ),
               ),
             ),
-          ),]
+          ],
         ],
       ),
     );
   }
+
+Widget _buildSummaryBanner() {
+  String bannerText;
+  if (_totalUnreadMessages > 0 && _totalPendingQuestions > 0) {
+    bannerText = '$_totalUnreadMessages unread message${_totalUnreadMessages == 1 ? '' : 's'} and\n$_totalPendingQuestions unanswered question${_totalPendingQuestions == 1 ? '' : 's'}';
+  } else if (_totalUnreadMessages > 0) {
+    bannerText = '$_totalUnreadMessages unread message${_totalUnreadMessages == 1 ? '' : 's'}';
+  } else {
+    bannerText = '$_totalPendingQuestions unanswered question${_totalPendingQuestions == 1 ? '' : 's'}';
+  }
+
+  return Container(
+    margin: EdgeInsets.only(bottom: 10),
+    padding: EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppColors.lightBrown,
+      border: Border.all(color: AppColors.darkBrown, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: InkWell(
+      onTap: () {
+        setState(() {
+          _bannerCollapsed = !_bannerCollapsed;
+        });
+      },
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              _bannerCollapsed ? "What's new" : bannerText,
+              style: AppTextStyles.body.copyWith(
+                fontSize: 14,
+                fontWeight: _bannerCollapsed ? FontWeight.w600 : null,
+                fontStyle: _bannerCollapsed ? null : FontStyle.italic,
+                color: AppColors.darkBrown,
+              ),
+            ),
+          ),
+          Icon(
+            _bannerCollapsed ? Icons.expand_more : Icons.expand_less,
+            size: 20,
+            color: AppColors.darkBrown,
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   //helper to create each chat room's block
   Widget buildChatroomTile(Chatroom chat) {
@@ -153,81 +225,152 @@ class MailScreenState extends State<MailScreen> {
     if (chat.participants.isEmpty) {
       final pigeonId = model.currentUser?.pigeonId ?? 0;
       final pigeon = Pigeon.getById(pigeonId);
-      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else if (chat.participants.length == 1) {
       final pigeonId = chat.participants[0].pigeonId;
       final pigeon = Pigeon.getById(pigeonId);
-      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else {
       //if there are more than 1 participants
-      chatImage = 'images/group.png';
+      chatImage = 'images/group.webp';
     }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: GestureDetector(
         onLongPress: () => controller.onLongPressChat(context, chat),
         onTap: () => controller.onTapChat(context, chat),
-        child: Row(
-          crossAxisAlignment:
-              CrossAxisAlignment.start, //makes pinned icon in top right
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            //chat image
-            CircleAvatar(
-              backgroundColor: AppColors.darkBrown,
-              radius: 20,
-              child: ClipOval(child: Image.asset(chatImage)),
-            ),
-            const SizedBox(width: 10), //spacer
-            Expanded(
-              //text info
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    //chat name/title
-                    chat.name,
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      fontSize: 14,
-                      color: AppColors.darkBrown,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                //chat image
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.darkBrown,
+                      radius: 20,
+                      child: ClipOval(child: Image.asset(chatImage)),
                     ),
-                  ),
-                  Row(
-                    //most recent message info
-                    children: [
-                      Expanded(
-                        child: Text(
-                          //last message text
-                          chat.lastSentMessage,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall!
-                              .copyWith(
-                                fontSize: 14,
-                                color: AppColors.darkBrown,
+                    if (chat.unreadCount > 0)
+                      Positioned(
+                        top: -4,
+                        right: -4,
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Center(
+                            child: Text(
+                              chat.unreadCount > 99
+                                  ? '99+'
+                                  : '${chat.unreadCount}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
+                            ),
+                          ),
                         ),
                       ),
-                      SizedBox(width: 5.0),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        //last message time
-                        controller.formatChatTimestamp(chat.lastSentTime),
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          fontSize: 14,
-                          color: AppColors.darkBrown,
-                        ),
+                        chat.name,
+                        style: Theme.of(context).textTheme.headlineSmall!
+                            .copyWith(fontSize: 14, color: AppColors.darkBrown),
                       ),
-                      if (chat.pinned) SizedBox(width: 10.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              chat.lastSentMessage,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall!
+                                  .copyWith(
+                                    fontSize: 14,
+                                    color: AppColors.darkBrown,
+                                  ),
+                            ),
+                          ),
+                          SizedBox(width: 5.0),
+                          Text(
+                            controller.formatChatTimestamp(chat.lastSentTime),
+                            style: Theme.of(context).textTheme.bodySmall!
+                                .copyWith(
+                                  fontSize: 14,
+                                  color: AppColors.darkBrown,
+                                ),
+                          ),
+                          if (chat.pinned) SizedBox(width: 10.0),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                if (chat.pinned)
+                  Transform.rotate(
+                    angle: 45 * math.pi / 180,
+                    child: const Icon(
+                      Icons.push_pin,
+                      color: AppColors.darkBrown,
+                      size: 20.0,
+                    ),
+                  ),
+              ],
             ),
-            if (chat.pinned) //pinned icon
-              Transform.rotate(
-                angle: 45 * math.pi / 180,
-                child: const Icon(
-                  Icons.push_pin,
-                  color: AppColors.darkBrown,
-                  size: 20.0,
+
+            if (chat.hasPendingQuestion)
+              Positioned(
+                top: 27, 
+                right: 70, 
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkBrown,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'New Question!',
+                    style: AppTextStyles.label.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+
+            if (chat.hasPendingQuestion)
+              Positioned(
+                top: -10,
+                right: 90,
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.rectangle,
+                  ),
+                  child: Image.asset(
+                    'images/pigeonSide/pinkNeckedGreenPigeonSide.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
           ],

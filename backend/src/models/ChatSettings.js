@@ -13,7 +13,7 @@ const ChatSettings = sequelize.define('ChatSettings', {
     unique: true // One settings object per chatroom
   },
   relationshipType: {
-    type: DataTypes.ENUM('Family', 'Romantic', 'Acquaintance', 'Friends'),
+    type: DataTypes.ENUM('Family', 'Romantic', 'Acquaintances', 'Friends'),
     defaultValue: 'Friends'
   },
   // Manual overrides for specific topics stored as a JSON array
@@ -21,7 +21,12 @@ const ChatSettings = sequelize.define('ChatSettings', {
     type: DataTypes.JSON, 
     defaultValue: [] 
   },
+  allowedTypes: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
 }, {
+  tableName: 'chatsettings',
   timestamps: true
 });
 

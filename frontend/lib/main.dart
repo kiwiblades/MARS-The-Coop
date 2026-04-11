@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/services/token_manager.dart';
 import 'package:frontend/view/addChat_screen.dart';
 import 'package:frontend/view/auth_check.dart';
 import 'package:frontend/view/app_shell.dart';
-import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/view/createChat_screen.dart';
 import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/mycoop_screen.dart';
@@ -13,8 +13,6 @@ import 'package:frontend/view/profile_screen.dart';
 import 'package:frontend/view/resetPassword_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
-
-import 'package:google_fonts/google_fonts.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,11 +41,14 @@ class MyApp extends StatelessWidget {
       //styling
       theme: ThemeData(
         fontFamily: 'Zalando Sans', 
-
-        textTheme: GoogleFonts.seymourOneTextTheme().copyWith(
-          bodyLarge: const TextStyle(fontFamily: 'Zalando Sans'),
-          bodyMedium: const TextStyle(fontFamily: 'Zalando Sans'),
-          bodySmall: const TextStyle(fontFamily: 'Zalando Sans'),
+        // google fonts is no longer needed since the necessary fonts are bundled (assets/fonts)
+        textTheme: const TextTheme( 
+          bodyLarge: TextStyle(fontFamily: 'Zalando Sans'),
+          bodyMedium: TextStyle(fontFamily: 'Zalando Sans'),
+          bodySmall: TextStyle(fontFamily: 'Zalando Sans'),
+          headlineLarge:  TextStyle(fontFamily: 'Dela Gothic One'),
+          headlineMedium: TextStyle(fontFamily: 'Dela Gothic One'),
+          headlineSmall:  TextStyle(fontFamily: 'Dela Gothic One'),
         ),
       ),
 
@@ -65,7 +66,7 @@ class MyApp extends StatelessWidget {
         ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),
         AddChatScreen.routeName: (_) => RequireAuth(child: const AddChatScreen()),
         CreateChatScreen.routeName: (_) => RequireAuth(child: const CreateChatScreen()),
-        ChatDetailScreen.routeName: (_) => RequireAuth(child: const ChatDetailScreen()),
+        // ChatDetailScreen.routeName: (_) => RequireAuth(child: const ChatDetailScreen()),
       },
     );
   }
@@ -78,7 +79,7 @@ class RequireAuth extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: TokenManager.instance.hasSession(),
+      future: _connectIfNeeded(),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return const Scaffold(
@@ -93,4 +94,13 @@ class RequireAuth extends StatelessWidget {
       },
     );
   }
+}
+
+// check for session, connect socket if logged in
+Future<bool> _connectIfNeeded() async {
+  final loggedIn = await TokenManager.instance.hasSession();
+  if (loggedIn) {
+    await SocketClient.instance.connect();
+  }
+  return loggedIn;
 }

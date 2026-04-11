@@ -5,10 +5,19 @@ import 'package:frontend/controller/chatDetail_controller.dart';
 import 'package:frontend/model/chatDetail_model.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/model/profile_model.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/user_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   static const String routeName = '/chatDetailScreen';
-  const ChatDetailScreen({super.key});
+  final Chatroom chatroom;
+  final void Function(Chatroom)? onSettingsChanged;
+  const ChatDetailScreen({
+    super.key,
+    required this.chatroom,
+    this.onSettingsChanged,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -24,19 +33,38 @@ String formatEnumName(String name) {
 
 class ChatDetailScreenState extends State<ChatDetailScreen> {
   late final ChatDetailController controller;
+  late final UserService userService;
   late ChatDetailModel model;
 
-  User? currentUser; //TODO: current user for role and conditional rendering
-  Chatroom? currentChat; //TODO: current chatroom to grab details from
+  User? currentUser;
+  Chatroom? currentChatroom;
   final GlobalKey<FormState> formKeyChatName = GlobalKey<FormState>();
   final GlobalKey<FormState> formKeyRelationshipType = GlobalKey<FormState>();
 
   @override
   void initState() {
-    super
-        .initState(); // TODO (Rye): this is where the current chatroom details will need to be fetched and set to the model, and also all the model editing values will need to be set to what they are in the chatroom so that when the user clicks edit it is already synced up
-    controller = ChatDetailController(this, chatroomService: chatroomService);
+    super.initState();
+    final apiClient = ApiClient();
+    final chatroomService = ChatroomService(api: apiClient);
+    userService = UserService(api: apiClient);
     model = ChatDetailModel();
+    controller = ChatDetailController(
+      this,
+      chatroomService: chatroomService,
+      userService: userService,
+    );
+    controller.init(widget.chatroom);
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await userService.getProfile();
+
+    if (mounted) {
+      setState(() {
+        currentUser = user;
+      });
+    }
   }
 
   void callSetState(fn) => setState(fn);
@@ -47,7 +75,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
       decoration: const BoxDecoration(
         color: Color(0xFFD1A681),
         image: DecorationImage(
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
@@ -83,7 +111,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   children: [
                     Text(
                       //code
-                      currentChat?.inviteCode ?? '<CODE>',
+                      model.currentChatroom?.inviteCode ?? '<CODE>',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 20.0,
                         color: AppColors.darkBrown,
@@ -95,7 +123,9 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       onPressed: () {
                         //show that the code has been copied
                         Clipboard.setData(
-                          ClipboardData(text: currentChat!.inviteCode),
+                          ClipboardData(
+                            text: model.currentChatroom?.inviteCode ?? '',
+                          ),
                         );
                       },
                       icon: const Icon(
@@ -129,7 +159,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                   labelText: 'Chat Name',
                                   border: OutlineInputBorder(),
                                 ),
-                                initialValue: currentChat?.name ?? '',
+                                initialValue: model.currentChatroom?.name ?? '',
                                 validator: controller.chatNameValidator,
                                 onSaved: controller.onSaveChatName,
                               ),
@@ -155,7 +185,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                         : [
                             Text(
                               //chat name
-                              currentChat?.name ?? '<Chat Name>',
+                              model.currentChatroom?.name ?? '<Chat Name>',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     fontSize: 20.0,
@@ -187,8 +217,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                 const SizedBox(height: 10), //spacer
                 Text(
                   //role
-                  currentChat?.name ??
-                      '<Participant Role>', //TODO: i do not know not user role will be grabbed but currentChat?.name will need to be switched out for whatever returns the current user's chat role
+                  model.currentChatroom?.membership ?? '<Participant Role>',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 20.0,
                     color: AppColors.darkBrown,
@@ -206,10 +235,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   textAlign: TextAlign.left,
                 ),
                 const SizedBox(height: 5), //spacer
-                //TODO: conditional statement for rendering i.e. if(current user is the owner), again i do not know how role will be accesible
                 model.isOwner
-                    ? //test value TODO: replace with correct conditional
-                      Form(
+                    ? Form(
                         key: formKeyRelationshipType,
                         child: Row(
                           children: model.isEditingRelationshipType
@@ -304,8 +331,13 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                               : [
                                   Text(
                                     //relationship type
-                                    currentChat?.name ??
-                                        '<Relationship Type>', //TODO: replace with currentChat?.relationshipType
+                                    formatEnumName(
+                                      model
+                                              .currentChatroom
+                                              ?.relationshipType
+                                              .name ??
+                                          '<Relationship Type>',
+                                    ),
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
                                           fontSize: 20.0,
@@ -331,8 +363,10 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           const SizedBox(height: 6), //spacer
                           Text(
                             //relationship type
-                            currentChat?.name ??
-                                '<Relationship Type>', //TODO: replace with currentChat?.relationshipType
+                            formatEnumName(
+                              model.currentChatroom?.relationshipType.name ??
+                                  '<Relationship Type>',
+                            ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   fontSize: 20.0,
@@ -349,7 +383,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                         .isEditingQuestionPreferences) //just label is not editing
                       Text(
                         /*currentChat.fineGrainControl*/ model
-                                .fineGrainTest //TODO: link actual value
+                                .fineGrainControlEdit
                             ? "Fine-grain Question Control: On"
                             : "Fine-grain Question Control: Off", //label
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -401,16 +435,37 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                           onChanged: controller.onToggleFineGrainControl,
                         ),
                       ),
+                    //if editing and toggle is off
+                    if (model.isEditingQuestionPreferences &&
+                        !model.fineGrainControlEdit) //if editing, toggle
+                      IconButton(
+                        //relationship type edit save
+                        onPressed: controller.onPressedEditFineGrainControlSave,
+                        icon: const Icon(
+                          Icons.check,
+                          color: AppColors.darkBrown,
+                        ),
+                      ),
+                    if (model.isEditingQuestionPreferences &&
+                        !model.fineGrainControlEdit) //if editing, toggle
+                      IconButton(
+                        //relationship type cancel
+                        onPressed:
+                            controller.onPressedEditFineGrainControlCancel,
+                        icon: const Icon(
+                          Icons.close,
+                          color: AppColors.darkBrown,
+                        ),
+                      ),
                   ],
                 ),
                 //bullet pointed list if not editing
-                if (!model.isEditingQuestionPreferences)
+                if (!model.isEditingQuestionPreferences &&
+                    model.fineGrainControlEdit)
                   Column(
                     children: [
-                      if (!model.isOwner)
-                        SizedBox(
-                          height: 15,
-                        ), //TODO: replace isOwner with role info
+                      if (model.currentChatroom?.membership != 'owner')
+                        SizedBox(height: 15),
                       Container(
                         decoration: BoxDecoration(
                           border: Border(
@@ -442,22 +497,21 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 5),
-                                  // ...?currentChat?.questionTypePreferences.map((type) { //TODO
-                                  ...model.questionTypePreferenceTest.map((
-                                    type,
-                                  ) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 2.0,
-                                      ),
-                                      child: Text(
-                                        "• ${formatEnumName(type.name)}",
-                                        style: TextStyle(
-                                          color: AppColors.darkBrown,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  ...(model.currentChatroom?.allowedTypes ?? {})
+                                      .map((type) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2.0,
+                                          ),
+                                          child: Text(
+                                            "• ${formatEnumName(type.name)}",
+                                            style: TextStyle(
+                                              color: AppColors.darkBrown,
+                                            ),
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
                                 ],
                               ),
                             ),
@@ -478,22 +532,22 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         ),
                                   ),
                                   const SizedBox(height: 5),
-                                  // ...?currentChat?.questionTopicPreferences.map((topic) { //TODO
-                                  ...model.questionTopicPreferenceTest.map((
-                                    topic,
-                                  ) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 2.0,
-                                      ),
-                                      child: Text(
-                                        "• ${formatEnumName(topic.name)}",
-                                        style: TextStyle(
-                                          color: AppColors.darkBrown,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  ...(model.currentChatroom?.allowedTopics ??
+                                          {})
+                                      .map((topic) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2.0,
+                                          ),
+                                          child: Text(
+                                            "• ${formatEnumName(topic.name)}",
+                                            style: TextStyle(
+                                              color: AppColors.darkBrown,
+                                            ),
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
                                 ],
                               ),
                             ),
@@ -506,170 +560,173 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     model.fineGrainControlEdit)
                   Column(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: AppColors.darkBrown,
-                              width: 1.5,
+                      if (model.fineGrainControlEdit)
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: AppColors.darkBrown,
+                                width: 1.5,
+                              ),
+                              bottom: BorderSide(
+                                color: AppColors.darkBrown,
+                                width: 1.5,
+                              ),
                             ),
-                            bottom: BorderSide(
-                              color: AppColors.darkBrown,
-                              width: 1.5,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsetsGeometry.fromLTRB(
+                              0.0,
+                              5.0,
+                              0.0,
+                              5.0,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  //first column: question Type
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Question Type',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontSize: 20.0,
+                                              color: AppColors.darkBrown,
+                                            ),
+                                      ),
+
+                                      ...QuestionType.values.map((type) {
+                                        return SizedBox(
+                                          height: 20.0,
+                                          child: Row(
+                                            // mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  formatEnumName(type.name),
+                                                  style: TextStyle(
+                                                    color: AppColors.darkBrown,
+                                                  ),
+                                                ),
+                                              ),
+                                              Checkbox(
+                                                value: model
+                                                    .questionTypePreferenceEdits
+                                                    .contains(type),
+
+                                                fillColor:
+                                                    WidgetStateProperty.resolveWith(
+                                                      (states) {
+                                                        if (states.contains(
+                                                          WidgetState.selected,
+                                                        )) {
+                                                          return AppColors
+                                                              .darkBrown;
+                                                        }
+                                                        return AppColors
+                                                            .background;
+                                                      },
+                                                    ),
+
+                                                side: BorderSide(
+                                                  color: AppColors.darkBrown,
+                                                  width: 1.5,
+                                                ),
+
+                                                onChanged: (value) => controller
+                                                    .onToggleQuestionType(
+                                                      type,
+                                                      value,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 10.0),
+                                Expanded(
+                                  //2nd column: question topic
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Question Topic',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              fontSize: 20.0,
+                                              color: AppColors.darkBrown,
+                                            ),
+                                      ),
+
+                                      ...QuestionTopic.values.map((topic) {
+                                        return SizedBox(
+                                          height: 20.0,
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  formatEnumName(topic.name),
+                                                  style: TextStyle(
+                                                    color: AppColors.darkBrown,
+                                                  ),
+                                                ),
+                                              ),
+                                              Checkbox(
+                                                value: model
+                                                    .questionTopicPreferenceEdits
+                                                    .contains(topic),
+
+                                                fillColor:
+                                                    WidgetStateProperty.resolveWith(
+                                                      (states) {
+                                                        if (states.contains(
+                                                          WidgetState.selected,
+                                                        )) {
+                                                          return AppColors
+                                                              .darkBrown;
+                                                        }
+                                                        return AppColors
+                                                            .background;
+                                                      },
+                                                    ),
+
+                                                side: BorderSide(
+                                                  color: AppColors.darkBrown,
+                                                  width: 1.5,
+                                                ),
+
+                                                onChanged: (value) => controller
+                                                    .onToggleQuestionTopic(
+                                                      topic,
+                                                      value,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsetsGeometry.fromLTRB(
-                            0.0,
-                            5.0,
-                            0.0,
-                            5.0,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                //first column: question Type
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Question Type',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            fontSize: 20.0,
-                                            color: AppColors.darkBrown,
-                                          ),
-                                    ),
-
-                                    ...QuestionType.values.map((type) {
-                                      return SizedBox(
-                                        height: 20.0,
-                                        child: Row(
-                                          // mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                formatEnumName(type.name),
-                                                style: TextStyle(
-                                                  color: AppColors.darkBrown,
-                                                ),
-                                              ),
-                                            ),
-                                            Checkbox(
-                                              value: model
-                                                  .questionTypePreferenceEdits
-                                                  .contains(type),
-
-                                              fillColor:
-                                                  WidgetStateProperty.resolveWith(
-                                                    (states) {
-                                                      if (states.contains(
-                                                        WidgetState.selected,
-                                                      )) {
-                                                        return AppColors
-                                                            .darkBrown;
-                                                      }
-                                                      return AppColors
-                                                          .background;
-                                                    },
-                                                  ),
-
-                                              side: BorderSide(
-                                                color: AppColors.darkBrown,
-                                                width: 1.5,
-                                              ),
-
-                                              onChanged: (value) => controller
-                                                  .onToggleQuestionType(
-                                                    type,
-                                                    value,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(width: 10.0),
-                              Expanded(
-                                //2nd column: question topic
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Question Topic',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(
-                                            fontSize: 20.0,
-                                            color: AppColors.darkBrown,
-                                          ),
-                                    ),
-
-                                    ...QuestionTopic.values.map((topic) {
-                                      return SizedBox(
-                                        height: 20.0,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                formatEnumName(topic.name),
-                                                style: TextStyle(
-                                                  color: AppColors.darkBrown,
-                                                ),
-                                              ),
-                                            ),
-                                            Checkbox(
-                                              value: model
-                                                  .questionTopicPreferenceEdits
-                                                  .contains(topic),
-
-                                              fillColor:
-                                                  WidgetStateProperty.resolveWith(
-                                                    (states) {
-                                                      if (states.contains(
-                                                        WidgetState.selected,
-                                                      )) {
-                                                        return AppColors
-                                                            .darkBrown;
-                                                      }
-                                                      return AppColors
-                                                          .background;
-                                                    },
-                                                  ),
-
-                                              side: BorderSide(
-                                                color: AppColors.darkBrown,
-                                                width: 1.5,
-                                              ),
-
-                                              onChanged: (value) => controller
-                                                  .onToggleQuestionTopic(
-                                                    topic,
-                                                    value,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -696,9 +753,306 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ],
                   ),
                 SizedBox(height: 10),
+                //MEMBER LIST: For all
+                Text(
+                  "Members", //label
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 16.0,
+                    color: AppColors.darkBrown,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    //Top and bottom border of member list
+                    border: Border(
+                      top: BorderSide(color: AppColors.darkBrown, width: 1.5),
+                      bottom: BorderSide(
+                        color: AppColors.darkBrown,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...?model.currentChatroom?.participants.map((user) {
+                        final isOwner =
+                            model.currentChatroom?.owner.username ==
+                            user.username;
+
+                        return SizedBox(
+                          height: 34, //control row height
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Row(
+                                  children: [
+                                    if (isOwner) //special mark if the listed member is the owner
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 16,
+                                        color: AppColors.darkBrown,
+                                      ),
+
+                                    Text(
+                                      user.username,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: 20.0,
+                                            color: AppColors.darkBrown,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              //If the current user is the owner, they should see the "more" buttons
+                              if (model.currentChatroom?.owner.username ==
+                                  currentUser?.username)
+                                Expanded(
+                                  flex: 3,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Builder(
+                                      builder: (context) {
+                                        return IconButton(
+                                          onPressed: () async {
+                                            final RenderBox button =
+                                                context.findRenderObject()
+                                                    as RenderBox;
+                                            final RenderBox overlay =
+                                                Overlay.of(
+                                                      context,
+                                                    ).context.findRenderObject()
+                                                    as RenderBox;
+
+                                            final position =
+                                                RelativeRect.fromRect(
+                                                  Rect.fromPoints(
+                                                    button.localToGlobal(
+                                                      Offset.zero,
+                                                      ancestor: overlay,
+                                                    ),
+                                                    button.localToGlobal(
+                                                      button.size.bottomRight(
+                                                        Offset.zero,
+                                                      ),
+                                                      ancestor: overlay,
+                                                    ),
+                                                  ),
+                                                  Offset.zero & overlay.size,
+                                                );
+
+                                            final selected =
+                                                await showMenu<String>(
+                                                  context: context,
+                                                  position: position,
+                                                  color: AppColors.background,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                  ),
+                                                  items: [
+                                                    PopupMenuItem(
+                                                      value: 'promote',
+                                                      child: Text(
+                                                        'Promote to Owner',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              fontSize: 16.0,
+                                                              color: AppColors
+                                                                  .darkBrown,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    PopupMenuItem(
+                                                      value: 'ban',
+                                                      child: Text(
+                                                        'Ban User',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              fontSize: 16.0,
+                                                              color: AppColors
+                                                                  .darkBrown,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+
+                                            if (selected != null) {
+                                              controller.onMemberMoreActions(
+                                                //Controller listener connection
+                                                selected,
+                                                user,
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.more_vert,
+                                            size: 20,
+                                            color: AppColors.darkBrown,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                //BANNED LIST: For owner
+                if (model.currentChatroom?.owner.username ==
+                    currentUser?.username)
+                  Text(
+                    "Banned Users", //label
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 16.0,
+                      color: AppColors.darkBrown,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: AppColors.darkBrown, width: 1.5),
+                      bottom: BorderSide(
+                        color: AppColors.darkBrown,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      //if (model.currentChatroom?.bannedUsers?.isEmpty)
+                      if (model.currentChatroom?.bannedUsers.isEmpty ?? true)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              "No one is currently banned from this chat.",
+                              style: Theme.of(context).textTheme.headlineLarge
+                                  ?.copyWith(
+                                    fontSize: 16.0,
+                                    color: AppColors.darkBrown,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ...?model.currentChatroom?.bannedUsers.map((user) {
+                        return SizedBox(
+                          height: 34, //control row height
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      user.username,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: 20.0,
+                                            color: AppColors.darkBrown,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Builder(
+                                    builder: (context) {
+                                      return IconButton(
+                                        onPressed: () async {
+                                          final confirmed =
+                                              await showDialog<bool>(
+                                                context: context,
+                                                builder: (context) {
+                                                  return AlertDialog(
+                                                    title: const Text(
+                                                      "Unban User",
+                                                    ),
+                                                    content: Text(
+                                                      "Unban ${user.username}?",
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                              false,
+                                                            ),
+                                                        child: const Text(
+                                                          "Cancel",
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                              true,
+                                                            ),
+                                                        child: const Text(
+                                                          "Unban",
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+
+                                          if (confirmed == true) {
+                                            controller.onBannedUserMoreActions(
+                                              'unban',
+                                              user,
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.more_vert,
+                                          size: 20,
+                                          color: AppColors.darkBrown,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
                 //LEAVE For non-owner
-                if (!model
-                    .isOwner) //TODO: replace with actual value for conditional rendering
+                if (model.currentChatroom?.membership != null &&
+                    model.currentChatroom?.membership != 'owner')
                   InkWell(
                     onTap: controller.onPressedLeaveChat,
                     child: Row(
@@ -721,8 +1075,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                   ),
                 //DELETE only for owner
-                if (model
-                    .isOwner) //TODO: replace with actual value for conditional rendering
+                if (model.currentChatroom?.membership == 'owner')
                   InkWell(
                     onTap: controller.onPressedDeleteChat,
                     child: Row(
@@ -749,6 +1102,40 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+//PROMOTE TO OWNER confimation
+Future<bool?> showPromoteConfirmationPopUp(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return PromoteConfirmationPopUp();
+    },
+  );
+}
+
+class PromoteConfirmationPopUp extends StatelessWidget {
+  const PromoteConfirmationPopUp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Promote to Owner'),
+      content: Text(
+        'Are you sure you want to promote the selected user to owner? In doing so you relinquish the title and all subsequence privileges.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text('Promote', style: TextStyle(color: AppColors.error)),
+        ),
+      ],
     );
   }
 }

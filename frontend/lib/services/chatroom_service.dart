@@ -21,42 +21,60 @@ class ChatroomService {
       final participants = (entry['participants'] as List<dynamic>? ?? [])
           .map((p) => User.fromJson(p as Map<String, dynamic>))
           .toList();
+      final owner = entry['owner'] as Map<String, dynamic>;
+      final settings = entry['settings'] as Map<String, dynamic>? ?? {};
+      final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
+          .map((t) => t as String)
+          .toList();
+      final allowedTypes = (settings['allowedTypes'] as List<dynamic>? ?? [])
+          .map((t) => t as String)
+          .toList();
+      final bannedUsers = (entry['bannedUsers'] as List<dynamic>? ?? [])
+          .map((u) => User.fromJson(u as Map<String, dynamic>))
+          .toList();
 
       return Chatroom(
         id: chatroom['id'] as String,
         name: chatroom['name'] as String,
         inviteCode: chatroom['inviteCode'] as String,
         participants: participants,
+        bannedUsers: bannedUsers,
+        owner: User.fromJson(owner),
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
         lastSentMessage: entry['lastSentMessage'] as String? ?? '',
         lastSentTime: entry['lastSentTime'] as String? ?? '',
-
-        /// TODO (Rye), added arguments for relationshipType and fineGrainControl, but the service needs to be updated to actually return these values before this works
         relationshipType: RelationshipType.values.firstWhere(
           (e) =>
               e.name.toLowerCase() ==
-              (chatroom['relationshipType'] as String? ?? 'friends')
+              (settings['relationshipType'] as String? ?? 'friends')
                   .toLowerCase(),
           orElse: () => RelationshipType.friends,
         ),
-        fineGrainControl: chatroom['fineGrainControl'] as bool? ?? false,
-        questionTypePreference:
-            (chatroom['questionTypePreference'] as List<dynamic>?)
-            ? chatroom['questionTypePreference']!
-                  .map(
-                    (e) => QuestionType.values.firstWhere((v) => v.name == e),
-                  )
-                  .toList()
-            : const [],
-        questionTopicPreference:
-            (chatroom['questionTopicPreference'] as List<dynamic>?)
-            ? chatroom['questionTopicPreference']!
-                  .map(
-                    (e) => QuestionTopic.values.firstWhere((v) => v.name == e),
-                  )
-                  .toList()
-            : const [],
+        fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
+
+        allowedTypes: allowedTypes
+            .map(
+              (t) => QuestionType.values.firstWhere(
+                (q) => q.name.toLowerCase() == t.toLowerCase(),
+                orElse: () => QuestionType.favorite,
+              ),
+            )
+            .toSet(),
+        allowedTopics: allowedTopics
+            .map(
+              (t) => QuestionTopic.values.firstWhere(
+                (q) => q.name.toLowerCase() == t.toLowerCase(),
+                orElse: () => QuestionTopic.personal,
+              ),
+            )
+            .toSet(),
+        unreadCount:
+            entry['unreadCount'] as int? ??
+            _getMockUnreadCount(chatroom['id'] as String),
+        hasPendingQuestion:
+            entry['hasPendingQuestion'] as bool? ??
+            _getMockHasPendingQuestion(chatroom['id'] as String),
       );
     }).toList();
   }
@@ -64,24 +82,55 @@ class ChatroomService {
   // post /chatroom/create
   // returns the new chatroom row, but it doesn't really need to be displayed immediately
   // the invite code is immediately provided with the new chatroom, though
-  Future<Chatroom> createChatroom(String name) async {
-    final data = await api.postJson('/chatroom/create', {'name': name});
+  Future<Chatroom> createChatroom({
+    required String name,
+    required User creator,
+    required String relationshipType,
+    List<String> allowedTopics = const [],
+    List<String> allowedTypes = const [],
+  }) async {
+    final data = await api.postJson('/chatroom/create', {
+      'name': name,
+      'relationshipType': relationshipType,
+      'allowedTopics': allowedTopics,
+      'allowedTypes': allowedTypes,
+    });
     return Chatroom(
       id: data['id'] as String,
       name: data['name'] as String,
       inviteCode: data['inviteCode'] as String,
       // the values from here aren't really important, they'll be fetched when needed later
-      participants: [],
+      participants: [creator],
+      bannedUsers: [],
+      owner: creator,
       pinned: false,
       membership: 'owner',
       lastSentMessage: '',
       lastSentTime: '',
+      relationshipType: RelationshipType.values.firstWhere(
+        (e) => e.name.toLowerCase() == relationshipType.toLowerCase(),
+        orElse: () => RelationshipType.friends,
+      ),
+      fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
 
-      /// TODO (Rye), added arguments for relationshipType and fineGrainControl, but the service needs to be updated to actually return these values before this works
-      relationshipType: RelationshipType.friends,
-      fineGrainControl: false,
-      questionTypePreference: const [],
-      questionTopicPreference: const [],
+      allowedTypes: allowedTypes
+          .map(
+            (t) => QuestionType.values.firstWhere(
+              (q) => q.name.toLowerCase() == t.toLowerCase(),
+              orElse: () => QuestionType.favorite,
+            ),
+          )
+          .toSet(),
+      allowedTopics: allowedTopics
+          .map(
+            (t) => QuestionTopic.values.firstWhere(
+              (q) => q.name.toLowerCase() == t.toLowerCase(),
+              orElse: () => QuestionTopic.personal,
+            ),
+          )
+          .toSet(),
+      unreadCount: 0,
+      hasPendingQuestion: false,
     );
   }
 
@@ -106,11 +155,13 @@ class ChatroomService {
     String? name,
     String? relationshipType,
     List<String>? allowedTopics,
+    List<String>? allowedTypes,
   }) async {
     final body = {
       if (name != null) 'name': name,
       if (relationshipType != null) 'relationshipType': relationshipType,
       if (allowedTopics != null) 'allowedTopics': allowedTopics,
+      if (allowedTypes != null) 'allowedTypes': allowedTypes,
     };
 
     await api.patchJson('/chatroom/$chatroomId/settings', body);
@@ -119,5 +170,31 @@ class ChatroomService {
   // patch /chatroom/pin
   Future<void> togglePin(String chatroomId) async {
     await api.patchJson('/chatroom/pin', {'chatroomId': chatroomId});
+  }
+
+  // mock notification data for testing badges
+  // remove when backend is implemented
+  int _getMockUnreadCount(String chatId) {
+    return 6;
+  }
+
+  bool _getMockHasPendingQuestion(String chatId) {
+    return true;
+  }
+
+  Future<void> banUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.postJson('/chatroom/$chatroomId/ban', {'userIdToBan': userId});
+  }
+
+  Future<void> unbanUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.postJson('/chatroom/$chatroomId/unban', {
+      'userIdToUnban': userId,
+    });
   }
 }

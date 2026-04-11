@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/services/token_manager.dart';
 import 'package:frontend/view/app_shell.dart';
 import 'package:frontend/view/mail_screen.dart';
@@ -24,6 +25,7 @@ class AuthCheck extends StatelessWidget {
 
         // If session exists, go straight to "home" (just mail for now)
         if (loggedIn) {
+          SocketClient.instance.connect(); // connect to socket on session restore
           return AppShell(child: MailScreen(), currentRoute: MailScreen.routeName);
         }
 

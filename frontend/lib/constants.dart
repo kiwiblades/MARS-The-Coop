@@ -3,18 +3,15 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const Color background = Color(0xFFD1A681);     // lightest beige/cream
   static const Color primary = Color(0xFF93633A);        // dark brown
-  static const Color secondary = Color.fromARGB(255, 181, 199, 189);      // sage green
-  static const Color tertiary = Color(0xFFD8CFE6);        // light lavender
-  static const Color accent = Color(0xFF987C8F);         // mauve
   
-  // brown shades palette (darker alternatives)R
+  // brown shades palette (darker alternatives)
   static const Color darkBrown = Color(0xFF93633A);      
-  // static const Color mediumBrown = Color(0xF93633A);    
+  static const Color lightBrown = Color.fromARGB(255, 186, 148, 117);    
   
-  // functional Rcolors
+  // functional Rcolorsr
   static const Color border = Color(0xFF93633A);         // dark brown
   static const Color textPrimary = Color(0xFF93633A);    // darkest brown (almost black)
-  static const Color textSecondary = Color(0xFFC0936D);  // medium brown
+  static const Color textSecondary = Color(0xFFC0936D);
   static const Color error = Color(0xFFC84B31);          // red
 }
 
@@ -57,6 +54,7 @@ class AppTextStyles {
 }
 
 class AppSpacing {
+  static const double xs = 0.0;
   static const double sm = 10.0;
   static const double md = 20.0;
   static const double lg = 40.0;
