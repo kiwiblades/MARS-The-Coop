@@ -16,7 +16,6 @@ import DailyQuestion from "./DailyQuestion.js";
 import UserDailyAnswer from "./UserDailyAnswer.js";
 import Question from "./Question.js";
 import ChatSettings from "./ChatSettings.js";
-import GlobalQuestion from "./GlobalQuestion.js";
 import BannedUser from "./BannedUser.js";
 
 // define associations after all models are imported

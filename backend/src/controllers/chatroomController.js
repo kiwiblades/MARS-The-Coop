@@ -172,6 +172,15 @@ export async function joinChatroom(req, res) {
         throw AppError.notFound("No chatroom found with the given invite code", { code: "CHATROOM_NOT_FOUND" });
     }
 
+    // reject banned user from rejoining chat
+    const isBanned = await BannedUser.findOne({ 
+        where: { chatId: chatroom.id, userId: uid } 
+    });
+    
+    if (isBanned) {
+        throw AppError.forbidden("You are banned from this chatroom", { code: "USER_BANNED" });
+    }
+
     // add the user as a member
     try {
         const membership = await ChatMembership.create({
