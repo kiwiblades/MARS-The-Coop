@@ -1,12 +1,14 @@
 /* Entry point for journal routes */
+import { Router } from 'express';
+import * as journalController from '../controllers/journalController.js';
+import { authenticateToken } from '../middleware/auth.js'; 
 
-const router = require('express').Router();
-const journalController = require('../controllers/journalController');
-const auth = require('../middleware/auth'); // Use your existing auth middleware
+const router = Router();
 
-router.post('/', auth, journalController.createJournalEntry);
-router.get('/eligible-subjects', auth, journalController.getEligibleSubjects);
-router.get('/subjects', auth, journalController.getJournalSubjects); // For the "Bird Grid"
-router.get('/:subjectId', auth, journalController.getEntriesBySubject);
+// Routes
+router.post('/', authenticateToken, journalController.createJournalEntry);
+router.get('/eligible-subjects', authenticateToken, journalController.getEligibleSubjects);
+router.get('/subjects', authenticateToken, journalController.getJournalSubjects);
+router.get('/:subjectId', authenticateToken, journalController.getEntriesBySubject);
 
-module.exports = router;
+export default router;

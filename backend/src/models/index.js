@@ -17,7 +17,7 @@ import UserDailyAnswer from "./UserDailyAnswer.js";
 import Question from "./Question.js";
 import ChatSettings from "./ChatSettings.js";
 import BannedUser from "./BannedUser.js";
-import { Journal } from "./journal.js";
+import { Journal } from "./Journal.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -101,3 +101,18 @@ export function initModels() {
     BannedUser.belongsTo(ChatRoom, { foreignKey: 'chatId' });
 
 }
+
+export { 
+    User, 
+    RefreshToken, 
+    EmailVerificationToken, 
+    ChatRoom, 
+    ChatMembership, 
+    Message, 
+    DailyQuestion, 
+    UserDailyAnswer, 
+    Question, 
+    ChatSettings, 
+    BannedUser, 
+    Journal 
+};

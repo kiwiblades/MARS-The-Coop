@@ -38,7 +38,8 @@ class _JournalPageState extends State<JournalPage> {
   @override
   void initState() {
     super.initState();
-    _controller = JournalController(widget.journalId);
+    //_controller = JournalController(widget.journalId);
+    _controller = JournalController(widget.journalId, widget.journalId);
     _setupScrollListener();
     _loadEntries();
   }
@@ -264,9 +265,10 @@ class _JournalPageState extends State<JournalPage> {
       leadingWidth: 24,
       titleSpacing: 0,
       systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,  // Keep status bar transparent
-        statusBarIconBrightness: Brightness.dark,  // Dark icons on light background
-    ),
+        statusBarColor: Colors.transparent, // Keep status bar transparent
+        statusBarIconBrightness:
+            Brightness.dark, // Dark icons on light background
+      ),
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
@@ -283,7 +285,7 @@ class _JournalPageState extends State<JournalPage> {
             child: Center(
               child: Image.asset(
                 sideImage,
-                width: 120, 
+                width: 120,
                 height: 120,
                 fit: BoxFit.contain,
               ),
