@@ -76,7 +76,7 @@ class _SignupPageState extends State<SignupPage> {
         height: double.infinity,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('images/woodGrainTexture.png'),
+            image: AssetImage('images/woodGrainTexture.webp'),
             fit: BoxFit.fill,
           ),
         ),

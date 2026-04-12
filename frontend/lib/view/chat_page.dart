@@ -53,6 +53,7 @@ class _ChatPageState extends State<ChatPage> {
 
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription? _dqPushSubscription;
+  StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
   StreamSubscription? _typingSubscription;
   int _promptFeedKey = 0;
@@ -104,6 +105,12 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _hasAnsweredToday = false;
         });
+      });
+      
+      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
+        if (!mounted) return;
+        // refetch answers so the new one appears in the prompt section
+        if (_hasAnsweredToday) _loadPromptSection();
       });
 
       setState(() {
@@ -254,7 +261,7 @@ class _ChatPageState extends State<ChatPage> {
       builder: (context) => AlertDialog(
         title: Text('Leave Chat'),
         content: Text(
-          widget.participants.length + 1 == 1
+          widget.participants.length == 1
               ? 'You are the last member. Leaving will delete this chat.'
               : 'Are you sure you want to leave this chat?',
         ),
@@ -297,6 +304,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
     _dqPushSubscription?.cancel();
+    _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
@@ -317,7 +325,7 @@ class _ChatPageState extends State<ChatPage> {
             height: double.infinity,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('images/woodGrainTexture.png'),
+                image: AssetImage('images/woodGrainTexture.webp'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -390,8 +398,8 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   Text(
                     _model.showFullGroupName
-                        ? '${widget.participants.length + 1} members: ${widget.participants.map((p) => p.username).join(", ")}'
-                        : '${widget.participants.length + 1} members',
+                        ? '${widget.participants.length} members: ${widget.participants.map((p) => p.username).join(", ")}'
+                        : '${widget.participants.length} members',
                     style: AppTextStyles.label,
                     maxLines: _model.showFullGroupName ? null : 1,
                     overflow: _model.showFullGroupName
@@ -502,7 +510,7 @@ class _ChatPageState extends State<ChatPage> {
         ? Pigeon.getById(message.senderPigeonId!)
         : null;
     final profileImage =
-        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+        pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
 
     return Align(
       alignment: message.isSentByCurrentUser

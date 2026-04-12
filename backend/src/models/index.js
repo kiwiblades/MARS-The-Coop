@@ -16,7 +16,7 @@ import DailyQuestion from "./DailyQuestion.js";
 import UserDailyAnswer from "./UserDailyAnswer.js";
 import Question from "./Question.js";
 import ChatSettings from "./ChatSettings.js";
-import GlobalQuestion from "./GlobalQuestion.js";
+import BannedUser from "./BannedUser.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -83,4 +83,11 @@ export function initModels() {
     // a user has many daily answers (over many days)
     User.hasMany(UserDailyAnswer, { foreignKey: 'userId', as: 'dailyAnswers' });
     UserDailyAnswer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+    // Add Ban Associations
+    User.hasMany(BannedUser, { foreignKey: 'userId' });
+    BannedUser.belongsTo(User, { foreignKey: 'userId' });
+
+    ChatRoom.hasMany(BannedUser, { foreignKey: 'chatId' });
+    BannedUser.belongsTo(ChatRoom, { foreignKey: 'chatId' });
 }
