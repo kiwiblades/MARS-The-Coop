@@ -24,8 +24,12 @@ class MyCoopScreenState extends State<MyCoopScreen> {
     super.initState();
     model = MyCoopModel();
     controller = MyCoopController(this);
-    //TODO: fetch the user's journals
-    //TODO: fetch friends
+    //fetch the user's journals
+    model.journalList = [];
+    //fetch friends
+    model.friendList = [];
+    controller.loadJournalSubjects();
+    controller.loadEligibleFriends();
   }
 
   void callSetState(fn) => setState(fn);
@@ -221,7 +225,8 @@ class FriendSelectionDialogState extends State<FriendSelectionDialog> {
         ),
       ),
       actions: [
-        TextButton( //cancel button
+        TextButton(
+          //cancel button
           onPressed: () => Navigator.pop(context),
           child: Text(
             'Cancel',
@@ -231,10 +236,9 @@ class FriendSelectionDialogState extends State<FriendSelectionDialog> {
             ),
           ),
         ),
-        ElevatedButton( //Add button
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFFC0936D) 
-        ),
+        ElevatedButton(
+          //Add button
+          style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFC0936D)),
           onPressed: selectedIndex == null
               ? null
               : () {

@@ -67,7 +67,7 @@ class MyCoopController {
 
     if (selectedUser != null) {
       //user has to be selected
-      // TODO: create journal with selectedUser
+      // create journal with selectedUser
       //make sure the journalList is updated in a setState call so that the view updates
       final response = await api.postJson('/api/journals', {
         'subjectId': selectedUser.uid,
