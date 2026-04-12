@@ -9,6 +9,7 @@ import {
     notifyRoom,
 } from './dailyQuestion.js';
 import ChatMembership from '../models/ChatMembership.js';
+import { setPendingQuestion } from './notify.js';
 
 const MAX_RETRIES = 3; // how many retry attempts for resending failed daily q
 
@@ -114,6 +115,8 @@ async function attemptDelivery(io, dailyQuestion, question) {
         question: question.question,
         date: dailyQuestion.date,
     });
+    // persist to db
+    await setPendingQuestion(dailyQuestion.chatId, true);
     console.log(`[questionScheduler] emit fired`);
 
     // emit to each member's personal room so it appears on mail screen

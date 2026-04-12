@@ -53,6 +53,10 @@ export async function setPendingQuestion(chatId, value) {
 }
 
 export async function clearPendingQuestion(chatId, userId) {
+    if (!chatId || !userId) {
+        console.log('[clearPendingQuestion] missing chatId or userId');
+        return;
+    }
     await ChatMembership.update(
         { hasPendingQuestion: false },
         { where: { chatId, userId } }
