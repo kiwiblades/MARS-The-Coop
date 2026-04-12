@@ -256,7 +256,8 @@ class _JournalPageState extends State<JournalPage> {
 
   PreferredSizeWidget _buildAppBar() {
     final pigeon = Pigeon.getById(widget.pigeonId);
-    final sideImage = pigeon?.side ?? 'images/pigeonSide/defaultPigeonSide.png';
+    final sideImage =
+        pigeon?.side ?? 'images/pigeonSide/defaultPigeonSide.webp';
 
     return AppBar(
       backgroundColor: AppColors.background,

@@ -170,53 +170,56 @@ class MailScreenState extends State<MailScreen> {
     );
   }
 
-Widget _buildSummaryBanner() {
-  String bannerText;
-  if (_totalUnreadMessages > 0 && _totalPendingQuestions > 0) {
-    bannerText = '$_totalUnreadMessages unread message${_totalUnreadMessages == 1 ? '' : 's'} and\n$_totalPendingQuestions unanswered question${_totalPendingQuestions == 1 ? '' : 's'}';
-  } else if (_totalUnreadMessages > 0) {
-    bannerText = '$_totalUnreadMessages unread message${_totalUnreadMessages == 1 ? '' : 's'}';
-  } else {
-    bannerText = '$_totalPendingQuestions unanswered question${_totalPendingQuestions == 1 ? '' : 's'}';
-  }
+  Widget _buildSummaryBanner() {
+    String bannerText;
+    if (_totalUnreadMessages > 0 && _totalPendingQuestions > 0) {
+      bannerText =
+          '$_totalUnreadMessages unread message${_totalUnreadMessages == 1 ? '' : 's'} and\n$_totalPendingQuestions unanswered question${_totalPendingQuestions == 1 ? '' : 's'}';
+    } else if (_totalUnreadMessages > 0) {
+      bannerText =
+          '$_totalUnreadMessages unread message${_totalUnreadMessages == 1 ? '' : 's'}';
+    } else {
+      bannerText =
+          '$_totalPendingQuestions unanswered question${_totalPendingQuestions == 1 ? '' : 's'}';
+    }
 
-  return Container(
-    margin: EdgeInsets.only(bottom: 10),
-    padding: EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: AppColors.lightBrown,
-      border: Border.all(color: AppColors.darkBrown, width: 2),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: InkWell(
-      onTap: () {
-        setState(() {
-          _bannerCollapsed = !_bannerCollapsed;
-        });
-      },
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              _bannerCollapsed ? "What's new" : bannerText,
-              style: AppTextStyles.body.copyWith(
-                fontSize: 14,
-                fontWeight: _bannerCollapsed ? FontWeight.w600 : null,
-                fontStyle: _bannerCollapsed ? null : FontStyle.italic,
-                color: AppColors.darkBrown,
+    return Container(
+      margin: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.lightBrown,
+        border: Border.all(color: AppColors.darkBrown, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _bannerCollapsed = !_bannerCollapsed;
+          });
+        },
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                _bannerCollapsed ? "What's new" : bannerText,
+                style: AppTextStyles.body.copyWith(
+                  fontSize: 14,
+                  fontWeight: _bannerCollapsed ? FontWeight.w600 : null,
+                  fontStyle: _bannerCollapsed ? null : FontStyle.italic,
+                  color: AppColors.darkBrown,
+                ),
               ),
             ),
-          ),
-          Icon(
-            _bannerCollapsed ? Icons.expand_more : Icons.expand_less,
-            size: 20,
-            color: AppColors.darkBrown,
-          ),
-        ],
+            Icon(
+              _bannerCollapsed ? Icons.expand_more : Icons.expand_less,
+              size: 20,
+              color: AppColors.darkBrown,
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   //helper to create each chat room's block
   Widget buildChatroomTile(Chatroom chat) {
@@ -225,11 +228,13 @@ Widget _buildSummaryBanner() {
     if (chat.participants.isEmpty) {
       final pigeonId = model.currentUser?.pigeonId ?? 0;
       final pigeon = Pigeon.getById(pigeonId);
-      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
+      chatImage =
+          pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else if (chat.participants.length == 1) {
       final pigeonId = chat.participants[0].pigeonId;
       final pigeon = Pigeon.getById(pigeonId);
-      chatImage = pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
+      chatImage =
+          pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else {
       //if there are more than 1 participants
       chatImage = 'images/group.webp';
@@ -337,8 +342,8 @@ Widget _buildSummaryBanner() {
 
             if (chat.hasPendingQuestion)
               Positioned(
-                top: 27, 
-                right: 70, 
+                top: 27,
+                right: 70,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
@@ -368,7 +373,7 @@ Widget _buildSummaryBanner() {
                     shape: BoxShape.rectangle,
                   ),
                   child: Image.asset(
-                    'images/pigeonSide/pinkNeckedGreenPigeonSide.png',
+                    'images/pigeonSide/pinkNeckedGreenPigeonSide.webp',
                     fit: BoxFit.contain,
                   ),
                 ),
