@@ -16,7 +16,7 @@ const BannedUser = sequelize.define("BannedUser", {
         allowNull: false,
     },
 }, {
-    tableName: "BannedUsers",
+    tableName: "bannedusers",
     timestamps: true,
 });
 

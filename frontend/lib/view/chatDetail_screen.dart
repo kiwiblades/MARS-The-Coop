@@ -812,8 +812,8 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                 ),
                               ),
                               //If the current user is the owner, they should see the "more" buttons
-                              if (model.currentChatroom?.owner.username ==
-                                  currentUser?.username)
+                              if (model.currentChatroom?.owner.username == currentUser?.username &&
+                                  user.username != model.currentChatroom?.owner.username)
                                 Expanded(
                                   flex: 3,
                                   child: Align(

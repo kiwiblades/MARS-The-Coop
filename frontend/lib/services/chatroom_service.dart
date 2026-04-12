@@ -187,4 +187,12 @@ class ChatroomService {
       'userIdToUnban': userId,
     });
   }
+
+  // patch /chatroom/:id/promote
+  Future<void> promoteUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.patchJson('/chatroom/$chatroomId/promote', {'newOwnerUid': userId});
+  }
 }

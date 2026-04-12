@@ -101,4 +101,43 @@ class Chatroom {
       hasPendingQuestion: json['hasPendingQuestion'] as bool? ?? false,
     );
   }
+
+  Chatroom copyWith({
+    String? id,
+    String? name,
+    String? inviteCode,
+    List<User>? participants,
+    List<User>? bannedUsers,
+    User? owner,
+    bool? pinned,
+    String? membership,
+    String? lastSentMessage,
+    String? lastSentTime,
+    RelationshipType? relationshipType,
+    bool? fineGrainControl,
+    Set<QuestionTopic>? allowedTopics,
+    Set<QuestionType>? allowedTypes,
+    int? unreadCount,
+    bool? hasPendingQuestion,
+  }) {
+    return Chatroom(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      inviteCode: inviteCode ?? this.inviteCode,
+      participants: participants ?? this.participants,
+      bannedUsers: bannedUsers ?? this.bannedUsers,
+      owner: owner ?? this.owner,
+      pinned: pinned ?? this.pinned,
+      membership: membership ?? this.membership,
+      lastSentMessage: lastSentMessage ?? this.lastSentMessage,
+      lastSentTime: lastSentTime ?? this.lastSentTime,
+      relationshipType: relationshipType ?? this.relationshipType,
+      fineGrainControl: fineGrainControl ?? this.fineGrainControl,
+      allowedTopics: allowedTopics ?? this.allowedTopics,
+      allowedTypes: allowedTypes ?? this.allowedTypes,
+      unreadCount: unreadCount ?? this.unreadCount,
+      hasPendingQuestion: hasPendingQuestion ?? this.hasPendingQuestion
+    );
+  }
 }
+
