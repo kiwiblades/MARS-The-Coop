@@ -63,6 +63,10 @@ class Chatroom {
     final participants = (json['participants'] as List<dynamic>? ?? [])
       .map((p) => User.fromJson(p as Map<String, dynamic>))
       .toList();
+    final bannedUsers = (json['bannedUsers'] as List<dynamic>? ?? [])
+      .map((p) => User.fromJson(p as Map<String, dynamic>))
+      .toList();
+    final owner = User.fromJson(json['owner'] as Map<String, dynamic>);
     final settings = json['settings'] as Map<String, dynamic>? ?? {};
     final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
       .map((t) => t as String).toList();
@@ -74,6 +78,8 @@ class Chatroom {
       name: chatroom['name'] as String,
       inviteCode: chatroom['inviteCode'] as String? ?? '',
       participants: participants,
+      bannedUsers: bannedUsers,
+      owner: owner,
       pinned: membership['pinned'] as bool? ?? false,
       membership: membership['role'] as String? ?? 'member',
       lastSentMessage: json['lastSentMessage'] as String? ?? '',
