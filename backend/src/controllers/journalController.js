@@ -3,6 +3,7 @@
 import { Journal, User, ChatMembership } from '../models/index.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../db/sequelize.js';
+import AppError from '../utils/errors/AppError.js';
 
 /**
  * Create a journal entry with an interaction check
@@ -153,3 +154,47 @@ export const getEligibleSubjects = async (req, res, next) => {
     next(error);
   }
 };
+
+export async function deleteEntry(req, res) {
+  const uid = req.user.uid;
+  const journalId = req.params.id;
+
+  if (!journalId) {
+    throw AppError("journalId is required for deleting an entry");
+  }
+  
+  const entry = await Journal.findByPk(journalId);
+  if (!entry) {
+    throw AppError.notFound("Journal entry not found");
+  }
+  if (entry.ownerId !== uid) {
+    throw AppError.forbidden("You can only delete your own journal entries");
+  }
+
+  await entry.destroy();
+  return res.status(204).end();
+}
+
+export async function updateEntry(req, res) {
+  const uid = req.user.uid;
+  const journalId = req.params.id;
+  const { content } = req.body;
+
+  if (!journalId) {
+    throw AppError.badRequest("journalId is required for updating an entry");
+  }
+  if (!content) {
+    throw AppError.badRequest("content is required");
+  }
+
+  const entry = await Journal.findByPk(journalId);
+  if (!entry) {
+    throw AppError.notFound("Journal entry not found");
+  }
+  if (entry.ownerId !== uid) {
+    throw AppError.forbidden("You can only update your own journal entries");
+  }
+
+  await entry.update({ content });
+  return res.status(204).end();
+}

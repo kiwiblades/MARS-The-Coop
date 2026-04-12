@@ -19,6 +19,7 @@ export const Journal = sequelize.define('Journal', {
     allowNull: false,
     comment: 'The user the journal entry is about'
   },
+  // entries stored per array
   content: {
     type: DataTypes.TEXT,
     allowNull: false,

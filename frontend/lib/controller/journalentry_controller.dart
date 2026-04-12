@@ -1,12 +1,11 @@
+import 'package:frontend/services/journalentry_service.dart';
 import '../model/journalentry_model.dart';
-import '../services/api_client.dart';
 
 class JournalController {
-  final String journalId;
   final String subjectId; // ID of the 'bird' (the person the journal is about)
-  final ApiClient api = ApiClient();
+  final JournalService journalService;
 
-  JournalController(this.journalId, this.subjectId);
+  JournalController(this.subjectId, {required this.journalService});
 
   // load journal entries from backend
   Future<Map<String, dynamic>> loadEntries({
@@ -14,20 +13,13 @@ class JournalController {
     int limit = 50,
   }) async {
     try {
-      // The backend route is /api/journals/:subjectId
-      final List<dynamic> response = await api.getJsonList(
-        '/api/journals/$subjectId',
-      );
-
+      final response = await journalService.getEntriesBySubject(subjectId);
       final entries = response
-          .map((data) => JournalEntry.fromJson(data))
-          .toList();
-
-      // mock data for now
-      //await Future.delayed(Duration(milliseconds: 500));
+        .map((data) => JournalEntry.fromJson(data))
+        .toList();
       return {
         'success': true,
-        'entries': entries, // real entries from backend
+        'entries': entries,
         'hasMore': false,
       };
     } catch (e) {
@@ -39,37 +31,22 @@ class JournalController {
   // create new journal entry
   Future<Map<String, dynamic>> createEntry(String content) async {
     try {
-      final data = await api.postJson('/api/journals', {
-        'subjectId': subjectId,
-        'content': content,
-      });
-
-      // Map the backend response back to a JournalEntry object
+      final data = await journalService.createEntry(
+        subjectId: subjectId,
+        content: content,
+      );
       final newEntry = JournalEntry.fromJson(data);
-
-      //await Future.delayed(Duration(milliseconds: 300));
-      // final newEntry = JournalEntry(
-      //   id: DateTime.now().millisecondsSinceEpoch.toString(),
-      //   content: content,
-      //   timestamp: DateTime.now(),
-      // );
-
       return {'success': true, 'entry': newEntry};
-    } catch (e) {
+    } catch(e) {
       print("CREATE ENTRY ERROR: $e");
       return {'success': false, 'error': e.toString()};
     }
   }
 
   // update existing entry
-  Future<Map<String, dynamic>> updateEntry(
-    String entryId,
-    String content,
-  ) async {
+  Future<Map<String, dynamic>> updateEntry(String entryId, String content) async {
     try {
-      await api.patchJson('/journals/entry/$entryId', {'content': content});
-
-      //await Future.delayed(Duration(milliseconds: 300));
+      await journalService.updateEntry(entryId: entryId, content: content);
       return {'success': true};
     } catch (e) {
       return {'success': false, 'error': e.toString()};
@@ -79,9 +56,7 @@ class JournalController {
   // delete entry
   Future<Map<String, dynamic>> deleteEntry(String entryId) async {
     try {
-      await api.deleteJson('/journals/entry/$entryId', {});
-
-      //await Future.delayed(Duration(milliseconds: 300));
+      await journalService.deleteEntry(entryId);
       return {'success': true};
     } catch (e) {
       return {'success': false, 'error': e.toString()};

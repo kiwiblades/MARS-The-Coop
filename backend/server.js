@@ -51,7 +51,7 @@ app.use('/chat', messageRoutes);
 app.use('/sync', syncRoutes);
 app.use('/daily-question', dailyQuestionRoutes);
 app.use('/notifications', notificationRoutes);
-app.use('/api/journals', journalRoutes);
+app.use('/journals', journalRoutes);
 
 // for testing only
 import devRoutes from './src/dev/devRoutes.js';

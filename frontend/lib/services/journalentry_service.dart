@@ -1,78 +1,54 @@
-import 'package:frontend/model/journalentry_model.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:frontend/services/api_client.dart';
 
 class JournalService {
-  final String baseUrl;
-  final String? authToken;
+  final ApiClient api;
+  JournalService({required this.api});
 
-  JournalService({required this.baseUrl, this.authToken});
-
-  Future<List<JournalEntry>> getEntries(String journalId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/journal/$journalId/entries'),
-      headers: {
-        'Authorization': 'Bearer $authToken',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.map((e) => JournalEntry.fromJson(e)).toList();
-    } else {
-      throw Exception('failed to load entries');
-    }
+  // get all entries from a journal
+  // get /journals/:id
+  Future<List<dynamic>> getEntriesBySubject(String subjectId) async {
+    return await api.getJsonList('/journals/$subjectId');
   }
 
-  // create new entry
-  Future<JournalEntry> createEntry(String journalId, String content) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/journal/$journalId/entries'),
-      headers: {
-        'Authorization': 'Bearer $authToken',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({'content': content}),
-    );
+  // get each journal (journal per user)
+  // get /journals/subjects
+  Future<List<dynamic>> getJournalSubjects() async {
+    return await api.getJsonList('/journals/subjects');
+  }
 
-    if (response.statusCode == 201) {
-      return JournalEntry.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('failed to create entry');
-    }
+  // get users that a journal can be made for
+  // get /journals/eligible-subjects
+  Future<List<dynamic>> getEligibleSubjects({String? search}) async {
+    final path = search != null && search.isNotEmpty
+      ? '/journals/eligible-subjects?search=$search'
+      : '/journals/eligible-subjects';
+    return await api.getJsonList(path);
+  }
+
+  // create new journal entry within a journal
+  // post /journals
+  Future<Map<String, dynamic>> createEntry({
+    required String subjectId,
+    required String content,
+  }) async {
+    return await api.postJson('/journals', {
+      'subjectId': subjectId,
+      'content': content,
+    });
   }
 
   // update entry
-  Future<JournalEntry> updateEntry(String journalId, String entryId, String content) async {
-    final response = await http.patch(
-      Uri.parse('$baseUrl/journal/$journalId/entries/$entryId'),
-      headers: {
-        'Authorization': 'Bearer $authToken',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({'content': content}),
-    );
-
-    if (response.statusCode == 200) {
-      return JournalEntry.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('failed to update entry');
-    }
+  // patch /journals/:id
+  Future<void> updateEntry({
+    required String entryId,
+    required String content,
+  }) async {
+    await api.patchJson('/journals/$entryId', {'content': content});
   }
 
   // delete entry
-  Future<void> deleteEntry(String journalId, String entryId) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/journal/$journalId/entries/$entryId'),
-      headers: {
-        'Authorization': 'Bearer $authToken',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode != 204) {
-      throw Exception('failed to delete entry');
-    }
+  // delete /journals/:id
+  Future<void> deleteEntry(String entryId) async {
+    await api.deleteJson('/journals/$entryId', {});
   }
 }

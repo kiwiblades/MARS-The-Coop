@@ -5,12 +5,14 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// Routes
-router.get('/eligible-subjects', authenticateToken, journalController.getEligibleSubjects);
-router.get('/subjects', authenticateToken, journalController.getJournalSubjects);
+router.use(authenticateToken);
+router.get('/eligible-subjects', journalController.getEligibleSubjects);
+router.get('/subjects', journalController.getJournalSubjects);
 
-router.get('/:subjectId', authenticateToken, journalController.getEntriesBySubject);
-router.post('/', authenticateToken, journalController.createJournalEntry);
+router.get('/:subjectId', journalController.getEntriesBySubject);
+router.post('/', journalController.createJournalEntry);
 
+router.delete('/:id', journalController.deleteEntry);
+router.patch('/:id', journalController.updateEntry);
 
 export default router;

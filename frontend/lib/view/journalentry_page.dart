@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/services/api_client.dart';
+import 'package:frontend/services/journalentry_service.dart';
 import '../constants.dart';
 import '../controller/journalentry_controller.dart';
 import '../model/journalentry_model.dart';
@@ -8,13 +10,13 @@ import '../model/pigeon.dart';
 class JournalPage extends StatefulWidget {
   static const String routeName = '/journalPage';
 
-  final String journalId;
+  final String subjectId;
   final String userName; // username of journal owner
   final int pigeonId; // pigeon id for profile image
 
   const JournalPage({
     Key? key,
-    required this.journalId,
+    required this.subjectId,
     required this.userName,
     required this.pigeonId,
   }) : super(key: key);
@@ -38,8 +40,10 @@ class _JournalPageState extends State<JournalPage> {
   @override
   void initState() {
     super.initState();
-    //_controller = JournalController(widget.journalId);
-    _controller = JournalController(widget.journalId, widget.journalId);
+    _controller = JournalController(
+      widget.subjectId, 
+      journalService: JournalService(api: ApiClient()),
+    );
     _setupScrollListener();
     _loadEntries();
   }

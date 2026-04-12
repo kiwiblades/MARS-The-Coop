@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/journal.dart';
 import 'package:frontend/model/profile_model.dart';
+import 'package:frontend/services/journalentry_service.dart';
 import 'package:frontend/view/myCoop_screen.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/view/journalentry_page.dart';
 
 class MyCoopController {
   MyCoopScreenState state;
-  MyCoopController(this.state);
-  final ApiClient api = ApiClient();
+  late final JournalService journalService;
+
+  MyCoopController(this.state) {
+    journalService = JournalService(api: ApiClient());
+  }
 
   //Function to fetch/load journals into the journalList of the state.model
   Future<void> loadJournalSubjects() async {
     try {
-      final response = await api.getJsonList('/api/journals/subjects');
+      final response = await journalService.getJournalSubjects();
       state.setState(() {
         state.model.journalList = response
             .map((data) => Journal.fromJson(data))
@@ -27,10 +31,9 @@ class MyCoopController {
   //Function to fetch/load the "friends" into the friendList of state.model
   Future<void> loadEligibleFriends() async {
     try {
-      final response = await api.getJsonList('/api/journals/eligible-subjects');
-
+      final response = await journalService.getEligibleSubjects();
       state.setState(() {
-        state.model.friendList = (response as List)
+        state.model.friendList = response
             .map((data) => User.fromJson(data))
             .toList();
       });
@@ -48,7 +51,7 @@ class MyCoopController {
       MaterialPageRoute(
         builder: (context) => JournalPage(
           // Pass the subject's UID as the journalId for fetching entries
-          journalId: journal.subject.uid,
+          subjectId: journal.subject.uid,
           userName: journal.subject.username,
           pigeonId: journal.subject.pigeonId,
         ),
@@ -69,10 +72,11 @@ class MyCoopController {
       //user has to be selected
       // create journal with selectedUser
       //make sure the journalList is updated in a setState call so that the view updates
-      final response = await api.postJson('/api/journals', {
-        'subjectId': selectedUser.uid,
-        'content': 'Started a new journal.',
-      });
+      await journalService.createEntry(
+        subjectId: selectedUser.uid,
+        content: 'Started a new journal.',
+      );
+      await loadJournalSubjects(); // refresh list after creating
       print("Selected: ${selectedUser.username}");
     }
   }
