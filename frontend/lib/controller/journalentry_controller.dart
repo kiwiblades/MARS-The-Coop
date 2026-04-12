@@ -16,7 +16,7 @@ class JournalController {
     try {
       // The backend route is /api/journals/:subjectId
       final List<dynamic> response = await api.getJsonList(
-        '/journals/$subjectId',
+        '/api/journals/$subjectId',
       );
 
       final entries = response
