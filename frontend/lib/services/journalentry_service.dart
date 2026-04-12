@@ -7,7 +7,8 @@ class JournalService {
   // get all entries from a journal
   // get /journals/:id
   Future<List<dynamic>> getEntriesBySubject(String subjectId) async {
-    return await api.getJsonList('/journals/$subjectId');
+    final data = await api.getJsonList('/journals/$subjectId');
+    return data.reversed.toList();
   }
 
   // get each journal (journal per user)
