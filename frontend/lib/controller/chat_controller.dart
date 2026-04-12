@@ -51,25 +51,6 @@ class ChatController {
     }
   }
 
-  // // load chat group info
-  // Future<Map<String, dynamic>> loadChatInfo() async {
-  //   try {
-  //     //TODO: API
-  //     final response = await _apiClient.getJson('/chat/$chatId');
-  //     final chatGroup = ChatGroup.fromJson(response);
-      
-  //     return {
-  //       'success': true,
-  //       'chatGroup': chatGroup,
-  //     };
-  //   } catch (e) {
-  //     return {
-  //       'success': false,
-  //       'error': e.toString(),
-  //     };
-  //   }
-  // }
-
   // send a message via socket with http as fallback, doesn't return the message, rather receives through broadcast
   // so onReceiveMessages() must be used to listen to the broadcast
   void sendMessage(String content) {
@@ -105,14 +86,16 @@ class ChatController {
     }
   }
 
-  // // typing indicator
-  // Future<void> sendTypingIndicator(bool isTyping) async {
-  //   try {
-  //     //TODO: API
-  //     await _apiClient.postJson('/chat/$chatId/typing', {
-  //       'isTyping': isTyping,
-  //     });
-  //   } catch (e) {
-  //   }
-  // }
+// typing indicator
+Stream<Map<String, dynamic>> onUserTyping() {
+  return _messageService.socket.on('user_typing');
+}
+
+void sendTypingIndicator(bool isTyping) {
+  _messageService.socket.emit('typing_indicator', {
+    'chatId': chatId,
+    'userId': currentUserId,
+    'isTyping': isTyping,
+  });
+}
 }

@@ -25,6 +25,8 @@ class Chatroom {
   final String name;
   final String inviteCode;
   final List<User> participants;
+  final List<User> bannedUsers;
+  final User owner;
   bool pinned;
   final String membership;
   final String lastSentMessage;
@@ -33,12 +35,16 @@ class Chatroom {
   final bool fineGrainControl;
   final Set<QuestionTopic> allowedTopics;
   final Set<QuestionType> allowedTypes;
+  final int unreadCount;
+  final bool hasPendingQuestion;
 
   Chatroom({
     required this.id,
     required this.name,
     required this.inviteCode,
     required this.participants,
+    required this.bannedUsers,
+    required this.owner,
     required this.pinned,
     required this.membership,
     required this.lastSentMessage,
@@ -47,5 +53,7 @@ class Chatroom {
     required this.fineGrainControl,
     required this.allowedTopics,
     required this.allowedTypes,
+    required this.unreadCount,
+    required this.hasPendingQuestion,
   });
 }

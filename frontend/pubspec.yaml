@@ -1,5 +1,5 @@
 name: frontend
-description: "A new Flutter project."
+description: "a mobile app to cultivate human connection"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -37,7 +37,6 @@ dependencies:
   http: ^1.6.0
   flutter_dotenv: ^6.0.0
   flutter_secure_storage: ^10.0.0
-  google_fonts: ^6.1.0
   socket_io_client: ^3.1.4
 
 dev_dependencies:
@@ -66,53 +65,55 @@ flutter:
   assets:
     - .env
     - assets/images/logo.png
-    - images/woodGrainTexture.png
-    - images/group.png
-    - images/codeBanner.png
+    - images/woodGrainTexture.webp
+    - images/group.webp
+    - images/codeBanner.webp
   #   - images/a_dot_ham.jpeg
+
     - images/skyProfileBG.png
     - images/leftSideCoopBG.png
     - images/middleCoopBG.png
     - images/rightSideCoopBG.png
     - images/addPigeon.png
+    - images/skyProfileBG.webp
     #Side view of pigeons (for journal)
-    # - images/pigeonSide/nicobarPigeonSide.png
-    # - images/pigeonSide/thickBilledPigeonSide.png
-    - images/pigeonSide/defaultPigeonSide.png
-    - images/pigeonSide/showRacingHomerSide.png
-    - images/pigeonSide/amStrasserSide.png
-    - images/pigeonSide/ancientPigeonSide.png
-    - images/pigeonSide/berneLarkSide.png
-    - images/pigeonSide/chineseOwlChampionSide.png
-    - images/pigeonSide/egyptianSwiftSide.png
-    - images/pigeonSide/indianFantailSide.png
-    - images/pigeonSide/magpiePigeonSide.png
-    - images/pigeonSide/mourningDoveSide.png
-    - images/pigeonSide/pinkNeckedGreenPigeonSide.png
+    - images/pigeonSide/nicobarPigeonSide.webp
+    - images/pigeonSide/thickBilledPigeonSide.webp
+    - images/pigeonSide/defaultPigeonSide.webp
+    - images/pigeonSide/showRacingHomerSide.webp
+    - images/pigeonSide/amStrasserSide.webp
+    - images/pigeonSide/ancientPigeonSide.webp
+    - images/pigeonSide/berneLarkSide.webp
+    - images/pigeonSide/chineseOwlChampionSide.webp
+    - images/pigeonSide/egyptianSwiftSide.webp
+    - images/pigeonSide/indianFantailSide.webp
+    - images/pigeonSide/magpiePigeonSide.webp
+    - images/pigeonSide/mourningDoveSide.webp
+    - images/pigeonSide/pinkNeckedGreenPigeonSide.webp
     #coop view of pigeons (for "my coop")
-    - images/pigeonCoop/defaultPigeonCoop.png
-    - images/pigeonCoop/showRacingHomerCoop.png
-    - images/pigeonCoop/amStrasserCoop.png
-    - images/pigeonCoop/ancientPigeonCoop.png
-    - images/pigeonCoop/berneLarkCoop.png
-    - images/pigeonCoop/chineseOwlChampionCoop.png
-    - images/pigeonCoop/egyptianSwiftCoop.png
-    - images/pigeonCoop/indianFantailCoop.png
-    - images/pigeonCoop/magpiePigeonCoop.png
-    - images/pigeonCoop/mourningDoveCoop.png
-    - images/pigeonCoop/pinkNeckedGreenPigeonCoop.png
+    - images/pigeonCoop/defaultPigeonCoop.webp
+    - images/pigeonCoop/showRacingHomerCoop.webp
+    - images/pigeonCoop/amStrasserCoop.webp
+    - images/pigeonCoop/ancientPigeonCoop.webp
+    - images/pigeonCoop/berneLarkCoop.webp
+    - images/pigeonCoop/chineseOwlChampionCoop.webp
+    - images/pigeonCoop/egyptianSwiftCoop.webp
+    - images/pigeonCoop/indianFantailCoop.webp
+    - images/pigeonCoop/magpiePigeonCoop.webp
+    - images/pigeonCoop/mourningDoveCoop.webp
+    - images/pigeonCoop/pinkNeckedGreenPigeonCoop.webp
     #profile view of pigeons (for "my coop")
-    - images/pigeonProfile/defaultPigeonProfile.png
-    - images/pigeonProfile/showRacingHomerProfile.png
-    - images/pigeonProfile/amStrasserProfile.png
-    - images/pigeonProfile/ancientPigeonProfile.png
-    - images/pigeonProfile/berneLarkProfile.png
-    - images/pigeonProfile/chineseOwlChampionProfile.png
-    - images/pigeonProfile/egyptianSwiftProfile.png
-    - images/pigeonProfile/indianFantailProfile.png
-    - images/pigeonProfile/magpiePigeonProfile.png
-    - images/pigeonProfile/mourningDoveProfile.png
-    - images/pigeonProfile/pinkNeckedGreenPigeonProfile.png
+    - images/pigeonProfile/defaultPigeonProfile.webp
+    - images/pigeonProfile/showRacingHomerProfile.webp
+    - images/pigeonProfile/amStrasserProfile.webp
+    - images/pigeonProfile/ancientPigeonProfile.webp
+    - images/pigeonProfile/berneLarkProfile.webp
+    - images/pigeonProfile/chineseOwlChampionProfile.webp
+    - images/pigeonProfile/egyptianSwiftProfile.webp
+    - images/pigeonProfile/indianFantailProfile.webp
+    - images/pigeonProfile/magpiePigeonProfile.webp
+    - images/pigeonProfile/mourningDoveProfile.webp
+    - images/pigeonProfile/pinkNeckedGreenPigeonProfile.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

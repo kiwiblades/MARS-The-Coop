@@ -14,8 +14,6 @@ import 'package:frontend/view/resetPassword_screen.dart';
 import 'package:frontend/view/signin_page.dart';
 import 'package:frontend/view/signup_page.dart';
 
-import 'package:google_fonts/google_fonts.dart';
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // load frontend config from .env
@@ -43,11 +41,14 @@ class MyApp extends StatelessWidget {
       //styling
       theme: ThemeData(
         fontFamily: 'Zalando Sans', 
-
-        textTheme: GoogleFonts.seymourOneTextTheme().copyWith(
-          bodyLarge: const TextStyle(fontFamily: 'Zalando Sans'),
-          bodyMedium: const TextStyle(fontFamily: 'Zalando Sans'),
-          bodySmall: const TextStyle(fontFamily: 'Zalando Sans'),
+        // google fonts is no longer needed since the necessary fonts are bundled (assets/fonts)
+        textTheme: const TextTheme( 
+          bodyLarge: TextStyle(fontFamily: 'Zalando Sans'),
+          bodyMedium: TextStyle(fontFamily: 'Zalando Sans'),
+          bodySmall: TextStyle(fontFamily: 'Zalando Sans'),
+          headlineLarge:  TextStyle(fontFamily: 'Dela Gothic One'),
+          headlineMedium: TextStyle(fontFamily: 'Dela Gothic One'),
+          headlineSmall:  TextStyle(fontFamily: 'Dela Gothic One'),
         ),
       ),
 
