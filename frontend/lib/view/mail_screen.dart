@@ -319,6 +319,7 @@ Widget _buildSummaryBanner() {
                                   color: AppColors.darkBrown,
                                 ),
                           ),
+                          if (chat.hasPendingQuestion) SizedBox(width: 30.0), 
                           if (chat.pinned) SizedBox(width: 10.0),
                         ],
                       ),
@@ -337,31 +338,31 @@ Widget _buildSummaryBanner() {
               ],
             ),
 
-            if (chat.hasPendingQuestion)
-              Positioned(
-                top: 27, 
-                right: 70, 
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: AppColors.darkBrown,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'New Question!',
-                    style: AppTextStyles.label.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
+            // if (chat.hasPendingQuestion)
+            //   Positioned(
+            //     top: 27, 
+            //     right: 70, 
+            //     child: Container(
+            //       padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            //       decoration: BoxDecoration(
+            //         color: AppColors.darkBrown,
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       child: Text(
+            //         'New Question!',
+            //         style: AppTextStyles.label.copyWith(
+            //           fontSize: 11,
+            //           fontWeight: FontWeight.w600,
+            //           color: AppColors.textSecondary,
+            //         ),
+            //       ),
+            //     ),
+            //   ),
 
             if (chat.hasPendingQuestion)
               Positioned(
-                top: -10,
-                right: 90,
+                top: -5,
+                right: -12,
                 child: Container(
                   width: 50,
                   height: 50,
@@ -370,7 +371,7 @@ Widget _buildSummaryBanner() {
                     shape: BoxShape.rectangle,
                   ),
                   child: Image.asset(
-                    'images/pigeonSide/pinkNeckedGreenPigeonSide.png',
+                    'images/pigeonPrompt.png',
                     fit: BoxFit.contain,
                   ),
                 ),

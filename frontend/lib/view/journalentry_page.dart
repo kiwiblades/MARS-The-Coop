@@ -240,15 +240,26 @@ class _JournalPageState extends State<JournalPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
-      body: SafeArea(
-        child: _model.loadError != null
-            ? _buildErrorView()
-            : Column(
-                children: [
-                  Expanded(child: _buildEntryList()),
-                  _buildInputArea(),
-                ],
-              ),
+      body: Container(
+        // ADD THIS CONTAINER
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/woodGrainTexture.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: _model.loadError != null
+              ? _buildErrorView()
+              : Column(
+                  children: [
+                    Expanded(child: _buildEntryList()),
+                    _buildInputArea(),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -264,9 +275,10 @@ class _JournalPageState extends State<JournalPage> {
       leadingWidth: 24,
       titleSpacing: 0,
       systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,  // Keep status bar transparent
-        statusBarIconBrightness: Brightness.dark,  // Dark icons on light background
-    ),
+        statusBarColor: Colors.transparent, // Keep status bar transparent
+        statusBarIconBrightness:
+            Brightness.dark, // Dark icons on light background
+      ),
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
@@ -283,7 +295,7 @@ class _JournalPageState extends State<JournalPage> {
             child: Center(
               child: Image.asset(
                 sideImage,
-                width: 120, 
+                width: 120,
                 height: 120,
                 fit: BoxFit.contain,
               ),
