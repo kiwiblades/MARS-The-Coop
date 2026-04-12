@@ -6,6 +6,7 @@ import ChatSettings from "../models/ChatSettings.js";
 import User from "../models/userModel.js";
 import Message from "../models/Message.js";
 import AppError from "../utils/errors/AppError.js";
+import BannedUser from "../models/BannedUser.js"; 
 
 export async function getChatrooms(req, res) {
     const uid = req.user.uid;
@@ -69,6 +70,18 @@ export async function getChatrooms(req, res) {
         // look up the last message for the current chatroom, if one exists
         const lastMessage = lastMessageMap[m.chatId];
         const settings = m.ChatRoom?.settings;
+        const participants = m.ChatRoom?.participants ?? [];
+
+        console.log(participants.username);
+
+        // find the owner from participants
+        const ownerRecord = participants.find(u => u.ChatMembership?.role === 'owner');
+        const owner = {
+            uid: ownerRecord.uid,
+            username: ownerRecord.username,
+            pigeonId: ownerRecord.pigeonId,
+        };
+
         return {
             chatroom: m.ChatRoom,
             membership: {
@@ -77,7 +90,17 @@ export async function getChatrooms(req, res) {
                 joinedAt: m.joinedAt,
             },
             // add participants for each chatroom EXCLUDING the current user
-            participants: (m.ChatRoom?.participants ?? []).filter((u) => u.uid !== uid),
+            participants: participants
+                .sort((a,b) => {
+                    // always place owner first
+                    const aIsOwner = a.ChatMembership?.role === 'owner';
+                    const bIsOwner = b.ChatMembership?.role === 'owner';
+                    if (aIsOwner) return -1; // a before b
+                    if (bIsOwner) return 1; // b before a
+                    // otherwise, sort alphabetically by username
+                    return a.username.localeCompare(b.username);
+                }),
+            owner,
             lastSentMessage: lastMessage?.content ?? '',
             lastSentTime: lastMessage?.createdAt ?? '',
             settings: {
@@ -87,6 +110,8 @@ export async function getChatrooms(req, res) {
             }
         }
     });
+
+    console.log(payload);
 
     // attach and return the payload w/ res
     return res.json(payload);
@@ -202,6 +227,15 @@ export async function joinChatroom(req, res) {
     const chatroom = await ChatRoom.findOne({ where: { inviteCode: inviteCode.trim().toUpperCase() }});
     if (!chatroom) {
         throw AppError.notFound("No chatroom found with the given invite code", { code: "CHATROOM_NOT_FOUND" });
+    }
+
+    // reject banned user from rejoining chat
+    const isBanned = await BannedUser.findOne({ 
+        where: { chatId: chatroom.id, userId: uid } 
+    });
+    
+    if (isBanned) {
+        throw AppError.forbidden("You are banned from this chatroom", { code: "USER_BANNED" });
     }
 
     // add the user as a member
@@ -380,4 +414,53 @@ export async function updateSettings(req, res, next) {
     await t.rollback();
     next(error);
   }
+}
+
+// Ban a user (Owner Only)
+export async function banUser(req, res) {
+    const ownerUid = req.user.uid;
+    const chatId = req.params.id;
+    const { userIdToBan } = req.body;
+
+    if (!userIdToBan) throw AppError.badRequest("userIdToBan is required");
+
+    // 1. Verify requester is the owner
+    const membership = await ChatMembership.findOne({ where: { userId: ownerUid, chatId } });
+    if (!membership || membership.role !== 'owner') {
+        throw AppError.forbidden("Only the owner can ban users");
+    }
+
+    const t = await sequelize.transaction();
+    try {
+        // 2. Add to BannedUser table
+        await BannedUser.findOrCreate({
+            where: { chatId, userId: userIdToBan },
+            transaction: t
+        });
+
+        // 3. Kick from Chat (Delete Membership)
+        await ChatMembership.destroy({
+            where: { chatId, userId: userIdToBan },
+            transaction: t
+        });
+
+        await t.commit();
+        return res.status(200).json({ message: "User has been banned and removed from the chat." });
+    } catch (e) {
+        await t.rollback();
+        throw e;
+    }
+}
+
+// Unban a user
+export async function unbanUser(req, res) {
+    const ownerUid = req.user.uid;
+    const chatId = req.params.id;
+    const { userIdToUnban } = req.body;
+
+    const membership = await ChatMembership.findOne({ where: { userId: ownerUid, chatId } });
+    if (!membership || membership.role !== 'owner') throw AppError.forbidden("Only the owner can unban users");
+
+    await BannedUser.destroy({ where: { chatId, userId: userIdToUnban } });
+    return res.status(200).json({ message: "User unbanned." });
 }

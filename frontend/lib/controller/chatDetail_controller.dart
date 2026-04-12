@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/model/chatroom.dart';
+import 'package:frontend/model/profile_model.dart';
+import 'package:frontend/services/user_service.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/view/mail_screen.dart';
@@ -7,23 +9,30 @@ import 'package:frontend/view/mail_screen.dart';
 class ChatDetailController {
   ChatDetailScreenState state;
   final ChatroomService chatroomService;
-  ChatDetailController(this.state, {required this.chatroomService});
+  final UserService userService;
+  ChatDetailController(
+    this.state, {
+    required this.chatroomService,
+    required this.userService,
+  });
 
-  //TODO: chat needs to be fetched for currentChat in view and also to set all the model editing values to what they are already
   // Helper to get current chat ID
   String get _chatId => state.model.currentChatroom!.id;
-  
+
   // INITIALIZATION: Called from the View's initState to sync model with existing data
   void init(Chatroom chatroom) {
     state.model.currentChatroom = chatroom;
     state.callSetState(() {
       // Set initial values for the relationship dropdown
       state.model.selectedRelationshipType = RelationshipType.values.firstWhere(
-        (e) => e.name.toLowerCase() == chatroom.relationshipType.name.toLowerCase(),
+        (e) =>
+            e.name.toLowerCase() ==
+            chatroom.relationshipType.name.toLowerCase(),
         orElse: () => RelationshipType.friends,
       );
       // Sync fine grain control state
-      state.model.fineGrainControlEdit = chatroom.allowedTopics.isNotEmpty || chatroom.allowedTypes.isNotEmpty;
+      state.model.fineGrainControlEdit =
+          chatroom.allowedTopics.isNotEmpty || chatroom.allowedTypes.isNotEmpty;
     });
   }
 
@@ -56,30 +65,35 @@ class ChatDetailController {
     if (newChatName == null || newChatName.isEmpty) return;
 
     // immediately update local model to reflect changes
-    // TODO: there's probably a better way to do this, fix later
-    
+    // TODO: there's probably a better way to do this, fix later - POTENTIAL: copywith method on the Chatroom model
+
     final updated = Chatroom(
-      id:                      state.model.currentChatroom!.id,
-      name:                    newChatName,
-      inviteCode:              state.model.currentChatroom!.inviteCode,
-      participants:            state.model.currentChatroom!.participants,
-      pinned:                  state.model.currentChatroom!.pinned,
-      membership:              state.model.currentChatroom!.membership,
-      lastSentMessage:         state.model.currentChatroom!.lastSentMessage,
-      lastSentTime:            state.model.currentChatroom!.lastSentTime,
-      relationshipType:        state.model.currentChatroom!.relationshipType,
-      fineGrainControl:        state.model.currentChatroom!.fineGrainControl,
-      allowedTypes:            state.model.currentChatroom!.allowedTypes,
-      allowedTopics:           state.model.currentChatroom!.allowedTopics,
-      unreadCount:      state.model.currentChatroom!.unreadCount,
+      id: state.model.currentChatroom!.id,
+      name: newChatName,
+      inviteCode: state.model.currentChatroom!.inviteCode,
+      participants: state.model.currentChatroom!.participants,
+      owner: state.model.currentChatroom!.owner,
+      pinned: state.model.currentChatroom!.pinned,
+      membership: state.model.currentChatroom!.membership,
+      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+      lastSentTime: state.model.currentChatroom!.lastSentTime,
+      relationshipType: state.model.currentChatroom!.relationshipType,
+      fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+      allowedTypes: state.model.currentChatroom!.allowedTypes,
+      allowedTopics: state.model.currentChatroom!.allowedTopics,
+      unreadCount: state.model.currentChatroom!.unreadCount,
       hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
+      bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
     state.callSetState(() {
       state.model.currentChatroom = updated;
     });
 
     try {
-      await chatroomService.updateSettings(chatroomId: _chatId, name: newChatName);
+      await chatroomService.updateSettings(
+        chatroomId: _chatId,
+        name: newChatName,
+      );
       // notify parent of the change
       state.widget.onSettingsChanged?.call(updated);
     } catch (error) {
@@ -152,20 +166,22 @@ class ChatDetailController {
     if (newRelationshipType == null) return;
 
     final updated = Chatroom(
-      id:               state.model.currentChatroom!.id,
-      name:             state.model.currentChatroom!.name,
-      inviteCode:       state.model.currentChatroom!.inviteCode,
-      participants:     state.model.currentChatroom!.participants,
-      pinned:           state.model.currentChatroom!.pinned,
-      membership:       state.model.currentChatroom!.membership,
-      lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
-      lastSentTime:     state.model.currentChatroom!.lastSentTime,
+      id: state.model.currentChatroom!.id,
+      name: state.model.currentChatroom!.name,
+      inviteCode: state.model.currentChatroom!.inviteCode,
+      participants: state.model.currentChatroom!.participants,
+      owner: state.model.currentChatroom!.owner,
+      pinned: state.model.currentChatroom!.pinned,
+      membership: state.model.currentChatroom!.membership,
+      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+      lastSentTime: state.model.currentChatroom!.lastSentTime,
       relationshipType: newRelationshipType, // updated
       fineGrainControl: state.model.currentChatroom!.fineGrainControl,
-      allowedTypes:     state.model.currentChatroom!.allowedTypes,
-      allowedTopics:    state.model.currentChatroom!.allowedTopics,
-      unreadCount:      state.model.currentChatroom!.unreadCount,
+      allowedTypes: state.model.currentChatroom!.allowedTypes,
+      allowedTopics: state.model.currentChatroom!.allowedTopics,
+      unreadCount: state.model.currentChatroom!.unreadCount,
       hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
+      bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
 
     state.callSetState(() {
@@ -174,7 +190,10 @@ class ChatDetailController {
     });
 
     try {
-      await chatroomService.updateSettings(chatroomId: _chatId, relationshipType: newRelationshipType.name);
+      await chatroomService.updateSettings(
+        chatroomId: _chatId,
+        relationshipType: newRelationshipType.name,
+      );
     } catch (error) {
       print('Error updating relationship type: $error');
     }
@@ -202,21 +221,26 @@ class ChatDetailController {
   void onPressedEditFineGrainControl() {
     print('edit fine-grain question control clicked');
 
-    print('[FineGrain] allowedTopics: ${state.model.currentChatroom!.allowedTopics}');
-    print('[FineGrain] allowedTypes: ${state.model.currentChatroom!.allowedTypes}');
+    print(
+      '[FineGrain] allowedTopics: ${state.model.currentChatroom!.allowedTopics}',
+    );
+    print(
+      '[FineGrain] allowedTypes: ${state.model.currentChatroom!.allowedTypes}',
+    );
 
     state.callSetState(() {
       state.model.isEditingQuestionPreferences = true;
 
       // resync finegraincontroledit
-      state.model.fineGrainControlEdit = state.model.currentChatroom!.allowedTopics.isNotEmpty ||
-        state.model.currentChatroom!.allowedTypes.isNotEmpty;
+      state.model.fineGrainControlEdit =
+          state.model.currentChatroom!.allowedTopics.isNotEmpty ||
+          state.model.currentChatroom!.allowedTypes.isNotEmpty;
 
       // SYNC: Copy current topics from the chatroom object into the "Edits" buffer
       state.model.questionTopicPreferenceEdits
         ..clear()
         ..addAll(state.model.currentChatroom!.allowedTopics);
-      
+
       state.model.questionTypePreferenceEdits
         ..clear()
         ..addAll(state.model.currentChatroom!.allowedTypes);
@@ -236,35 +260,40 @@ class ChatDetailController {
 
       // clear the allowed types/topics on backend + local
       final updated = Chatroom(
-        id:               state.model.currentChatroom!.id,
-        name:             state.model.currentChatroom!.name,
-        inviteCode:       state.model.currentChatroom!.inviteCode,
-        participants:     state.model.currentChatroom!.participants,
-        pinned:           state.model.currentChatroom!.pinned,
-        membership:       state.model.currentChatroom!.membership,
-        lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
-        lastSentTime:     state.model.currentChatroom!.lastSentTime,
+        id: state.model.currentChatroom!.id,
+        name: state.model.currentChatroom!.name,
+        inviteCode: state.model.currentChatroom!.inviteCode,
+        participants: state.model.currentChatroom!.participants,
+        owner: state.model.currentChatroom!.owner,
+        pinned: state.model.currentChatroom!.pinned,
+        membership: state.model.currentChatroom!.membership,
+        lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+        lastSentTime: state.model.currentChatroom!.lastSentTime,
         relationshipType: state.model.currentChatroom!.relationshipType,
         fineGrainControl: false,
-        allowedTypes:     const {},
-        allowedTopics:    const {},
-        unreadCount:      state.model.currentChatroom!.unreadCount,
+        allowedTypes: const {},
+        allowedTopics: const {},
+        unreadCount: state.model.currentChatroom!.unreadCount,
         hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
+        bannedUsers: state.model.currentChatroom!.bannedUsers,
       );
 
       state.callSetState(() {
         state.model.currentChatroom = updated;
       });
 
-      chatroomService.updateSettings(
-        chatroomId: _chatId,
-        allowedTypes: [],
-        allowedTopics: [], 
-      ).then((_) {
-        state.widget.onSettingsChanged?.call(updated);
-      }).catchError((e) {
-        print('Error clearing fine grain control: $e');
-      });
+      chatroomService
+          .updateSettings(
+            chatroomId: _chatId,
+            allowedTypes: [],
+            allowedTopics: [],
+          )
+          .then((_) {
+            state.widget.onSettingsChanged?.call(updated);
+          })
+          .catchError((e) {
+            print('Error clearing fine grain control: $e');
+          });
     }
   }
 
@@ -313,22 +342,23 @@ class ChatDetailController {
     List<QuestionType> types,
     List<QuestionTopic> topics,
   ) async {
-
     final updated = Chatroom(
-      id:               state.model.currentChatroom!.id,
-      name:             state.model.currentChatroom!.name,
-      inviteCode:       state.model.currentChatroom!.inviteCode,
-      participants:     state.model.currentChatroom!.participants,
-      pinned:           state.model.currentChatroom!.pinned,
-      membership:       state.model.currentChatroom!.membership,
-      lastSentMessage:  state.model.currentChatroom!.lastSentMessage,
-      lastSentTime:     state.model.currentChatroom!.lastSentTime,
+      id: state.model.currentChatroom!.id,
+      name: state.model.currentChatroom!.name,
+      inviteCode: state.model.currentChatroom!.inviteCode,
+      participants: state.model.currentChatroom!.participants,
+      owner: state.model.currentChatroom!.owner,
+      pinned: state.model.currentChatroom!.pinned,
+      membership: state.model.currentChatroom!.membership,
+      lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+      lastSentTime: state.model.currentChatroom!.lastSentTime,
       relationshipType: state.model.currentChatroom!.relationshipType,
       fineGrainControl: fineGrainControl,
-      allowedTypes:     types.toSet(),
-      allowedTopics:    topics.toSet(),
-      unreadCount:      state.model.currentChatroom!.unreadCount,
+      allowedTypes: types.toSet(),
+      allowedTopics: topics.toSet(),
+      unreadCount: state.model.currentChatroom!.unreadCount,
       hasPendingQuestion: state.model.currentChatroom!.hasPendingQuestion,
+      bannedUsers: state.model.currentChatroom!.bannedUsers,
     );
 
     state.callSetState(() {
@@ -353,6 +383,172 @@ class ChatDetailController {
     state.callSetState(() {
       state.model.isEditingQuestionPreferences = false;
     });
+  }
+
+  //MEMBER LIST
+  void onMemberMoreActions(String action, User user) async {
+    switch (action) {
+      case 'ban':
+        print('Ban ${user.username}');
+        // backend integration
+        // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
+        // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
+        try {
+          // 1. Backend Call
+          await chatroomService.banUser(chatroomId: _chatId, userId: user.uid);
+          // 2. Update Local State
+          // Remove from participants and add to bannedUsers
+          final currentParticipants = state.model.currentChatroom!.participants;
+          final currentBanned = state.model.currentChatroom!.bannedUsers;
+
+          final updatedParticipants = currentParticipants
+              .where((u) => u.uid != user.uid)
+              .toList();
+          final updatedBanned = [...currentBanned, user];
+
+          state.callSetState(() {
+            state.model.currentChatroom = Chatroom(
+              id: state.model.currentChatroom!.id,
+              name: state.model.currentChatroom!.name,
+              inviteCode: state.model.currentChatroom!.inviteCode,
+              participants:
+                  updatedParticipants, // The one thing you actually changed
+              bannedUsers: updatedBanned, // The other thing you changed
+              owner: state.model.currentChatroom!.owner,
+              pinned: state.model.currentChatroom!.pinned,
+              membership: state.model.currentChatroom!.membership,
+              lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+              lastSentTime: state.model.currentChatroom!.lastSentTime,
+              relationshipType: state.model.currentChatroom!.relationshipType,
+              fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+              allowedTopics: state.model.currentChatroom!.allowedTopics,
+              allowedTypes: state.model.currentChatroom!.allowedTypes,
+              unreadCount: state.model.currentChatroom!.unreadCount,
+              hasPendingQuestion:
+                  state.model.currentChatroom!.hasPendingQuestion,
+            );
+          });
+
+          ScaffoldMessenger.of(state.context).showSnackBar(
+            SnackBar(content: Text('${user.username} has been banned.')),
+          );
+        } catch (error) {
+          print('Error banning user: $error');
+        }
+        break;
+
+      case 'promote':
+        final confirmed = await showPromoteConfirmationPopUp(state.context);
+
+        if (confirmed == true) {
+          print('Promote ${user.username} to owner');
+          // backend integration
+          // Chatroom should be updated, owner attribute should be changed from the previous user to the selected user (passed to this function)
+          // state.model also needs to be updated (same reasons as above)
+          final confirmed = await showPromoteConfirmationPopUp(state.context);
+
+          if (confirmed == true) {
+            try {
+              // 1. Backend Call
+              // Note: Ensure your service has this method or use updateSettings
+              await chatroomService.updateSettings(chatroomId: _chatId);
+
+              // 2. Update Local State (Manual Rebuild)
+              state.callSetState(() {
+                state.model.currentChatroom = Chatroom(
+                  id: state.model.currentChatroom!.id,
+                  name: state.model.currentChatroom!.name,
+                  inviteCode: state.model.currentChatroom!.inviteCode,
+                  participants: state.model.currentChatroom!.participants,
+                  bannedUsers: state.model.currentChatroom!.bannedUsers,
+                  owner: user, // NEW OWNER
+                  pinned: state.model.currentChatroom!.pinned,
+                  membership: 'member', // Current user is no longer the owner
+                  lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+                  lastSentTime: state.model.currentChatroom!.lastSentTime,
+                  relationshipType:
+                      state.model.currentChatroom!.relationshipType,
+                  fineGrainControl:
+                      state.model.currentChatroom!.fineGrainControl,
+                  allowedTopics: state.model.currentChatroom!.allowedTopics,
+                  allowedTypes: state.model.currentChatroom!.allowedTypes,
+                  unreadCount: state.model.currentChatroom!.unreadCount,
+                  hasPendingQuestion:
+                      state.model.currentChatroom!.hasPendingQuestion,
+                );
+              });
+
+              ScaffoldMessenger.of(state.context).showSnackBar(
+                SnackBar(content: Text('${user.username} is now the owner.')),
+              );
+            } catch (error) {
+              print('Error promoting user: $error');
+            }
+          }
+        }
+
+        break;
+    }
+  }
+
+  //BANNED USERS list
+  void onBannedUserMoreActions(String action, User user) async {
+    switch (action) {
+      //for possible later expansion
+      case 'unban':
+        print('unban ${user.username}');
+        // backend integration
+        // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
+        // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
+        try {
+          // 1. Backend Call
+          await chatroomService.unbanUser(
+            chatroomId: _chatId,
+            userId: user.uid,
+          );
+
+          // 2. Update Local State
+          // Filter out the user from the current banned list
+          final updatedBannedList = state.model.currentChatroom!.bannedUsers
+              .where((u) => u.uid != user.uid)
+              .toList();
+
+          state.callSetState(() {
+            state.model.currentChatroom = Chatroom(
+              id: state.model.currentChatroom!.id,
+              name: state.model.currentChatroom!.name,
+              inviteCode: state.model.currentChatroom!.inviteCode,
+              participants: state.model.currentChatroom!.participants,
+              bannedUsers:
+                  updatedBannedList, // Updated list without the unbanned user
+              owner: state.model.currentChatroom!.owner,
+              pinned: state.model.currentChatroom!.pinned,
+              membership: state.model.currentChatroom!.membership,
+              lastSentMessage: state.model.currentChatroom!.lastSentMessage,
+              lastSentTime: state.model.currentChatroom!.lastSentTime,
+              relationshipType: state.model.currentChatroom!.relationshipType,
+              fineGrainControl: state.model.currentChatroom!.fineGrainControl,
+              allowedTopics: state.model.currentChatroom!.allowedTopics,
+              allowedTypes: state.model.currentChatroom!.allowedTypes,
+              unreadCount: state.model.currentChatroom!.unreadCount,
+              hasPendingQuestion:
+                  state.model.currentChatroom!.hasPendingQuestion,
+            );
+          });
+
+          ScaffoldMessenger.of(state.context).showSnackBar(
+            SnackBar(content: Text('${user.username} has been unbanned.')),
+          );
+        } catch (error) {
+          print('Error unbanning user: $error');
+          ScaffoldMessenger.of(state.context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to unban user. Please try again.'),
+            ),
+          );
+        }
+        break;
+    }
   }
 
   //DELETE
@@ -401,33 +597,11 @@ class ChatDetailController {
     try {
       await chatroomService.leaveChatroom(_chatId);
       // Pop twice (back to main mail screen)
-      Navigator.of(state.context).pushNamedAndRemoveUntil(
-        MailScreen.routeName,
-        (route) => false
-      );
+      Navigator.of(
+        state.context,
+      ).pushNamedAndRemoveUntil(MailScreen.routeName, (route) => false);
     } catch (e) {
       print('Leave chat failed: $e');
     }
   }
-  //   if (_currentUser == null) return;
-
-  //   final result = await _chatController.leaveChat();
-
-  //   if (result['success']) {
-  //     Navigator.pop(state.context);
-  //     ScaffoldMessenger.of(
-  //       state.context,
-  //     ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
-  //     );
-  //   }
-  // }
-
-  // @override
-  // void dispose() {
-  //   _messageController.dispose();
-  //   _scrollController.dispose();
-  //   super.dispose();
 }

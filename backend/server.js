@@ -40,6 +40,7 @@ import messageRoutes from './src/routes/messageRoutes.js';
 import syncRoutes from './src/routes/syncRoutes.js';
 import dailyQuestionRoutes from './src/routes/dailyQuestionRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
+import journalRoutes from './src/routes/journalRoutes.js';
 
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
@@ -50,6 +51,7 @@ app.use('/chat', messageRoutes);
 app.use('/sync', syncRoutes);
 app.use('/daily-question', dailyQuestionRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/api/journals', journalRoutes);
 
 // for testing only
 import devRoutes from './src/dev/devRoutes.js';
@@ -74,6 +76,7 @@ console.log("Database connected");
 // dev only: sync models with database (create tables if they don't exist)
 initModels();
 await sequelize.sync({ alter: true }); // alter: true modifies tables to match if the model has changed
+//await sequelize.sync({ force: true }); // TEMPORARY
 console.log("Database models synced");
 
 // // ---------------------------------- TEMPORARY FIX FOR DB SYNC ISSUES --
