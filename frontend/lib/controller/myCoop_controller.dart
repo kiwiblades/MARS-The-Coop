@@ -77,6 +77,7 @@ class MyCoopController {
         content: 'Started a new journal.',
       );
       await loadJournalSubjects(); // refresh list after creating
+      await loadEligibleFriends(); // refresh to remove user from eligible list
       print("Selected: ${selectedUser.username}");
     }
   }
