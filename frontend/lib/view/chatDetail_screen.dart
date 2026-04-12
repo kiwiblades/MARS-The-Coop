@@ -928,127 +928,132 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                     textAlign: TextAlign.left,
                   ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: AppColors.darkBrown, width: 1.5),
-                      bottom: BorderSide(
-                        color: AppColors.darkBrown,
-                        width: 1.5,
+                if (model.currentChatroom?.owner.username ==
+                    currentUser?.username)
+                  const SizedBox(height: 10),
+                if (model.currentChatroom?.owner.username ==
+                    currentUser?.username)
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: AppColors.darkBrown, width: 1.5),
+                        bottom: BorderSide(
+                          color: AppColors.darkBrown,
+                          width: 1.5,
+                        ),
                       ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      //if (model.currentChatroom?.bannedUsers?.isEmpty)
-                      if (model.currentChatroom?.bannedUsers.isEmpty ?? true)
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              "No one is currently banned from this chat.",
-                              style: Theme.of(context).textTheme.headlineLarge
-                                  ?.copyWith(
-                                    fontSize: 16.0,
-                                    color: AppColors.darkBrown,
-                                  ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        //if (model.currentChatroom?.bannedUsers?.isEmpty)
+                        if (model.currentChatroom?.bannedUsers.isEmpty ?? true)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "No one is currently banned from this chat.",
+                                style: Theme.of(context).textTheme.headlineLarge
+                                    ?.copyWith(
+                                      fontSize: 16.0,
+                                      color: AppColors.darkBrown,
+                                    ),
+                              ),
                             ),
                           ),
-                        ),
-                      ...?model.currentChatroom?.bannedUsers.map((user) {
-                        return SizedBox(
-                          height: 34, //control row height
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      user.username,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            fontSize: 20.0,
-                                            color: AppColors.darkBrown,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Builder(
-                                    builder: (context) {
-                                      return IconButton(
-                                        onPressed: () async {
-                                          final confirmed =
-                                              await showDialog<bool>(
-                                                context: context,
-                                                builder: (context) {
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                      "Unban User",
-                                                    ),
-                                                    content: Text(
-                                                      "Unban ${user.username}?",
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.pop(
-                                                              context,
-                                                              false,
-                                                            ),
-                                                        child: const Text(
-                                                          "Cancel",
-                                                        ),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.pop(
-                                                              context,
-                                                              true,
-                                                            ),
-                                                        child: const Text(
-                                                          "Unban",
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-
-                                          if (confirmed == true) {
-                                            controller.onBannedUserMoreActions(
-                                              'unban',
-                                              user,
-                                            );
-                                          }
-                                        },
-                                        icon: const Icon(
-                                          Icons.more_vert,
-                                          size: 20,
-                                          color: AppColors.darkBrown,
-                                        ),
-                                      );
-                                    },
+                        ...?model.currentChatroom?.bannedUsers.map((user) {
+                          return SizedBox(
+                            height: 34, //control row height
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        user.username,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              fontSize: 20.0,
+                                              color: AppColors.darkBrown,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ],
+                                Expanded(
+                                  flex: 3,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Builder(
+                                      builder: (context) {
+                                        return IconButton(
+                                          onPressed: () async {
+                                            final confirmed =
+                                                await showDialog<bool>(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return AlertDialog(
+                                                      title: const Text(
+                                                        "Unban User",
+                                                      ),
+                                                      content: Text(
+                                                        "Unban ${user.username}?",
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                context,
+                                                                false,
+                                                              ),
+                                                          child: const Text(
+                                                            "Cancel",
+                                                          ),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                context,
+                                                                true,
+                                                              ),
+                                                          child: const Text(
+                                                            "Unban",
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+
+                                            if (confirmed == true) {
+                                              controller
+                                                  .onBannedUserMoreActions(
+                                                    'unban',
+                                                    user,
+                                                  );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.more_vert,
+                                            size: 20,
+                                            color: AppColors.darkBrown,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
                   ),
-                ),
                 SizedBox(height: 10),
                 //LEAVE For non-owner
                 if (model.currentChatroom?.membership != null &&
