@@ -39,7 +39,7 @@ class JournalController {
   // create new journal entry
   Future<Map<String, dynamic>> createEntry(String content) async {
     try {
-      final data = await api.postJson('/journals', {
+      final data = await api.postJson('/api/journals', {
         'subjectId': subjectId,
         'content': content,
       });
@@ -56,6 +56,7 @@ class JournalController {
 
       return {'success': true, 'entry': newEntry};
     } catch (e) {
+      print("CREATE ENTRY ERROR: $e");
       return {'success': false, 'error': e.toString()};
     }
   }
