@@ -70,7 +70,7 @@ flutter:
     - images/codeBanner.webp
   #   - images/a_dot_ham.jpeg
 
-    - images/skyProfileBG.png
+    # images/skyProfileBG.png
     - images/leftSideCoopBG.png
     - images/middleCoopBG.png
     - images/rightSideCoopBG.png
