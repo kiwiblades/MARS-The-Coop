@@ -79,7 +79,7 @@ export const getJournalSubjects = async (req, res, next) => {
       include: [{
         model: User,
         as: 'SubjectProfile',
-        attributes: ['uid', 'username', 'pigeonId'] // Fixed: matching your user model 'pigeonId'
+        attributes: ['uid', 'username', 'pigeonId'] // Fixed: matching user model 'pigeonId'
       }]
     });
 
