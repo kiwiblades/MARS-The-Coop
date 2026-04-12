@@ -5,6 +5,8 @@ import UserDailyAnswer from "../models/UserDailyAnswer.js";
 import ChatRoom from "../models/ChatRoom.js";
 import AppError from "./errors/AppError.js";
 import ChatSettings from "../models/ChatSettings.js";
+import ChatMembership from "../models/ChatMembership.js";
+import { notifyUsers } from "./notify.js";
 
 // relatinship type filtering, least inclusive to most inclusive
 const RELATIONSHIP_HIERARCHY = ['Acquaintances', 'Family', 'Friends', 'Romantic'];
@@ -37,8 +39,20 @@ const questionTypeMap = {
     'memory': 'Memory',
 };
 
+// send push notifications to rooms receiving a daily question
 export async function notifyRoom(chatId, question) {
-    // TODO: push notification
+    const members = await ChatMembership.findAll({
+        where: { chatId },
+        attributes: ['userId'],
+    });
+    const userIds = members.map(m => m.userId);
+
+    await notifyUsers(userIds, {
+        title: 'Daily Question',
+        body: question.question,
+        data: { chatId },
+    });
+
     console.log(`[questionScheduler] notify room ${chatId}: ${question}`);
 }
 

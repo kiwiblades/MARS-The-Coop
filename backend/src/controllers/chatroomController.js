@@ -117,6 +117,63 @@ export async function getChatrooms(req, res) {
     return res.json(payload);
 }
 
+export async function getChatroomById(req, res) {
+    const uid = req.user.uid;
+    const chatId = req.params.chatId;
+    if (!chatId) {
+        throw AppError.badRequest('chatId is required');
+    }
+
+    // verify the user is a member
+    const membership = await ChatMembership.findOne({
+        where: { userId: uid, chatId },
+        attributes: ['pinned','role','joinedAt','chatId'],
+        include: [{
+            model: ChatRoom,
+            attributes: ['id','name','inviteCode','createdAt','updatedAt'],
+            include: [{
+                model: User,
+                as: 'participants',
+                attributes: ['uid','username','pigeonId'],
+                through: { attributes: ['role','joinedAt'] },
+            }, {
+                model: ChatSettings,
+                as: 'settings',
+                attributes: ['relationshipType','allowedTopics','allowedTypes'],
+                required: false,
+            }],
+        }],
+    });
+
+    if (!membership) {
+        throw AppError.forbidden('You are not a member of this chatroom');
+    }
+
+    const lastMessage = await Message.findOne({
+        where: { chat_id: chatId },
+        order: [['createdAt', 'DESC']],
+        attributes: ['content','createdAt'],
+    });
+
+    const settings = membership.ChatRoom?.settings;
+    return res.json({
+        chatroom: membership.ChatRoom,
+        membership: {
+            pinned: membership.pinned,
+            role: membership.role,
+            joinedAt: membership.joinedAt,
+        },
+        participants: (membership.ChatRoom?.participants ?? []),
+        lastSentMessage: lastMessage?.content ?? '',
+        lastSentTime: lastMessage?.createdAt ?? '',
+        settings: {
+            relationshipType: settings?.relationshipType ?? 'Friends',
+            allowedTopics: settings?.allowedTopics ?? [],
+            allowedTypes: settings?.allowedTypes ?? [],
+        },
+    });
+}
+
 export async function createChatroom(req, res) {
     const uid = req.user.uid;
     const { name, relationshipType, allowedTopics, allowedTypes } = req.body;

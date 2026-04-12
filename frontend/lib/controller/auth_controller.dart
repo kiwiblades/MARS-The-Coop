@@ -1,4 +1,5 @@
 import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/notification_service.dart';
 import 'package:frontend/services/socket_client.dart';
 
 class AuthController {
@@ -25,6 +26,7 @@ class AuthController {
   }) async {
     try {
       await auth.signin(username: username, password: password);
+      await NotificationService.instance.saveToken(); // save the fcm token for notifications
       await SocketClient.instance.connect(); // establish connection with socket once tokens are saved
       return {'success': true}; // tokens are saved locally inside AuthService
     } catch (e) {

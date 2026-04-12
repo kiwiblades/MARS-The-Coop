@@ -38,6 +38,7 @@ class MailScreenState extends State<MailScreen> {
       userService: userService,
     );
     controller.loadChatrooms(); // fetch the user's chatrooms on screen load
+    controller.initNotificationListeners(); // start listening for live badge updates
   }
 
   void callSetState(fn) => setState(fn);
@@ -49,6 +50,12 @@ class MailScreenState extends State<MailScreen> {
   int get _totalPendingQuestions {
     if (model.chatroomList == null) return 0;
     return model.chatroomList!.where((chat) => chat.hasPendingQuestion).length;
+  }
+
+  @override
+  void dispose() {
+    controller.dispose(); // cancel subscriptions
+    super.dispose();
   }
 
   @override

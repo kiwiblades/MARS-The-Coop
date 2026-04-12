@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "978916819124",
+    "project_id": "the-coop-491016",
+    "storage_bucket": "the-coop-491016.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978916819124:android:b8de9c933ea82ecdbe97e1",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg0roRx-535WlgRJo2vWf9yvCq3F4Yx38"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
