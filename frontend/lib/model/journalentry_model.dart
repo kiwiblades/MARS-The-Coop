@@ -19,10 +19,16 @@ class JournalEntry {
 
   factory JournalEntry.fromJson(Map<String, dynamic> json) {
     return JournalEntry(
-      id: json['id'],
-      content: json['content'],
-      timestamp: DateTime.parse(json['timestamp']),
-      editedAt: json['editedAt'] != null ? DateTime.parse(json['editedAt']) : null,
+      id: json['id'].toString(),
+      content: json['content'] ?? '',
+      //timestamp: DateTime.parse(json['timestamp']),
+      timestamp: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+      //editedAt: json['editedAt'] != null ? DateTime.parse(json['editedAt']) : null,
+      editedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
     );
   }
 

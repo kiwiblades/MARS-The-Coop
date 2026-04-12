@@ -31,6 +31,7 @@ class JournalController {
         'hasMore': false,
       };
     } catch (e) {
+      print("FATAL JOURNAL LOAD ERROR: $e");
       return {'success': false, 'error': e.toString()};
     }
   }

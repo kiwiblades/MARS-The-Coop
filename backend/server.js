@@ -61,6 +61,7 @@ console.log("Database connected");
 // dev only: sync models with database (create tables if they don't exist)
 initModels();
 await sequelize.sync({ alter: true }); // alter: true modifies tables to match if the model has changed
+//await sequelize.sync({ force: true }); // TEMPORARY
 console.log("Database models synced");
 
 // // ---------------------------------- TEMPORARY FIX FOR DB SYNC ISSUES --

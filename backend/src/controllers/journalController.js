@@ -26,13 +26,30 @@ export const createJournalEntry = async (req, res, next) => {
       return res.status(403).json({ error: 'You can only journal about people you share a chatroom with.' });
     }
 
+    // 2. Create the entry
     const entry = await Journal.create({
       ownerId,
       subjectId,
-      content
+      content: content || "New journal started" // Ensure content isn't null/undefined
     });
 
-    res.status(201).json(entry);
+    // 3. RE-FETCH with Inclusions
+    const fullEntry = await Journal.findByPk(entry.id, {
+      include: [
+        {
+          model: User,
+          as: 'SubjectProfile',
+          attributes: ['uid', 'username', 'pigeonId']
+        },
+        {
+          model: User,
+          as: 'AuthorProfile',
+          attributes: ['uid', 'username', 'pigeonId']
+        }
+      ]
+    });
+
+    res.status(201).json(fullEntry);
   } catch (error) {
     next(error);
   }
@@ -55,7 +72,14 @@ export const getEntriesBySubject = async (req, res, next) => {
   try {
     const entries = await Journal.findAll({
       where: { ownerId, subjectId },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: 'SubjectProfile',
+          attributes: ['uid', 'username', 'pigeonId']
+        }
+      ]
     });
 
     res.status(200).json(entries);
@@ -74,13 +98,18 @@ export const getJournalSubjects = async (req, res, next) => {
     const subjects = await Journal.findAll({
       where: { ownerId },
       //attributes: [[sequelize.fn('DISTINCT', sequelize.col('subjectId')), 'subjectId']],
-	  attributes: ['subjectId'],
+	  attributes: ['subjectId', 'ownerId'], // Include ownerId for grouping
       group: ['subjectId', 'ownerId', 'SubjectProfile.uid', 'AuthorProfile.uid'], // Group by subjectId and ownerId to get unique subjects  
       include: [{
         model: User,
-        as: 'AuthorProfile',
+        as: 'SubjectProfile',
         attributes: ['uid', 'username', 'pigeonId'] 
-      }]
+      },
+        {
+          model: User,
+          as: 'AuthorProfile', // THE WRITER
+          attributes: ['uid', 'username', 'pigeonId'] 
+        }]
     });
 
     res.status(200).json(subjects || []);
