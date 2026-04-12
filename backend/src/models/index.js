@@ -92,6 +92,12 @@ export function initModels() {
     Journal.belongsTo(User, { foreignKey: 'ownerId', as: 'Owner' }); // The writer
     Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' }); // The "Bird"
 
+    // Locate your Journal section and update it to this:
+    User.hasMany(Journal, { foreignKey: 'ownerId', as: 'WrittenJournals' });
+    // Association for the Writer (Owner)
+    Journal.belongsTo(User, { foreignKey: 'ownerId', as: 'AuthorProfile' }); 
+    // Association for the "Bird" (Subject)
+    Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' });
 
     // Add Ban Associations
     User.hasMany(BannedUser, { foreignKey: 'userId' });

@@ -75,11 +75,11 @@ export const getJournalSubjects = async (req, res, next) => {
       where: { ownerId },
       //attributes: [[sequelize.fn('DISTINCT', sequelize.col('subjectId')), 'subjectId']],
 	  attributes: ['subjectId'],
-      group: ['subjectId', 'SubjectProfile.uid'],
+      group: ['subjectId', 'ownerId', 'SubjectProfile.uid', 'AuthorProfile.uid'], // Group by subjectId and ownerId to get unique subjects  
       include: [{
         model: User,
-        as: 'SubjectProfile',
-        attributes: ['uid', 'username', 'pigeonId'] // Fixed: matching user model 'pigeonId'
+        as: 'AuthorProfile',
+        attributes: ['uid', 'username', 'pigeonId'] 
       }]
     });
 
