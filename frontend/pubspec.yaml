@@ -117,6 +117,7 @@ flutter:
     - images/pigeonProfile/magpiePigeonProfile.webp
     - images/pigeonProfile/mourningDoveProfile.webp
     - images/pigeonProfile/pinkNeckedGreenPigeonProfile.webp
+     - images/pigeonPrompt.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

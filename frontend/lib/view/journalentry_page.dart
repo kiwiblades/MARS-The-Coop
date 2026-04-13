@@ -245,15 +245,26 @@ class _JournalPageState extends State<JournalPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
-      body: SafeArea(
-        child: _model.loadError != null
-            ? _buildErrorView()
-            : Column(
-                children: [
-                  Expanded(child: _buildEntryList()),
-                  _buildInputArea(),
-                ],
-              ),
+      body: Container(
+        // ADD THIS CONTAINER
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/woodGrainTexture.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: _model.loadError != null
+              ? _buildErrorView()
+              : Column(
+                  children: [
+                    Expanded(child: _buildEntryList()),
+                    _buildInputArea(),
+                  ],
+                ),
+        ),
       ),
     );
   }
