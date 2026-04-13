@@ -5,6 +5,7 @@ import 'package:frontend/controller/createChat_controller.dart';
 import 'package:frontend/model/chatroom.dart';
 import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
+import 'package:frontend/services/user_service.dart';
 
 class CreateChatScreen extends StatefulWidget {
   static const String routeName = '/createChatScreen';
@@ -37,8 +38,10 @@ class CreateChatScreenState extends State<CreateChatScreen> {
   @override
   void initState() {
     super.initState();
-    final chatroomService = ChatroomService(api: ApiClient());
-    controller = CreateChatController(this, chatroomService: chatroomService);
+    final apiClient = ApiClient();
+    final chatroomService = ChatroomService(api: apiClient);
+    final userService = UserService(api: apiClient);
+    controller = CreateChatController(this, chatroomService: chatroomService, userService: userService);
   }
 
   void callSetState(fn) => setState(fn);
@@ -55,7 +58,7 @@ class CreateChatScreenState extends State<CreateChatScreen> {
       decoration: const BoxDecoration(
         color: Color(0xFFD1A681),
         image: DecorationImage(
-          image: AssetImage('images/woodGrainTexture.png'),
+          image: AssetImage('images/woodGrainTexture.webp'),
           fit: BoxFit.cover,
         ),
       ),
@@ -514,7 +517,7 @@ class CodeBannerPopup extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Image.asset(
-            'images/codeBanner.png',
+            'images/codeBanner.webp',
             width: screenWidth,
             fit: BoxFit.fitWidth,
           ),

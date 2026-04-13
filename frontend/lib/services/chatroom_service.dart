@@ -19,27 +19,36 @@ class ChatroomService {
       final chatroom = entry['chatroom'] as Map<String, dynamic>;
       final membership = entry['membership'] as Map<String, dynamic>;
       final participants = (entry['participants'] as List<dynamic>? ?? [])
-        .map((p) => User.fromJson(p as Map<String, dynamic>))
-        .toList();
+          .map((p) => User.fromJson(p as Map<String, dynamic>))
+          .toList();
+      final owner = entry['owner'] as Map<String, dynamic>;
       final settings = entry['settings'] as Map<String, dynamic>? ?? {};
       final allowedTopics = (settings['allowedTopics'] as List<dynamic>? ?? [])
-        .map((t) => t as String)
-        .toList();
+          .map((t) => t as String)
+          .toList();
       final allowedTypes = (settings['allowedTypes'] as List<dynamic>? ?? [])
-        .map((t) => t as String)
-        .toList();
+          .map((t) => t as String)
+          .toList();
+      final bannedUsers = (entry['bannedUsers'] as List<dynamic>? ?? [])
+          .map((u) => User.fromJson(u as Map<String, dynamic>))
+          .toList();
 
       return Chatroom(
         id: chatroom['id'] as String,
         name: chatroom['name'] as String,
         inviteCode: chatroom['inviteCode'] as String,
         participants: participants,
+        bannedUsers: bannedUsers,
+        owner: User.fromJson(owner),
         pinned: membership['pinned'] as bool,
         membership: membership['role'] as String,
         lastSentMessage: entry['lastSentMessage'] as String? ?? '',
         lastSentTime: entry['lastSentTime'] as String? ?? '',
         relationshipType: RelationshipType.values.firstWhere(
-          (e) => e.name.toLowerCase() == (settings['relationshipType'] as String? ?? 'friends').toLowerCase(),
+          (e) =>
+              e.name.toLowerCase() ==
+              (settings['relationshipType'] as String? ?? 'friends')
+                  .toLowerCase(),
           orElse: () => RelationshipType.friends,
         ),
         fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
@@ -55,6 +64,8 @@ class ChatroomService {
             orElse: () => QuestionTopic.personal,
           )
         ).toSet(),
+        unreadCount: entry['unreadCount'] as int? ?? 0,
+        hasPendingQuestion: entry['hasPendingQuestion'] as bool? ?? false,
       );
     }).toList();
   }
@@ -64,6 +75,7 @@ class ChatroomService {
   // the invite code is immediately provided with the new chatroom, though
   Future<Chatroom> createChatroom({
     required String name,
+    required User creator,
     required String relationshipType,
     List<String> allowedTopics = const [],
     List<String> allowedTypes = const [],
@@ -79,28 +91,47 @@ class ChatroomService {
       name: data['name'] as String,
       inviteCode: data['inviteCode'] as String,
       // the values from here aren't really important, they'll be fetched when needed later
-      participants: [],
+      participants: [creator],
+      bannedUsers: [],
+      owner: creator,
       pinned: false,
       membership: 'owner',
       lastSentMessage: '',
       lastSentTime: '',
       relationshipType: RelationshipType.values.firstWhere(
-      (e) => e.name.toLowerCase() == relationshipType.toLowerCase(),
-      orElse: () => RelationshipType.friends),
+        (e) => e.name.toLowerCase() == relationshipType.toLowerCase(),
+        orElse: () => RelationshipType.friends,
+      ),
       fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
-      allowedTypes: allowedTypes.map((t) =>
-        QuestionType.values.firstWhere(
-          (q) => q.name.toLowerCase() == t.toLowerCase(),
-          orElse: () => QuestionType.favorite,
-        )
-      ).toSet(),
-      allowedTopics: allowedTopics.map((t) =>
-        QuestionTopic.values.firstWhere(
-          (q) => q.name.toLowerCase() == t.toLowerCase(),
-          orElse: () => QuestionTopic.personal,
-        )
-      ).toSet(),
+
+      allowedTypes: allowedTypes
+          .map(
+            (t) => QuestionType.values.firstWhere(
+              (q) => q.name.toLowerCase() == t.toLowerCase(),
+              orElse: () => QuestionType.favorite,
+            ),
+          )
+          .toSet(),
+      allowedTopics: allowedTopics
+          .map(
+            (t) => QuestionTopic.values.firstWhere(
+              (q) => q.name.toLowerCase() == t.toLowerCase(),
+              orElse: () => QuestionTopic.personal,
+            ),
+          )
+          .toSet(),
+      unreadCount: 0,
+      hasPendingQuestion: false,
     );
+  }
+
+  // when a notification is clicked, the chatId is passed through the notif
+  // we can then use it to fetch the specific chatroom and push it with the navigator,
+  // so the chatroom immediately loads upon navigation from a notif popup
+  // get /chatroom/$chatId
+  Future<Chatroom> getChatroomById(String chatId) async {
+    final data = await api.getJson('/chatroom/$chatId');
+    return Chatroom.fromJson(data);
   }
 
   // post /chatroom/join
@@ -139,5 +170,29 @@ class ChatroomService {
   // patch /chatroom/pin
   Future<void> togglePin(String chatroomId) async {
     await api.patchJson('/chatroom/pin', {'chatroomId': chatroomId});
+  }
+
+  Future<void> banUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.postJson('/chatroom/$chatroomId/ban', {'userIdToBan': userId});
+  }
+
+  Future<void> unbanUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.postJson('/chatroom/$chatroomId/unban', {
+      'userIdToUnban': userId,
+    });
+  }
+
+  // patch /chatroom/:id/promote
+  Future<void> promoteUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.patchJson('/chatroom/$chatroomId/promote', {'newOwnerUid': userId});
   }
 }

@@ -1,9 +1,17 @@
 import { submitAnswer } from "../utils/dailyQuestion.js"
+import { clearPendingQuestion } from "../utils/notify.js";
 
 export const registerDailyQuestionHandlers = (io, socket) => {
     socket.on('submit_daily_answer', async ({ dailyQuestionId, userId, answerText, chatId }) => {
         try {
             const result = await submitAnswer(dailyQuestionId, userId, answerText);
+
+            // clear pending badge for the user
+            await clearPendingQuestion(chatId, userId);
+            socket.emit('pending_question_update', {
+                chatId,
+                hasPendingQuestion: false,
+            });
 
             // confirm success to answering user
             socket.emit('daily_answer_accepted', {

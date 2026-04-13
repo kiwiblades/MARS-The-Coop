@@ -42,7 +42,7 @@ export const config = {
     token_hash_secret: process.env.TOKEN_HASH_SECRET,
   },
   sheets: {
-    keyFilePath: process.env.SHEETS_KEY_FILE_PATH ?? './sheet-service.json',
+    keyFilePath: process.env.SHEETS_KEY_FILE_PATH ?? '../sheet-service.json',
     spreadsheetId: process.env.SHEETS_SPREADSHEET_ID,
     sheetName: process.env.SHEETS_SHEET_NAME ?? 'Sheet1',
     syncIntervalHours: Number(process.env.SHEETS_SYNC_INTERVAL_HOURS ?? '1'),
@@ -51,4 +51,7 @@ export const config = {
     cronTime: process.env.DAILYQ_CRON_TIME ?? '0 5 * * *',
     timezone: process.env.DAILYQ_TIMEZONE ?? 'America/Chicago',
   },
+  firebase: {
+    keyFilePath: process.env.FIREBASE_KEY_FILE_PATH ?? '../firebase-service-account.json',
+  }
 };

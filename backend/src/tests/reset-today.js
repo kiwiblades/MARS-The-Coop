@@ -21,4 +21,13 @@ const res = await fetch(`${URL}/daily-question/reset-today`, {
   headers: { 'Authorization': `Bearer ${accessToken}` },
 });
 const data = await res.json();
-console.log('done:', data);
+console.log('reset questions:', data);
+
+console.log("clearing pending question statuses...");
+const clearRes = await fetch(`${URL}/daily-question/clear-pending`, {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${accessToken}` },
+});
+const clearData = await clearRes.json();
+console.log('cleared pending:', clearData);
+
