@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../config/env.dart';
+import 'api_client.dart';
 import 'token_manager.dart';
 
 class AuthService {
@@ -85,6 +86,11 @@ class AuthService {
   // returns 204 on success
   Future<void> logout() async {
     final refreshToken = await tokens.getRefreshToken();
+
+    // clear fcm token from server so logged out user doesn't get notifs
+    try {
+      await ApiClient().postJson('/notifications/fcm-token', {'fcmToken': null});
+    } catch(_) {}
 
     if (refreshToken != null && refreshToken.isNotEmpty) {
       final uri = Uri.parse('${Env.apiBaseUrl}/auth/signout');

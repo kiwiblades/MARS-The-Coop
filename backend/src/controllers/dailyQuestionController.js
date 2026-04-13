@@ -5,6 +5,7 @@ import DailyQuestion from "../models/DailyQuestion.js";
 import UserDailyAnswer from "../models/UserDailyAnswer.js";
 import User from "../models/userModel.js";
 import Question from "../models/Question.js";
+import ChatMembership from "../models/ChatMembership.js";
 
 // for use when loading a chatroom
 export async function getTodaysDailyQuestion(req, res) {
@@ -80,5 +81,14 @@ export async function resetToday(req, res) {
         throw AppError.badRequest('No questions, or questions failed to delete');
     }
     res.json({ message: `deleted ${deleted} daily question(s) for today` });
+}
+
+// manually clear pending dq status
+export async function clearPending(req, res) {
+    await ChatMembership.update(
+        { hasPendingQuestion: false },
+        { where: {} } // clears all
+    );
+    res.json({ message: 'pending question statuses cleared' });
 }
 

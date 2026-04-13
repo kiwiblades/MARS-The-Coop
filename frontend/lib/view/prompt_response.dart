@@ -24,7 +24,7 @@ class PromptResponseFeed extends StatefulWidget {
 class _PromptResponseFeedState extends State<PromptResponseFeed> {
   late final DailyPromptController _controller;
   final DailyPromptModel _model = DailyPromptModel();
-  
+
   List<PromptResponse> _responses = [];
   DailyPrompt? _prompt;
 
@@ -120,7 +120,8 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
                     ? Pigeon.getById(response.pigeonId!)
                     : null;
                 final profileImage =
-                    pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+                    pigeon?.profile ??
+                    'images/pigeonProfile/defaultPigeonProfile.webp';
 
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -172,10 +173,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Failed to load responses',
-            style: AppTextStyles.body,
-          ),
+          Text('Failed to load responses', style: AppTextStyles.body),
           SizedBox(height: AppSpacing.md),
           ElevatedButton(
             onPressed: _loadPromptAndResponses,

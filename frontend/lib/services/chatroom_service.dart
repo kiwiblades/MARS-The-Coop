@@ -52,27 +52,20 @@ class ChatroomService {
           orElse: () => RelationshipType.friends,
         ),
         fineGrainControl: allowedTopics.isNotEmpty || allowedTypes.isNotEmpty,
-
-        allowedTypes: allowedTypes
-            .map(
-              (t) => QuestionType.values.firstWhere(
-                (q) => q.name.toLowerCase() == t.toLowerCase(),
-                orElse: () => QuestionType.favorite,
-              ),
-            )
-            .toSet(),
-        allowedTopics: allowedTopics
-            .map(
-              (t) => QuestionTopic.values.firstWhere(
-                (q) => q.name.toLowerCase() == t.toLowerCase(),
-                orElse: () => QuestionTopic.personal,
-              ),
-            )
-            .toSet(),
-        unreadCount: entry['unreadCount'] as int? ?? 
-            _getMockUnreadCount(chatroom['id'] as String),
-        hasPendingQuestion: entry['hasPendingQuestion'] as bool? ?? 
-            _getMockHasPendingQuestion(chatroom['id'] as String),
+        allowedTypes: allowedTypes.map((t) => 
+          QuestionType.values.firstWhere(
+            (q) => q.name.toLowerCase() == t.toLowerCase(),
+            orElse: () => QuestionType.favorite,
+          )
+        ).toSet(),
+        allowedTopics: allowedTopics.map((t) =>
+          QuestionTopic.values.firstWhere(
+            (q) => q.name.toLowerCase() == t.toLowerCase(),
+            orElse: () => QuestionTopic.personal,
+          )
+        ).toSet(),
+        unreadCount: entry['unreadCount'] as int? ?? 0,
+        hasPendingQuestion: entry['hasPendingQuestion'] as bool? ?? false,
       );
     }).toList();
   }
@@ -132,6 +125,15 @@ class ChatroomService {
     );
   }
 
+  // when a notification is clicked, the chatId is passed through the notif
+  // we can then use it to fetch the specific chatroom and push it with the navigator,
+  // so the chatroom immediately loads upon navigation from a notif popup
+  // get /chatroom/$chatId
+  Future<Chatroom> getChatroomById(String chatId) async {
+    final data = await api.getJson('/chatroom/$chatId');
+    return Chatroom.fromJson(data);
+  }
+
   // post /chatroom/join
   Future<void> joinChatroom(String inviteCode) async {
     await api.postJson('/chatroom/join', {'inviteCode': inviteCode});
@@ -170,15 +172,6 @@ class ChatroomService {
     await api.patchJson('/chatroom/pin', {'chatroomId': chatroomId});
   }
 
-  // mock notification data for testing badges
-  // remove when backend is implemented
-  int _getMockUnreadCount(String chatId) {
-    return 6; 
-  }
-
-  bool _getMockHasPendingQuestion(String chatId) {
-    return true;  
-
   Future<void> banUser({
     required String chatroomId,
     required String userId,
@@ -193,6 +186,13 @@ class ChatroomService {
     await api.postJson('/chatroom/$chatroomId/unban', {
       'userIdToUnban': userId,
     });
+  }
 
+  // patch /chatroom/:id/promote
+  Future<void> promoteUser({
+    required String chatroomId,
+    required String userId,
+  }) async {
+    await api.patchJson('/chatroom/$chatroomId/promote', {'newOwnerUid': userId});
   }
 }

@@ -46,7 +46,8 @@ class MessageService {
     final messages = data['messages'] as List<dynamic>;
     return messages
       .map((m) => Message.fromJson(m as Map<String, dynamic>, currentUserId))
-      .toList();
+      .toList()
+      .reversed.toList(); // show oldest first for display (top down)
   }
 
   Future<void> _sendMessageHttp({

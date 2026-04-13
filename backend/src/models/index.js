@@ -17,6 +17,7 @@ import UserDailyAnswer from "./UserDailyAnswer.js";
 import Question from "./Question.js";
 import ChatSettings from "./ChatSettings.js";
 import BannedUser from "./BannedUser.js";
+import { Journal } from "./Journal.js";
 
 // define associations after all models are imported
 export function initModels() {
@@ -84,10 +85,33 @@ export function initModels() {
     User.hasMany(UserDailyAnswer, { foreignKey: 'userId', as: 'dailyAnswers' });
     UserDailyAnswer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+    // models/index.js
+    // User.hasMany(Journal, { foreignKey: 'ownerId', as: 'WrittenJournals' });
+    // Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' });
+    User.hasMany(Journal, { foreignKey: 'ownerId', as: 'WrittenJournals' });
+    Journal.belongsTo(User, { foreignKey: 'subjectId', as: 'SubjectProfile' }); // The "Bird"
+    Journal.belongsTo(User, { foreignKey: 'ownerId', as: 'AuthorProfile' }); 
+
     // Add Ban Associations
     User.hasMany(BannedUser, { foreignKey: 'userId' });
     BannedUser.belongsTo(User, { foreignKey: 'userId' });
 
     ChatRoom.hasMany(BannedUser, { foreignKey: 'chatId' });
     BannedUser.belongsTo(ChatRoom, { foreignKey: 'chatId' });
+
 }
+
+export { 
+    User, 
+    RefreshToken, 
+    EmailVerificationToken, 
+    ChatRoom, 
+    ChatMembership, 
+    Message, 
+    DailyQuestion, 
+    UserDailyAnswer, 
+    Question, 
+    ChatSettings, 
+    BannedUser, 
+    Journal 
+};

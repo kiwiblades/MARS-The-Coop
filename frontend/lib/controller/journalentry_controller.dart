@@ -1,86 +1,65 @@
+import 'package:frontend/services/journalentry_service.dart';
 import '../model/journalentry_model.dart';
 
 class JournalController {
-  final String journalId;
-  // TODO
+  final String subjectId; // ID of the 'bird' (the person the journal is about)
+  final JournalService journalService;
 
-  JournalController(this.journalId);
+  JournalController(this.subjectId, {required this.journalService});
 
   // load journal entries from backend
-  Future<Map<String, dynamic>> loadEntries({int offset = 0, int limit = 50}) async {
+  Future<Map<String, dynamic>> loadEntries({
+    int offset = 0,
+    int limit = 50,
+  }) async {
     try {
-      // TODO
-      
-      // mock data for now
-      await Future.delayed(Duration(milliseconds: 500));
+      final response = await journalService.getEntriesBySubject(subjectId);
+      final entries = response
+        .map((data) => JournalEntry.fromJson(data))
+        .toList();
       return {
         'success': true,
-        'entries': <JournalEntry>[], // empty for now
+        'entries': entries,
         'hasMore': false,
       };
     } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
+      print("FATAL JOURNAL LOAD ERROR: $e");
+      return {'success': false, 'error': e.toString()};
     }
   }
 
   // create new journal entry
   Future<Map<String, dynamic>> createEntry(String content) async {
     try {
-      // TODO
-      
-      await Future.delayed(Duration(milliseconds: 300));
-      final newEntry = JournalEntry(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+      final data = await journalService.createEntry(
+        subjectId: subjectId,
         content: content,
-        timestamp: DateTime.now(),
       );
-      
-      return {
-        'success': true,
-        'entry': newEntry,
-      };
-    } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
+      final newEntry = JournalEntry.fromJson(data);
+      return {'success': true, 'entry': newEntry};
+    } catch(e) {
+      print("CREATE ENTRY ERROR: $e");
+      return {'success': false, 'error': e.toString()};
     }
   }
 
   // update existing entry
   Future<Map<String, dynamic>> updateEntry(String entryId, String content) async {
     try {
-      // TODO
-      
-      await Future.delayed(Duration(milliseconds: 300));
-      return {
-        'success': true,
-      };
+      await journalService.updateEntry(entryId: entryId, content: content);
+      return {'success': true};
     } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
+      return {'success': false, 'error': e.toString()};
     }
   }
 
   // delete entry
   Future<Map<String, dynamic>> deleteEntry(String entryId) async {
     try {
-      // TODO
-      
-      await Future.delayed(Duration(milliseconds: 300));
-      return {
-        'success': true,
-      };
+      await journalService.deleteEntry(entryId);
+      return {'success': true};
     } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
+      return {'success': false, 'error': e.toString()};
     }
   }
 }
