@@ -62,9 +62,9 @@ class MyApp extends StatelessWidget {
           bodyLarge: TextStyle(fontFamily: 'Zalando Sans'),
           bodyMedium: TextStyle(fontFamily: 'Zalando Sans'),
           bodySmall: TextStyle(fontFamily: 'Zalando Sans'),
-          headlineLarge:  TextStyle(fontFamily: 'Dela Gothic One'),
-          headlineMedium: TextStyle(fontFamily: 'Dela Gothic One'),
-          headlineSmall:  TextStyle(fontFamily: 'Dela Gothic One'),
+          headlineLarge:  TextStyle(fontFamily: 'Seymour One'),
+          headlineMedium: TextStyle(fontFamily: 'Seymour One'),
+          headlineSmall:  TextStyle(fontFamily: 'Seymour One'),
         ),
       ),
 
