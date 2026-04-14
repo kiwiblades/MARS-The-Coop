@@ -475,6 +475,11 @@ export async function banUser(req, res) {
         });
 
         await t.commit();
+
+        // notify banned user to immediately kick to mail screen
+        const io = req.app.get('io');
+        io.to(userIdToBan).emit('banned_from_chat', { chatId });
+
         return res.status(200).json({ message: "User has been banned and removed from the chat." });
     } catch (e) {
         await t.rollback();

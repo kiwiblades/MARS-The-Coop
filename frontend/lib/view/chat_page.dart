@@ -9,6 +9,7 @@ import 'package:frontend/services/message_service.dart';
 import 'package:frontend/services/notification_service.dart';
 import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
+import 'package:frontend/view/mail_screen.dart';
 import 'package:frontend/view/prompt_modal.dart';
 import 'package:frontend/view/prompt_response.dart';
 import '../constants.dart';
@@ -57,6 +58,7 @@ class _ChatPageState extends State<ChatPage> {
   StreamSubscription? _dqPushSubscription;
   StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
+  StreamSubscription? _banSubscription;
   StreamSubscription? _typingSubscription;
   StreamSubscription? _notifSubscription;
   int _promptFeedKey = 0;
@@ -150,6 +152,19 @@ class _ChatPageState extends State<ChatPage> {
             userId: _currentUser!.uid,
           );
         }
+      });
+
+      _banSubscription = SocketClient.instance.on('banned_from_chat').listen((data) {
+        if (!mounted) return;
+        if (data['chatId'] != widget.chatId) return;
+
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          MailScreen.routeName,
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You have been banned from the chat.'))
+        );
       });
 
       _typingSubscription = _chatController.onUserTyping().listen((data) {
@@ -379,6 +394,7 @@ class _ChatPageState extends State<ChatPage> {
     _dqPushSubscription?.cancel();
     _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
+    _banSubscription?.cancel();
     _typingSubscription?.cancel();
     _notifSubscription?.cancel();
     _typingTimer?.cancel();
