@@ -386,7 +386,7 @@ class MailScreenState extends State<MailScreen> {
                     shape: BoxShape.rectangle,
                   ),
                   child: Image.asset(
-                    'images/pigeonPrompt.png',
+                    'images/pigeonPrompt.webp',
                     fit: BoxFit.contain,
                   ),
                 ),

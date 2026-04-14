@@ -16,7 +16,7 @@ class AppColors {
 }
 
 class AppTextStyles {
-  static const String headingFont = 'Dela Gothic One';
+  static const String headingFont = 'Seymour One';
   static const String bodyFont = 'Zalando Sans';
   
   static const TextStyle heading = TextStyle(

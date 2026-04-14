@@ -81,11 +81,11 @@ class MyCoopScreenState extends State<MyCoopScreen> {
     int column = index % 3;
 
     if (column == 0) {
-      return 'images/leftSideCoopBG.png';
+      return 'images/leftSideCoopBG.webp';
     } else if (column == 1) {
-      return 'images/middleCoopBG.png';
+      return 'images/middleCoopBG.webp';
     } else {
-      return 'images/rightSideCoopBG.png';
+      return 'images/rightSideCoopBG.webp';
     }
   }
 
@@ -131,7 +131,7 @@ class MyCoopScreenState extends State<MyCoopScreen> {
         children: [
           Expanded(
             child: Image.asset(
-              'images/addPigeon.png', // your special tile image
+              'images/addPigeon.webp', // your special tile image
               fit: BoxFit.cover,
             ),
           ),
