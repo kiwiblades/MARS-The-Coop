@@ -86,7 +86,7 @@ class _SigninPageState extends State<SigninPage> {
                 Row(
                   children: [
                     Image.asset(
-                      'assets/images/logo.png',
+                      'assets/images/logo.webp',
                       width: 90,
                       height: 90,
                     ),
