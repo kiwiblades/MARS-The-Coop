@@ -8,6 +8,13 @@ class AddChatController {
   final ChatroomService chatroomService;
   AddChatController(this.state, {required this.chatroomService});
 
+  // internal fcn to show errors
+  void _showError(String msg) {
+    ScaffoldMessenger.of(state.context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+  }
+
   //code validator
   String? chatCodeValidator(String? value) {
     if(value == null || value.isEmpty) {
@@ -48,10 +55,12 @@ class AddChatController {
         print('failed to join chatroom: $e');
         if (e.toString().contains('404')) {
           // chat doesn't exist
-          // TODO: display error
+          _showError('A chatroom does not exist with the entered code.');
         } else if (e.toString().contains('409')) {
           // already a member of the chat
-          // TODO: display error
+          _showError('You are already a member of this chat.');
+        } else if (e.toString().contains('403')) {
+          _showError('You are banned from joining this chat.');
         }
       }
     }

@@ -232,18 +232,23 @@ class MailScreenState extends State<MailScreen> {
   Widget buildChatroomTile(Chatroom chat) {
     //determine image for chat
     late final String chatImage;
-    if (chat.participants.isEmpty) {
+    if (chat.participants.length == 1) { //current user is the only member
       final pigeonId = model.currentUser?.pigeonId ?? 0;
       final pigeon = Pigeon.getById(pigeonId);
       chatImage =
           pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
-    } else if (chat.participants.length == 1) {
-      final pigeonId = chat.participants[0].pigeonId;
+    } else if (chat.participants.length == 2) { //if there is 1 other member (normal chat)
+      int pigeonId;
+      if (chat.participants[0].pigeonId == model.currentUser?.pigeonId) { 
+        pigeonId = chat.participants[1].pigeonId;
+      } else {
+        pigeonId = chat.participants[0].pigeonId;
+      }
       final pigeon = Pigeon.getById(pigeonId);
       chatImage =
           pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.webp';
     } else {
-      //if there are more than 1 participants
+      //if there are more than 2 participants --> gc
       chatImage = 'images/group.webp';
     }
 
