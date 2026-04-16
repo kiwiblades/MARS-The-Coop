@@ -9,12 +9,14 @@ class PromptResponseFeed extends StatefulWidget {
   final String chatId;
   final String currentUserId;
   final DailyQuestionService dqService;
+  final VoidCallback? onLoaded;
 
   const PromptResponseFeed({
     Key? key,
     required this.chatId,
     required this.currentUserId,
     required this.dqService,
+    this.onLoaded,
   }) : super(key: key);
 
   @override
@@ -24,7 +26,7 @@ class PromptResponseFeed extends StatefulWidget {
 class _PromptResponseFeedState extends State<PromptResponseFeed> {
   late final DailyPromptController _controller;
   final DailyPromptModel _model = DailyPromptModel();
-  
+
   List<PromptResponse> _responses = [];
   DailyPrompt? _prompt;
 
@@ -56,6 +58,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
         _responses = responsesResult['responses'];
         _model.isLoading = false;
       });
+      widget.onLoaded?.call();
     } else {
       setState(() {
         _model.loadError = promptResult['error'] ?? responsesResult['error'];
@@ -120,7 +123,8 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
                     ? Pigeon.getById(response.pigeonId!)
                     : null;
                 final profileImage =
-                    pigeon?.profile ?? 'images/pigeonProfile/defaultPigeonProfile.png';
+                    pigeon?.profile ??
+                    'images/pigeonProfile/defaultPigeonProfile.webp';
 
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -172,10 +176,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Failed to load responses',
-            style: AppTextStyles.body,
-          ),
+          Text('Failed to load responses', style: AppTextStyles.body),
           SizedBox(height: AppSpacing.md),
           ElevatedButton(
             onPressed: _loadPromptAndResponses,

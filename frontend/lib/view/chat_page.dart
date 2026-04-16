@@ -6,6 +6,7 @@ import 'package:frontend/services/api_client.dart';
 import 'package:frontend/services/chatroom_service.dart';
 import 'package:frontend/services/daily_question_service.dart';
 import 'package:frontend/services/message_service.dart';
+import 'package:frontend/services/notification_service.dart';
 import 'package:frontend/services/socket_client.dart';
 import 'package:frontend/view/chatDetail_screen.dart';
 import 'package:frontend/view/prompt_modal.dart';
@@ -16,6 +17,8 @@ import '../model/chat_model.dart';
 import '../model/pigeon.dart';
 import '../services/user_service.dart';
 import '../model/profile_model.dart';
+import '../controller/prompt_controller.dart';
+import '../model/prompt_model.dart';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';
@@ -45,6 +48,7 @@ class _ChatPageState extends State<ChatPage> {
   late final ChatController _chatController;
   late final UserService _userService;
   late final DailyQuestionService _dqService;
+  final notifService = NotificationService.instance;
   final ChatModel _model = ChatModel();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -56,13 +60,17 @@ class _ChatPageState extends State<ChatPage> {
   StreamSubscription? _dqAnswerUpdateSubscription;
   StreamSubscription? _messageErrorSubscription;
   StreamSubscription? _typingSubscription;
+  StreamSubscription? _notifSubscription;
   int _promptFeedKey = 0;
 
   bool _hasAnsweredToday = true;
+  bool _hasDailyQuestion = false; // to prevent hiding chat if no daily question has ever been sent
 
   List<Message> _messages = [];
   bool _hasMore = true;
   User? _currentUser;
+  Timer? _typingTimer;
+  final Map<String, Timer> _typingTimers = {};
   Set<String> _typingUsers = {};
 
   @override
@@ -99,7 +107,6 @@ class _ChatPageState extends State<ChatPage> {
         api: ApiClient(),
       );
 
-      // listen for live daily question push if the user has chat open when it runs
       _dqPushSubscription = _dqService.onDailyQuestion().listen((dq) {
         if (!mounted) return;
         setState(() {
@@ -107,10 +114,11 @@ class _ChatPageState extends State<ChatPage> {
         });
       });
       
-      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((date) {
+      _dqAnswerUpdateSubscription = _dqService.onAnswerUpdate().listen((data) {
         if (!mounted) return;
-        // refetch answers so the new one appears in the prompt section
-        if (_hasAnsweredToday) _loadPromptSection();
+        setState(() {
+          _promptFeedKey++; 
+        });
       });
 
       setState(() {
@@ -120,14 +128,27 @@ class _ChatPageState extends State<ChatPage> {
       // join socket room to receive live messages
       await _chatController.joinRoom();
 
+      if (_currentUser != null) {
+        NotificationService.instance.markChatRead(
+          chatId: widget.chatId,
+          userId: user.uid,
+        );
+      }
+
       // subscribe to incoming msg stream
-      _messageSubscription = _chatController.onReceiveMessage().listen((
-        message,
-      ) {
+      _messageSubscription = _chatController.onReceiveMessage().listen((message) {
         setState(() {
           _messages.add(message);
         });
         _scrollToBottom();
+
+        // clear unread immediately if user has chat open
+        if (_currentUser != null) {
+          NotificationService.instance.markChatRead(
+            chatId: widget.chatId,
+            userId: _currentUser!.uid,
+          );
+        }
       });
 
       _typingSubscription = _chatController.onUserTyping().listen((data) {
@@ -135,25 +156,37 @@ class _ChatPageState extends State<ChatPage> {
         final isTyping = data['isTyping'] as bool;
 
         if (isTyping) {
-          setState(() {
-            _typingUsers.add(userId);
+          setState(() => _typingUsers.add(userId));
+            
+          // auto-clear after 3s in case stop event is missed
+          _typingTimers[userId]?.cancel();
+          _typingTimers[userId] = Timer(const Duration(seconds: 3), () {
+            setState(() => _typingUsers.remove(userId));
           });
         } else {
-          setState(() {
-            _typingUsers.remove(userId);
-          });
+          _typingTimers[userId]?.cancel();
+          setState(() => _typingUsers.remove(userId));
         }
       });
 
-      // check if user needs to answer today's prompt
+      _notifSubscription = notifService.onPendingQuestionUpdate().listen((data) {
+        if (!mounted) return;
+        if (data['chatId'] != widget.chatId) return;
+        setState(() {
+          _hasDailyQuestion = true;
+          _hasAnsweredToday = false;
+        });
+      });
+
+
       final alreadyAnswered = await _dqService.getTodaysQuestion(widget.chatId);
       setState(() {
+        _hasDailyQuestion = alreadyAnswered != null;
         _hasAnsweredToday =
             alreadyAnswered == null || alreadyAnswered.hasAnswered;
       });
-      // error listener
       _messageErrorSubscription = _chatController.onMessageError().listen((e) {
-        if (!mounted) return; // if widget was disposed
+        if (!mounted) return; 
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
@@ -233,6 +266,12 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  // username helper for displaying typing indicator
+  String _getUsername(String userId) {
+    final match = widget.participants.where((p) => p.uid == userId).firstOrNull;
+    return match?.username ?? 'Someone';
+  }
+
   Future<void> _sendMessage() async {
     if (_currentUser == null) return;
 
@@ -241,6 +280,11 @@ class _ChatPageState extends State<ChatPage> {
 
     _messageController.clear();
 
+    // clear typing indicators on send
+    _typingTimer?.cancel();
+    _model.isTyping = false;
+    _chatController.sendTypingIndicator(false);
+
     // send message, no need to await. server broadcasts back to the room
     _chatController.sendMessage(content);
   }
@@ -248,11 +292,30 @@ class _ChatPageState extends State<ChatPage> {
   void _onTypingChanged(String text) {
     if (_currentUser == null) return;
     final isTyping = text.isNotEmpty;
-    setState(() {});
-    if (isTyping != _model.isTyping) {
-      _model.isTyping = isTyping;
-      _chatController.sendTypingIndicator(isTyping);
+    
+    if (isTyping) {
+      // emit typing start only once per burst, not on every keystroke to prevent event flooding
+      if (!_model.isTyping) {
+        _model.isTyping = true;
+        _chatController.sendTypingIndicator(true);
+      }
+      // reset timer each keystroke, stop after 2s of no input
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 2), () {
+        _model.isTyping = false;
+        _chatController.sendTypingIndicator(false);
+      });
+    } else {
+      // input cleared, stop immediately
+      _typingTimer?.cancel();
+      if (_model.isTyping) {
+        if (_model.isTyping) {
+          _model.isTyping = false;
+          _chatController.sendTypingIndicator(false);
+        }
+      }
     }
+    setState(() {});
   }
 
   Future<void> _showLeaveConfirmation() async {
@@ -300,16 +363,29 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  /// TODO (PLACEHOLDER) Forces the Daily Question section to refresh by updating its key.
+  void _loadPromptSection() {
+    if (!mounted) return;
+    setState(() {
+      _promptFeedKey++;
+    });
+  }
+
   @override
   void dispose() {
     _messageSubscription?.cancel(); // stop listening for new msgs
     _dqPushSubscription?.cancel();
     _dqAnswerUpdateSubscription?.cancel();
     _messageErrorSubscription?.cancel();
+    _typingSubscription?.cancel();
+    _notifSubscription?.cancel();
+    _typingTimer?.cancel();
+    for (final timer in _typingTimers.values) {
+      timer.cancel();
+    }
     _chatController.leaveRoom(); // leave socket room
     _messageController.dispose();
     _scrollController.dispose();
-    _typingSubscription?.cancel();
     super.dispose();
   }
 
@@ -434,75 +510,154 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildMessageList() {
-    if (_messages.isEmpty && !_hasAnsweredToday) {
-      return Center(
-        child: Text(
-          'No messages yet. Start the conversation!',
-          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-        ),
-      );
-    }
+Widget _buildMessageList() {
+  if (_messages.isEmpty && (!_hasAnsweredToday || !_hasDailyQuestion)) {
+    return Center(
+      child: Text(
+        'No messages yet. Start the conversation!',
+        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+      ),
+    );
+  }
 
-    List<Widget> items = [];
-    bool promptAdded = false;
+  return FutureBuilder<DateTime?>(
+    future: _getPromptTimestamp(),
+    builder: (context, snapshot) {
+      List<Widget> items = [];
+      bool promptAdded = false;
+      final promptTime = snapshot.data;
 
-    for (int i = 0; i < _messages.length; i++) {
-      final message = _messages[i];
+      for (int i = 0; i < _messages.length; i++) {
+        final message = _messages[i];
 
-      if (!promptAdded && _hasAnsweredToday && _currentUser != null && i == 2) {
+        if (!promptAdded && 
+            _hasAnsweredToday && 
+            _hasDailyQuestion && 
+            _currentUser != null &&
+            promptTime != null) {
+        
+          if (message.timestamp.isAfter(promptTime)) {
+            items.add(
+              PromptResponseFeed(
+                key: ValueKey(_promptFeedKey),
+                chatId: widget.chatId,
+                currentUserId: _currentUser!.uid,
+                dqService: _dqService,
+                onLoaded: _scrollToBottom, 
+              ),
+            );
+            promptAdded = true;
+          }
+        }
+
+        final showTimestamp =
+            i == _messages.length - 1 ||
+            _messages[i + 1].timestamp.difference(message.timestamp).inMinutes.abs() >=
+                1;
+
+        final isFirstInGroup =
+            i == 0 || message.senderId != _messages[i - 1].senderId;
+
+        items.add(
+          Column(
+            children: [
+              _buildMessageBubble(message, isFirstInGroup),
+              if (showTimestamp) _buildTimestamp(message.timestamp),
+              SizedBox(height: AppSpacing.sm),
+            ],
+          ),
+        );
+      }
+
+      if (!promptAdded && _hasAnsweredToday && _hasDailyQuestion && _currentUser != null) {
         items.add(
           PromptResponseFeed(
             key: ValueKey(_promptFeedKey),
             chatId: widget.chatId,
             currentUserId: _currentUser!.uid,
             dqService: _dqService,
+            onLoaded: _scrollToBottom, 
           ),
         );
-        promptAdded = true;
       }
 
-      final showTimestamp =
-          i == _messages.length - 1 ||
-          _messages[i + 1].timestamp.difference(message.timestamp).inMinutes >=
-              1;
-
-      final isFirstInGroup =
-          i == 0 || message.senderId != _messages[i - 1].senderId;
-
-      items.add(
-        Column(
-          children: [
-            _buildMessageBubble(message, isFirstInGroup),
-            if (showTimestamp) _buildTimestamp(message.timestamp),
-            SizedBox(height: AppSpacing.sm),
-          ],
-        ),
+      return ListView.builder(
+        controller: _scrollController,
+        padding: EdgeInsets.all(AppSpacing.md),
+        itemCount: items.length,
+        itemBuilder: (context, index) => items[index],
       );
-    }
+    },
+  );
+}
 
-    // If prompt wasn't added yet and should be shown, add at end
-    if (!promptAdded && _hasAnsweredToday && _currentUser != null) {
-      items.add(
-        PromptResponseFeed(
-          key: ValueKey(_promptFeedKey),
-          chatId: widget.chatId,
-          currentUserId: _currentUser!.uid,
-          dqService: _dqService,
-        ),
-      );
+Future<DateTime?> _getPromptTimestamp() async {
+  if (!_hasAnsweredToday || !_hasDailyQuestion || _currentUser == null) return null;
+  
+  try {
+    final controller = DailyPromptController(
+      _dqService,
+      widget.chatId,
+      _currentUser!.uid,
+    );
+    final result = await controller.getTodaysResponses();
+    
+    if (result['success']) {
+      final responsesList = result['responses'] as List?;
+      if (responsesList == null || responsesList.isEmpty) return null;
+      
+      final responses = responsesList
+          .whereType<PromptResponse>()
+          .toList();
+      
+      if (responses.isEmpty) return null;
+      
+      // return the most recent response timestamp
+      DateTime? latest;
+      for (final response in responses) {
+        if (latest == null || response.answeredAt.isAfter(latest)) {
+          latest = response.answeredAt;
+        }
+      }
+      return latest;
     }
+  } catch (e) {
+    print('Failed to get prompt timestamp: $e');
+  }
+  return null;
+}
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.all(AppSpacing.md),
-      itemCount: items.length,
-      itemBuilder: (context, index) => items[index],
+  Widget _buildChatContent() {
+    return Column(
+      children: [
+        Expanded(child: _buildMessageList()),
+        if (_typingUsers.isNotEmpty) _buildTypingIndicator(),
+      ]
     );
   }
 
-  Widget _buildChatContent() {
-    return Column(children: [Expanded(child: _buildMessageList())]);
+  Widget _buildTypingIndicator() {
+    final String text;
+    if (_typingUsers.length == 1) {
+      text = '${_getUsername(_typingUsers.first)} is typing...';
+    } else {
+      text = 'Multiple people are typing...';
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: AppTextStyles.label.copyWith(
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildMessageBubble(Message message, bool isFirstInGroup) {
@@ -575,19 +730,22 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildTimestamp(DateTime timestamp) {
+    final local = timestamp.toLocal();
     final now = DateTime.now();
-    final difference = now.difference(timestamp);
+
+    final today = DateTime(now.year, now.month, now.day);
+    final msgDay = DateTime(local.year, local.month, local.day);
+    final dayDiff = today.difference(msgDay).inDays;
+
+    final time = '${local.hour}:${local.minute.toString().padLeft(2,'0')}';
 
     String timeText;
-    if (difference.inDays == 0) {
-      timeText =
-          '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-    } else if (difference.inDays == 1) {
-      timeText =
-          'Yesterday ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+    if (dayDiff == 0) {
+      timeText = time;
+    } else if (dayDiff == 1) {
+      timeText = 'Yesterday $time';
     } else {
-      timeText =
-          '${timestamp.month}/${timestamp.day} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+      timeText = '${local.month}/${local.day} $time';
     }
 
     return Center(
