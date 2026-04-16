@@ -381,6 +381,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                   children: [
                     if (!model
                         .isEditingQuestionPreferences) //just label is not editing
+                                           
                       Text(
                         /*currentChat.fineGrainControl*/ model
                                 .fineGrainControlEdit
@@ -406,7 +407,9 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
 
                     if (model.isEditingQuestionPreferences) //if editing
-                      Text(
+                     // AURI EDIT: wrap text in Flexible to avoid overflow 
+                     Flexible( 
+                      child: Text(
                         "Fine-grain Question Control", //without on/off
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 16.0,
@@ -414,6 +417,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                         ),
                         textAlign: TextAlign.left,
                       ),
+                     ),
 
                     if (model.isEditingQuestionPreferences) //if editing, toggle
                       Transform.scale(
