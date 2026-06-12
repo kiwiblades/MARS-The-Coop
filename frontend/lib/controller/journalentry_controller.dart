@@ -1,4 +1,4 @@
-import 'package:frontend/services/journalentry_service.dart';
+import '../services/journalentry_service.dart';
 import '../model/journalentry_model.dart';
 
 class JournalController {

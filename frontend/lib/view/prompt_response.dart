@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/daily_question_service.dart';
 import '../constants.dart';
 import '../controller/prompt_controller.dart';
 import '../model/prompt_model.dart';
 import '../model/pigeon.dart';
+import '../services/daily_question_service.dart';
 
 class PromptResponseFeed extends StatefulWidget {
   final String chatId;

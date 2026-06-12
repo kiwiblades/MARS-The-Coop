@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/services/user_service.dart';
-import 'package:frontend/view/chat_page.dart';
-import 'package:frontend/view/createChat_screen.dart';
+import '../services/chatroom_service.dart';
+import '../services/user_service.dart';
+import '../view/chat_page.dart';
+import '../view/createChat_screen.dart';
 
 class CreateChatController {
   CreateChatScreenState state;

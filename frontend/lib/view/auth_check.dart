@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/socket_client.dart';
-import 'package:frontend/services/token_manager.dart';
-import 'package:frontend/view/app_shell.dart';
-import 'package:frontend/view/mail_screen.dart';
-import 'package:frontend/view/signup_page.dart';
+import '../services/socket_client.dart';
+import '../services/token_manager.dart';
+import 'app_shell.dart';
+import 'mail_screen.dart';
+import 'signup_page.dart';
 
 class AuthCheck extends StatelessWidget {
   const  AuthCheck({super.key});

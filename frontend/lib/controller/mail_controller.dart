@@ -1,13 +1,12 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/model/profile_model.dart';
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/services/notification_service.dart';
-import 'package:frontend/services/user_service.dart';
-import 'package:frontend/view/chat_page.dart';
-import 'package:frontend/view/mail_screen.dart';
+import '../model/chatroom.dart';
+import '../model/profile_model.dart';
+import '../services/chatroom_service.dart';
+import '../services/notification_service.dart';
+import '../services/user_service.dart';
+import '../view/chat_page.dart';
+import '../view/mail_screen.dart';
 
 class MailController {
   MailScreenState state;

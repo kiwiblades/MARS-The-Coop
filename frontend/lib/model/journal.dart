@@ -1,4 +1,4 @@
-import 'package:frontend/model/profile_model.dart';
+import 'profile_model.dart';
 
 class Journal {
   final User subject; //the user the journal is about

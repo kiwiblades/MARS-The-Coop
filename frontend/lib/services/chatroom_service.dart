@@ -2,9 +2,9 @@
   Calls backend /chatroom endpoints.
 */
 
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/model/profile_model.dart';
-import 'package:frontend/services/api_client.dart';
+import '../model/chatroom.dart';
+import '../model/profile_model.dart';
+import 'api_client.dart';
 
 class ChatroomService {
   final ApiClient api;

@@ -1,21 +1,21 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/notification_service.dart';
-import 'package:frontend/services/socket_client.dart';
-import 'package:frontend/services/token_manager.dart';
-import 'package:frontend/view/addChat_screen.dart';
-import 'package:frontend/view/auth_check.dart';
-import 'package:frontend/view/app_shell.dart';
-import 'package:frontend/view/createChat_screen.dart';
-import 'package:frontend/view/mail_screen.dart';
-import 'package:frontend/view/myCoop_screen.dart';
-import 'package:frontend/view/profilePicSelection_screen.dart';
-import 'package:frontend/view/profile_screen.dart';
-import 'package:frontend/view/resetPassword_screen.dart';
-import 'package:frontend/view/signin_page.dart';
-import 'package:frontend/view/signup_page.dart';
+import 'services/api_client.dart';
+import 'services/notification_service.dart';
+import 'services/socket_client.dart';
+import 'services/token_manager.dart';
+import 'view/addChat_screen.dart';
+import 'view/auth_check.dart';
+import 'view/app_shell.dart';
+import 'view/createChat_screen.dart';
+import 'view/mail_screen.dart';
+import 'view/myCoop_screen.dart';
+import 'view/profilePicSelection_screen.dart';
+import 'view/profile_screen.dart';
+import 'view/resetPassword_screen.dart';
+import 'view/signin_page.dart';
+import 'view/signup_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

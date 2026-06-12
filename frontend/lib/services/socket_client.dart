@@ -6,9 +6,9 @@
 */
 
 import 'dart:async';
-import 'package:frontend/services/api_client.dart';
+import 'api_client.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:frontend/services/token_manager.dart';
+import 'token_manager.dart';
 import '../config/env.dart';
 
 class SocketClient {

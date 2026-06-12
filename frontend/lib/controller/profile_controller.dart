@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/socket_client.dart';
-import 'package:frontend/services/user_service.dart';
-import 'package:frontend/view/profilePicSelection_screen.dart';
-import 'package:frontend/view/profile_screen.dart';
+import '../services/socket_client.dart';
+import '../services/user_service.dart';
+import '../view/profilePicSelection_screen.dart';
+import '../view/profile_screen.dart';
 
 class ProfileController {
   ProfileScreenState state;

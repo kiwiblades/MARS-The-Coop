@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/controller/profile_controller.dart';
-import 'package:frontend/model/pigeon.dart';
-import 'package:frontend/model/profile_model.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/user_service.dart';
+import '../controller/profile_controller.dart';
+import '../model/pigeon.dart';
+import '../model/profile_model.dart';
+import '../services/api_client.dart';
+import '../services/user_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   static const String routeName = '/profileScreen';

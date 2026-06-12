@@ -3,9 +3,9 @@
   Uses SocketClient for connection
 */
 
-import 'package:frontend/model/chat_model.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/socket_client.dart';
+import '../model/chat_model.dart';
+import 'api_client.dart';
+import 'socket_client.dart';
 
 class MessageService {
   final SocketClient socket;

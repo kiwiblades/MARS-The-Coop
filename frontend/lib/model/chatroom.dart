@@ -1,4 +1,4 @@
-import 'package:frontend/model/profile_model.dart';
+import 'profile_model.dart';
 
 //enum for possible relationship types a chat can fall under
 enum RelationshipType { acquaintances, family, friends, romantic }

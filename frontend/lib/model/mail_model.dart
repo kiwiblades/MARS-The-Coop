@@ -1,5 +1,5 @@
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/model/profile_model.dart';
+import 'chatroom.dart';
+import 'profile_model.dart';
 
 class MailModel {
   List<Chatroom>? chatroomList; //chatroomList should equal all the chatrooms the user is in

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/auth_service.dart';
-import 'package:frontend/view/resetPassword_screen.dart';
-import 'package:frontend/view/signin_page.dart';
+import '../services/auth_service.dart';
+import '../view/resetPassword_screen.dart';
+import '../view/signin_page.dart';
 
 class ResetPasswordController {
   ResetPasswordScreenState state;

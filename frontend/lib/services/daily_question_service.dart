@@ -3,10 +3,10 @@
   SocketClient for real-time events and ApiClient for REST API
 */
 
-// organized daily question info
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/socket_client.dart';
+import 'api_client.dart';
+import 'socket_client.dart';
 
+// organized daily question info
 class DailyQuestionData {
   final String dailyQuestionId;
   final String question;

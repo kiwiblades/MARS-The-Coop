@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/controller/resetPassword_controller.dart';
-import 'package:frontend/services/auth_service.dart';
+import '../controller/resetPassword_controller.dart';
+import '../services/auth_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   static const String routeName = '/resetPasswordScreen';

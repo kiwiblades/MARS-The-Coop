@@ -4,8 +4,8 @@
 */
 
 import 'dart:convert';
-import 'package:frontend/services/auth_service.dart';
-import 'package:frontend/services/token_manager.dart';
+import 'auth_service.dart';
+import 'token_manager.dart';
 import 'package:http/http.dart' as http;
 import '../config/env.dart';
 

@@ -5,7 +5,7 @@
   refresh and retry one time.
 */
 
-import 'package:frontend/services/api_client.dart';
+import 'api_client.dart';
 import '../model/profile_model.dart';
 
 class UserService {

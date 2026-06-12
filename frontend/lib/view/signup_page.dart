@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/auth_service.dart';
-import 'package:frontend/services/token_manager.dart';
-import '../constants.dart';
 import 'signin_page.dart';
+import '../constants.dart';
 import '../controller/auth_controller.dart';
+import '../services/auth_service.dart';
+import '../services/token_manager.dart';
 
 class SignupPage extends StatefulWidget {
   static const String routeName = '/signupScreen';

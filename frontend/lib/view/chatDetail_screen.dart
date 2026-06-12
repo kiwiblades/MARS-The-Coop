@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/controller/chatDetail_controller.dart';
-import 'package:frontend/model/chatDetail_model.dart';
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/model/profile_model.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/services/user_service.dart';
+import '../constants.dart';
+import '../controller/chatDetail_controller.dart';
+import '../model/chatDetail_model.dart';
+import '../model/chatroom.dart';
+import '../model/profile_model.dart';
+import '../services/api_client.dart';
+import '../services/chatroom_service.dart';
+import '../services/user_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   static const String routeName = '/chatDetailScreen';

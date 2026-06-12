@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/controller/myCoop_controller.dart';
-import 'package:frontend/model/myCoop_model.dart';
-import 'package:frontend/model/pigeon.dart';
-import 'package:frontend/model/profile_model.dart';
+import '../constants.dart';
+import '../controller/myCoop_controller.dart';
+import '../model/myCoop_model.dart';
+import '../model/pigeon.dart';
+import '../model/profile_model.dart';
 
 class MyCoopScreen extends StatefulWidget {
   static const String routeName = '/myCoopScreen';

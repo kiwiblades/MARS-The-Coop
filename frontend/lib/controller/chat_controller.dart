@@ -1,5 +1,5 @@
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/services/message_service.dart';
+import '../services/chatroom_service.dart';
+import '../services/message_service.dart';
 import '../model/chat_model.dart';
 
 class ChatController {

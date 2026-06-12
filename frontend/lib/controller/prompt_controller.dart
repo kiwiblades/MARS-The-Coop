@@ -1,4 +1,4 @@
-import 'package:frontend/services/daily_question_service.dart';
+import '../services/daily_question_service.dart';
 import '../model/prompt_model.dart';
 
 class DailyPromptController {

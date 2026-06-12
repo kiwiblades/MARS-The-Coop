@@ -1,14 +1,13 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/controller/mail_controller.dart';
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/model/mail_model.dart';
-import 'package:frontend/model/pigeon.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/services/user_service.dart';
+import '../constants.dart';
+import '../controller/mail_controller.dart';
+import '../model/chatroom.dart';
+import '../model/mail_model.dart';
+import '../model/pigeon.dart';
+import '../services/api_client.dart';
+import '../services/chatroom_service.dart';
+import '../services/user_service.dart';
 
 class MailScreen extends StatefulWidget {
   static const String routeName = '/mailScreen';

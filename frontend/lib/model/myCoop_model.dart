@@ -1,5 +1,5 @@
-import 'package:frontend/model/journal.dart';
-import 'package:frontend/model/profile_model.dart';
+import 'journal.dart';
+import 'profile_model.dart';
 
 class MyCoopModel {
   List<Journal>? journalList;

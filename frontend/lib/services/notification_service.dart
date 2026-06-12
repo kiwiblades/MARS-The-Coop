@@ -3,13 +3,12 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:frontend/main.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/socket_client.dart';
-
+import '../main.dart';
+import 'api_client.dart';
+import 'socket_client.dart';
+import 'chatroom_service.dart';
 import '../view/chat_page.dart';
 import '../view/mail_screen.dart';
-import 'chatroom_service.dart';
 
 // handles background messages
 @pragma('vm:entry-point')

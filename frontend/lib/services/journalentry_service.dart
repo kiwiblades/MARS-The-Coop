@@ -1,4 +1,4 @@
-import 'package:frontend/services/api_client.dart';
+import 'api_client.dart';
 
 class JournalService {
   final ApiClient api;

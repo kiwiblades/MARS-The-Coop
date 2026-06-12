@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/journalentry_service.dart';
 import '../constants.dart';
 import '../controller/journalentry_controller.dart';
 import '../model/journalentry_model.dart';
 import '../model/pigeon.dart';
+import '../services/api_client.dart';
+import '../services/journalentry_service.dart';
 
 class JournalPage extends StatefulWidget {
   static const String routeName = '/journalPage';

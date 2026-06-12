@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/controller/appshell_controller.dart';
+import '../controller/appshell_controller.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;

@@ -1,4 +1,4 @@
-import 'package:frontend/model/chatroom.dart';
+import 'chatroom.dart';
 
 class ChatDetailModel {
   // The actual data object from the backend

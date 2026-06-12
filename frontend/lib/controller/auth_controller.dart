@@ -1,6 +1,6 @@
-import 'package:frontend/services/auth_service.dart';
-import 'package:frontend/services/notification_service.dart';
-import 'package:frontend/services/socket_client.dart';
+import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import '../services/socket_client.dart';
 
 class AuthController {
   final AuthService auth;

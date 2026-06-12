@@ -1,25 +1,24 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/services/daily_question_service.dart';
-import 'package:frontend/services/message_service.dart';
-import 'package:frontend/services/notification_service.dart';
-import 'package:frontend/services/socket_client.dart';
-import 'package:frontend/view/chatDetail_screen.dart';
-import 'package:frontend/view/mail_screen.dart';
-import 'package:frontend/view/prompt_modal.dart';
-import 'package:frontend/view/prompt_response.dart';
+import 'chatDetail_screen.dart';
+import 'mail_screen.dart';
+import 'prompt_modal.dart';
+import 'prompt_response.dart';
 import '../constants.dart';
 import '../controller/chat_controller.dart';
+import '../controller/prompt_controller.dart';
+import '../model/chatroom.dart';
 import '../model/chat_model.dart';
 import '../model/pigeon.dart';
-import '../services/user_service.dart';
 import '../model/profile_model.dart';
-import '../controller/prompt_controller.dart';
 import '../model/prompt_model.dart';
+import '../services/api_client.dart';
+import '../services/chatroom_service.dart';
+import '../services/daily_question_service.dart';
+import '../services/message_service.dart';
+import '../services/notification_service.dart';
+import '../services/socket_client.dart';
+import '../services/user_service.dart';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';

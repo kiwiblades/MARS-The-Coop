@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/model/journal.dart';
-import 'package:frontend/model/profile_model.dart';
-import 'package:frontend/services/journalentry_service.dart';
-import 'package:frontend/view/myCoop_screen.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/view/journalentry_page.dart';
+import '../model/journal.dart';
+import '../model/profile_model.dart';
+import '../services/journalentry_service.dart';
+import '../services/api_client.dart';
+import '../view/myCoop_screen.dart';
+import '../view/journalentry_page.dart';
 
 class MyCoopController {
   MyCoopScreenState state;

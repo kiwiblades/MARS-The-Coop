@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/controller/addChat_controller.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/chatroom_service.dart';
+import '../constants.dart';
+import '../controller/addChat_controller.dart';
+import '../services/api_client.dart';
+import '../services/chatroom_service.dart';
 
 class AddChatScreen extends StatefulWidget {
   static const String routeName = '/addChatScreen';

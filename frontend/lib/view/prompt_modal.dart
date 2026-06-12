@@ -1,11 +1,10 @@
 import 'dart:async';
-
-import 'package:flutter/material.dart';
-import 'package:frontend/services/daily_question_service.dart';
 import 'dart:ui';
+import 'package:flutter/material.dart';
 import '../constants.dart';
 import '../controller/prompt_controller.dart';
 import '../model/prompt_model.dart';
+import '../services/daily_question_service.dart';
 
 class DailyPromptModal extends StatefulWidget {
   final String chatId;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/controller/profilepicselection_controller.dart';
-import 'package:frontend/model/profilePicSelection_model.dart';
-import 'package:frontend/services/api_client.dart';
-import 'package:frontend/services/user_service.dart';
+import '../controller/profilepicselection_controller.dart';
+import '../model/profilePicSelection_model.dart';
+import '../services/api_client.dart';
+import '../services/user_service.dart';
 
 class ProfilePicSelectionScreen extends StatefulWidget {
   static const String routeName = '/profilePicSelectionScreen';

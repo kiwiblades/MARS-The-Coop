@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/model/chatroom.dart';
-import 'package:frontend/model/profile_model.dart';
-import 'package:frontend/services/user_service.dart';
-import 'package:frontend/view/chatDetail_screen.dart';
-import 'package:frontend/services/chatroom_service.dart';
-import 'package:frontend/view/mail_screen.dart';
+import '../model/chatroom.dart';
+import '../model/profile_model.dart';
+import '../services/user_service.dart';
+import '../services/chatroom_service.dart';
+import '../view/chatDetail_screen.dart';
+import '../view/mail_screen.dart';
 
 class ChatDetailController {
   ChatDetailScreenState state;
