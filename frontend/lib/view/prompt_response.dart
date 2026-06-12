@@ -12,12 +12,12 @@ class PromptResponseFeed extends StatefulWidget {
   final VoidCallback? onLoaded;
 
   const PromptResponseFeed({
-    Key? key,
+    super.key,
     required this.chatId,
     required this.currentUserId,
     required this.dqService,
     this.onLoaded,
-  }) : super(key: key);
+  });
 
   @override
   State<PromptResponseFeed> createState() => _PromptResponseFeedState();
@@ -84,9 +84,9 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
     return Container(
       margin: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,7 +94,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
           Container(
             padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(AppBorderRadius.lg),
                 topRight: Radius.circular(AppBorderRadius.lg),

@@ -74,9 +74,9 @@ class MyApp extends StatelessWidget {
         SigninPage.routeName: (_) => const SigninPage(),
 
         // protected
-        MailScreen.routeName: (_) => RequireAuth(child: AppShell(child: MailScreen(), currentRoute: MailScreen.routeName)),
-        MyCoopScreen.routeName: (_) => RequireAuth(child: AppShell(child: MyCoopScreen(), currentRoute: MyCoopScreen.routeName)),
-        ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(child: ProfileScreen(), currentRoute: ProfileScreen.routeName)),
+        MailScreen.routeName: (_) => RequireAuth(child: AppShell(currentRoute: MailScreen.routeName, child: MailScreen())),
+        MyCoopScreen.routeName: (_) => RequireAuth(child: AppShell(currentRoute: MyCoopScreen.routeName, child: MyCoopScreen())),
+        ProfileScreen.routeName: (_) => RequireAuth(child: AppShell(currentRoute: ProfileScreen.routeName, child: ProfileScreen())),
         ProfilePicSelectionScreen.routeName: (_) => RequireAuth(child: const ProfilePicSelectionScreen()),
         
         ResetPasswordScreen.routeName: (_) => RequireAuth(child: const ResetPasswordScreen()),

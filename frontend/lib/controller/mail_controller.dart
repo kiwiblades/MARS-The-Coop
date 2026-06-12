@@ -146,6 +146,7 @@ class MailController {
     final chatroom = state.model.selectedChatroom!;
     try {
       await chatroomService.togglePin(chatroom.id);
+      if (!context.mounted) return;
       state.callSetState(() {
         chatroom.pinned = !chatroom.pinned; // reflect the change locally
       });

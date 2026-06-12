@@ -38,7 +38,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     controller.loadUser(); // fetch /user
   }
 
-  void callSetState(fn) => setState(fn);
+  void callSetState(VoidCallback fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +96,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                               child: ClipOval(
                                 child: Image.asset(
                                   profileImagePath,
-                                  //pigeon?.profile?? //default (i need to draw the default really quick) //TODO
                                   fit: BoxFit.cover,
                                 ),
                               ),

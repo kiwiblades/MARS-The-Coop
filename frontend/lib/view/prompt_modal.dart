@@ -13,12 +13,12 @@ class DailyPromptModal extends StatefulWidget {
   final VoidCallback onAnswerSubmitted;
 
   const DailyPromptModal({
-    Key? key,
+    super.key,
     required this.chatId,
     required this.currentUserId,
     required this.onAnswerSubmitted,
     required this.dqService,
-  }) : super(key: key);
+  });
 
   @override
   State<DailyPromptModal> createState() => _DailyPromptModalState();
@@ -87,6 +87,7 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
     });
 
     final result = await _controller.submitAnswer(answerText);
+    if (!mounted) return;
 
     if (!result['success']) {
       setState(() {
@@ -113,7 +114,7 @@ class _DailyPromptModalState extends State<DailyPromptModal> {
         // Blurred background
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(color: Colors.black.withOpacity(0.3)),
+          child: Container(color: Colors.black.withValues(alpha: 0.3)),
         ),
         
         // Prompt card - BOTTOM ALIGNED with TAB

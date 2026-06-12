@@ -53,7 +53,6 @@ class CreateChatController {
 
     print('validation passed');
     try {
-      // TODO: edit createChatroom to take: name(state.chatroomNameController),
       //relationship type(state.selectedRelationship),
       //fine-grain control one/off(state.fineGrainControlSwitch),
       //and question preferences (state.selectedQuestionTypes and selectedQuestionTopics) all relevant values are in "form controllers/values" section
@@ -68,6 +67,8 @@ class CreateChatController {
             ? state.selectedQuestionTypes.map((t) => t.name).toList()
             : [],
       );
+      if (!state.mounted) return;
+
       Navigator.of(state.context)
         ..pop() // pop createchatscreen
         ..pop() // pop add chat screen
@@ -87,11 +88,12 @@ class CreateChatController {
 
       // delay invite code popup so there's time to navigate to the chatroom
       Future.delayed(const Duration(milliseconds: 100), () {
+        if (!state.mounted) return; // the previous check doesn't cover the callback here, hence why it's checked again
         showCodePopup(state.context, chatroom.inviteCode);
       });
     } catch (e) {
       print('failed to create chatroom: $e');
-      // TODO: dispaly error
+      // TODO: display error
     }
 
     print('create pressed');

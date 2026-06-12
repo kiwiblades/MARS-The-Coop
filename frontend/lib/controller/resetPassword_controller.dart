@@ -64,6 +64,7 @@ class ResetPasswordController {
         await auth.changePassword(currentPassword: currentPassword, newPassword: newPassword);
         print('Password changed successfully');
         await auth.logout();
+        if (!state.mounted) return;
         Navigator.of(state.context).pushNamedAndRemoveUntil(
           SigninPage.routeName,
           (route) => false,

@@ -28,7 +28,7 @@ class ProfilePicSelectionScreenState extends State<ProfilePicSelectionScreen> {
     controller = ProfilePicSelectionController(this, users: users);
   }
 
-  void callSetState(fn) => setState(fn);
+  void callSetState(VoidCallback fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {

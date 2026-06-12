@@ -31,14 +31,14 @@ class ChatPage extends StatefulWidget {
   final Chatroom chatroom;
 
   const ChatPage({
-    Key? key,
+    super.key,
     required this.chatId,
     required this.chatName,
     required this.participants,
     required this.membership,
     required this.chatroomService,
     required this.chatroom,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -72,7 +72,7 @@ class _ChatPageState extends State<ChatPage> {
   User? _currentUser;
   Timer? _typingTimer;
   final Map<String, Timer> _typingTimers = {};
-  Set<String> _typingUsers = {};
+  final Set<String> _typingUsers = {};
 
   @override
   void initState() {
@@ -336,58 +336,58 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {});
   }
 
-  Future<void> _showLeaveConfirmation() async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Leave Chat'),
-        content: Text(
-          widget.participants.length == 1
-              ? 'You are the last member. Leaving will delete this chat.'
-              : 'Are you sure you want to leave this chat?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Leave', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
-    );
+  // Future<void> _showLeaveConfirmation() async {
+  //   final result = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text('Leave Chat'),
+  //       content: Text(
+  //         widget.participants.length == 1
+  //             ? 'You are the last member. Leaving will delete this chat.'
+  //             : 'Are you sure you want to leave this chat?',
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, false),
+  //           child: Text('Cancel'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, true),
+  //           child: Text('Leave', style: TextStyle(color: AppColors.error)),
+  //         ),
+  //       ],
+  //     ),
+  //   );
 
-    if (result == true) {
-      await _leaveChat();
-    }
-  }
+  //   if (result == true) {
+  //     await _leaveChat();
+  //   }
+  // }
 
-  Future<void> _leaveChat() async {
-    if (_currentUser == null) return;
+  // Future<void> _leaveChat() async {
+  //   if (_currentUser == null) return;
 
-    final result = await _chatController.leaveChat();
+  //   final result = await _chatController.leaveChat();
 
-    if (result['success']) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
-      );
-    }
-  }
+  //   if (result['success']) {
+  //     Navigator.pop(context);
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(SnackBar(content: Text('Left chat successfully')));
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed to leave chat: ${result['error']}')),
+  //     );
+  //   }
+  // }
 
-  /// TODO (PLACEHOLDER) Forces the Daily Question section to refresh by updating its key.
-  void _loadPromptSection() {
-    if (!mounted) return;
-    setState(() {
-      _promptFeedKey++;
-    });
-  }
+  // // Forces the Daily Question section to refresh by updating its key.
+  // void _loadPromptSection() {
+  //   if (!mounted) return;
+  //   setState(() {
+  //     _promptFeedKey++;
+  //   });
+  // }
 
   @override
   void dispose() {
@@ -465,7 +465,7 @@ class _ChatPageState extends State<ChatPage> {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.9),
+        color: AppColors.background.withValues(alpha: 0.9),
         border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
@@ -796,7 +796,7 @@ class _ChatPageState extends State<ChatPage> {
     return Container(
       padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.9),
+        color: AppColors.background.withValues(alpha: 0.9),
         border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(

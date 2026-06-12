@@ -64,8 +64,6 @@ class ChatDetailController {
     final newChatName = value?.trim();
     if (newChatName == null || newChatName.isEmpty) return;
 
-    // TODO: there's probably a better way to do this, fix later - POTENTIAL: copywith method on the Chatroom model
-
     // immediately update local model to reflect changes
     final updated = state.model.currentChatroom!.copyWith(name: newChatName);
     state.callSetState(() => state.model.currentChatroom = updated);
@@ -326,9 +324,9 @@ class ChatDetailController {
         // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
         // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
         try {
-          // 1. Backend Call
           await chatroomService.banUser(chatroomId: _chatId, userId: user.uid);
-          // 2. Update Local State
+          if (!state.mounted) return;
+
           // Remove from participants and add to bannedUsers
           final updated = state.model.currentChatroom!.copyWith(
             participants: state.model.currentChatroom!.participants
@@ -356,12 +354,11 @@ class ChatDetailController {
           // state.model also needs to be updated (same reasons as above)
 
           try {
-            // 1. Backend Call
-            // Note: Ensure your service has this method or use updateSettings
             await chatroomService.promoteUser(chatroomId: _chatId, userId: user.uid);
 
-            // 2. Update Local State (Manual Rebuild)
             final refreshed = await chatroomService.getChatroomById(_chatId);
+            if (!state.mounted) return;
+
             state.callSetState(() => state.model.currentChatroom = refreshed);
             state.widget.onSettingsChanged?.call(refreshed);
 
@@ -382,17 +379,15 @@ class ChatDetailController {
       //for possible later expansion
       case 'unban':
         print('unban ${user.username}');
-        // backend integration
         // The chatroom should be updated, but bannedUsers attribute should be updated to be accurate (add user)
         // the state.model also needs to be updated so the view is correct (should happen within a state.callSetState function call)
         try {
-          // 1. Backend Call
           await chatroomService.unbanUser(
             chatroomId: _chatId,
             userId: user.uid,
           );
+          if (!state.mounted) return;
 
-          // 2. Update Local State
           // Filter out the user from the current banned list
           final updated = state.model.currentChatroom!.copyWith(
             bannedUsers: state.model.currentChatroom!.bannedUsers
@@ -431,6 +426,8 @@ class ChatDetailController {
     print('delete chat called');
     try {
       await chatroomService.deleteChatroom(_chatId);
+      if (!state.mounted) return;
+
       // Navigate back to mail screen
       Navigator.of(state.context).pushNamedAndRemoveUntil(
         MailScreen.routeName,
@@ -461,6 +458,8 @@ class ChatDetailController {
     print('leave chat called');
     try {
       await chatroomService.leaveChatroom(_chatId);
+      if (!state.mounted) return;
+
       // Pop twice (back to main mail screen)
       Navigator.of(
         state.context,

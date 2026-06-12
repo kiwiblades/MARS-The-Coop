@@ -8,7 +8,7 @@ import '../services/token_manager.dart';
 
 class SigninPage extends StatefulWidget {
   static const String routeName = '/signinScreen';
-  const SigninPage({Key? key}) : super(key: key);
+  const SigninPage({super.key});
 
   @override
   State<SigninPage> createState() => _SigninPageState();
@@ -45,10 +45,9 @@ class _SigninPageState extends State<SigninPage> {
         username: _usernameController.text,
         password: _passwordController.text,
       );
+      if (!mounted) return;
 
       if (result['success']) {
-        if (!mounted) return;
-
         Navigator.pushNamedAndRemoveUntil(
           context,
           ProfileScreen.routeName,

@@ -7,7 +7,7 @@ import '../services/token_manager.dart';
 
 class SignupPage extends StatefulWidget {
   static const String routeName = '/signupScreen';
-  const SignupPage({Key? key}) : super(key: key);
+  const SignupPage({super.key});
 
   @override
   State<SignupPage> createState() => _SignupPageState();
@@ -50,6 +50,7 @@ class _SignupPageState extends State<SignupPage> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+      if (!mounted) return;
       
       if (result['success']) {
               Navigator.pushReplacement(

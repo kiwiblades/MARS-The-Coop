@@ -37,9 +37,10 @@ class AddChatController {
         final joined = chatrooms.firstWhere(
           (c) => c.inviteCode.toUpperCase() == state.chatroomCodeController.text.trim().toUpperCase(),
         );
+        if (!state.mounted) return;
 
         Navigator.of(state.context).pop(); // return to mail screen
-        Navigator.of(state.context).push( // push the newly joined chay
+        Navigator.of(state.context).push( // push the newly joined chat
           MaterialPageRoute(
             builder: (_) => ChatPage(
               chatId: joined.id,

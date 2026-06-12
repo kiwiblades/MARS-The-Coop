@@ -67,7 +67,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
     }
   }
 
-  void callSetState(fn) => setState(fn);
+  void callSetState(VoidCallback fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {
@@ -512,8 +512,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                             ),
                                           ),
                                         );
-                                      })
-                                      .toList(),
+                                      }),
                                 ],
                               ),
                             ),
@@ -548,8 +547,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                             ),
                                           ),
                                         );
-                                      })
-                                      .toList(),
+                                      }),
                                 ],
                               ),
                             ),
@@ -916,7 +914,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),
@@ -1054,7 +1052,7 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                               ],
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),
@@ -1197,7 +1195,7 @@ Future<bool?> showLeaveConfirmationPopUp(
 }
 
 class LeaveConfirmationPopUp extends StatelessWidget {
-  final numberOfParticipants;
+  final int numberOfParticipants;
   const LeaveConfirmationPopUp({super.key, required this.numberOfParticipants});
 
   @override

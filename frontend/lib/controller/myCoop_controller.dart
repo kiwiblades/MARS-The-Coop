@@ -18,7 +18,7 @@ class MyCoopController {
   Future<void> loadJournalSubjects() async {
     try {
       final response = await journalService.getJournalSubjects();
-      state.setState(() {
+      state.callSetState(() {
         state.model.journalList = response
             .map((data) => Journal.fromJson(data))
             .toList();
@@ -32,7 +32,7 @@ class MyCoopController {
   Future<void> loadEligibleFriends() async {
     try {
       final response = await journalService.getEligibleSubjects();
-      state.setState(() {
+      state.callSetState(() {
         state.model.friendList = response
             .map((data) => User.fromJson(data))
             .toList();

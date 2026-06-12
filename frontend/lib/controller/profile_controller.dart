@@ -184,6 +184,7 @@ class ProfileController {
     try {
       // Call backend to invalidate the session/token
       await users.signout();
+      if (!state.mounted) return;
 
       SocketClient.instance.disconnect(); // disconnect from socket
       // Confirm status and redirect

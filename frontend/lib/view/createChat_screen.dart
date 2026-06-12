@@ -44,7 +44,7 @@ class CreateChatScreenState extends State<CreateChatScreen> {
     controller = CreateChatController(this, chatroomService: chatroomService, userService: userService);
   }
 
-  void callSetState(fn) => setState(fn);
+  void callSetState(VoidCallback fn) => setState(fn);
 
   @override
   void dispose() {

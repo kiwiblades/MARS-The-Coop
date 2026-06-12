@@ -40,7 +40,7 @@ class MailScreenState extends State<MailScreen> {
     controller.initNotificationListeners(); // start listening for live badge updates
   }
 
-  void callSetState(fn) => setState(fn);
+  void callSetState(VoidCallback fn) => setState(fn);
   int get _totalUnreadMessages {
     if (model.chatroomList == null) return 0;
     return model.chatroomList!.fold(0, (sum, chat) => sum + chat.unreadCount);
@@ -418,7 +418,7 @@ class MailScreenState extends State<MailScreen> {
                   width: 80,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.darkBrown.withOpacity(0.4),
+                    color: AppColors.darkBrown.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

@@ -15,11 +15,11 @@ class JournalPage extends StatefulWidget {
   final int pigeonId; // pigeon id for profile image
 
   const JournalPage({
-    Key? key,
+    super.key,
     required this.subjectId,
     required this.userName,
     required this.pigeonId,
-  }) : super(key: key);
+  });
 
   @override
   State<JournalPage> createState() => _JournalPageState();
@@ -117,6 +117,7 @@ class _JournalPageState extends State<JournalPage> {
     });
 
     final result = await _controller.createEntry(content);
+    if (!mounted) return;
 
     if (result['success']) {
       _entryController.clear();
@@ -144,6 +145,7 @@ class _JournalPageState extends State<JournalPage> {
     });
 
     final result = await _controller.updateEntry(_editingEntryId!, content);
+    if (!mounted) return;
 
     if (result['success']) {
       setState(() {
@@ -164,6 +166,7 @@ class _JournalPageState extends State<JournalPage> {
       setState(() {
         _model.isSubmitting = false;
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('failed to save entry: ${result['error']}')),
       );
@@ -220,6 +223,7 @@ class _JournalPageState extends State<JournalPage> {
 
   Future<void> _deleteEntry(String entryId) async {
     final result = await _controller.deleteEntry(entryId);
+    if (!mounted) return;
 
     if (result['success']) {
       setState(() {
@@ -350,33 +354,33 @@ class _JournalPageState extends State<JournalPage> {
     );
   }
 
-  String _getDateKey(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
+  // String _getDateKey(DateTime timestamp) {
+  //   final now = DateTime.now();
+  //   final difference = now.difference(timestamp);
 
-    if (difference.inDays == 0) {
-      return 'today';
-    } else if (difference.inDays == 1) {
-      return 'yesterday';
-    } else {
-      return '${timestamp.month}/${timestamp.day}/${timestamp.year}';
-    }
-  }
+  //   if (difference.inDays == 0) {
+  //     return 'today';
+  //   } else if (difference.inDays == 1) {
+  //     return 'yesterday';
+  //   } else {
+  //     return '${timestamp.month}/${timestamp.day}/${timestamp.year}';
+  //   }
+  // }
 
-  Widget _buildDateHeader(String dateKey) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Center(
-        child: Text(
-          dateKey,
-          style: AppTextStyles.label.copyWith(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildDateHeader(String dateKey) {
+  //   return Padding(
+  //     padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+  //     child: Center(
+  //       child: Text(
+  //         dateKey,
+  //         style: AppTextStyles.label.copyWith(
+  //           fontSize: 12,
+  //           color: AppColors.textSecondary,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildEntryCard(JournalEntry entry) {
     final isEditing = _editingEntryId == entry.id;
@@ -523,9 +527,6 @@ class _JournalPageState extends State<JournalPage> {
   }
 
   String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
     final hour = timestamp.hour > 12
         ? timestamp.hour - 12
         : (timestamp.hour == 0 ? 12 : timestamp.hour);
@@ -538,39 +539,39 @@ class _JournalPageState extends State<JournalPage> {
     return '$date $time';
   }
 
-  void _showEntryOptions(JournalEntry entry) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.edit, color: AppColors.textPrimary),
-              title: Text('edit', style: AppTextStyles.body),
-              onTap: () {
-                Navigator.pop(context);
-                _startEditing(entry);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete, color: AppColors.error),
-              title: Text(
-                'delete',
-                style: AppTextStyles.body.copyWith(color: AppColors.error),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirmation(entry.id);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // void _showEntryOptions(JournalEntry entry) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     backgroundColor: AppColors.background,
+  //     builder: (context) => Container(
+  //       padding: EdgeInsets.all(AppSpacing.md),
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           ListTile(
+  //             leading: Icon(Icons.edit, color: AppColors.textPrimary),
+  //             title: Text('edit', style: AppTextStyles.body),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _startEditing(entry);
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: Icon(Icons.delete, color: AppColors.error),
+  //             title: Text(
+  //               'delete',
+  //               style: AppTextStyles.body.copyWith(color: AppColors.error),
+  //             ),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _showDeleteConfirmation(entry.id);
+  //             },
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildErrorView() {
     return Center(
@@ -596,7 +597,7 @@ class _JournalPageState extends State<JournalPage> {
     return Container(
       padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.9),
+        color: AppColors.background.withValues(alpha: 0.9),
         border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(

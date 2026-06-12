@@ -26,7 +26,7 @@ class AuthCheck extends StatelessWidget {
         // If session exists, go straight to "home" (just mail for now)
         if (loggedIn) {
           SocketClient.instance.connect(); // connect to socket on session restore
-          return AppShell(child: MailScreen(), currentRoute: MailScreen.routeName);
+          return AppShell(currentRoute: MailScreen.routeName, child: MailScreen());
         }
 
         return const SignupPage();

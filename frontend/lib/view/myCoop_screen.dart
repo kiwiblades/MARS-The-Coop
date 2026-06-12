@@ -32,7 +32,7 @@ class MyCoopScreenState extends State<MyCoopScreen> {
     controller.loadEligibleFriends();
   }
 
-  void callSetState(fn) => setState(fn);
+  void callSetState(VoidCallback fn) => setState(fn);
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +159,7 @@ class MyCoopScreenState extends State<MyCoopScreen> {
 class FriendSelectionDialog extends StatefulWidget {
   final List<User> friends;
 
-  const FriendSelectionDialog({required this.friends});
+  const FriendSelectionDialog({super.key, required this.friends});
 
   @override
   State<FriendSelectionDialog> createState() => FriendSelectionDialogState();
