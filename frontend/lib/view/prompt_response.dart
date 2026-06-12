@@ -9,12 +9,14 @@ class PromptResponseFeed extends StatefulWidget {
   final String chatId;
   final String currentUserId;
   final DailyQuestionService dqService;
+  final VoidCallback? onLoaded;
 
   const PromptResponseFeed({
     Key? key,
     required this.chatId,
     required this.currentUserId,
     required this.dqService,
+    this.onLoaded,
   }) : super(key: key);
 
   @override
@@ -56,6 +58,7 @@ class _PromptResponseFeedState extends State<PromptResponseFeed> {
         _responses = responsesResult['responses'];
         _model.isLoading = false;
       });
+      widget.onLoaded?.call();
     } else {
       setState(() {
         _model.loadError = promptResult['error'] ?? responsesResult['error'];

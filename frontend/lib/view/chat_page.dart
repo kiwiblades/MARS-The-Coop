@@ -18,6 +18,8 @@ import '../model/chat_model.dart';
 import '../model/pigeon.dart';
 import '../services/user_service.dart';
 import '../model/profile_model.dart';
+import '../controller/prompt_controller.dart';
+import '../model/prompt_model.dart';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chatPage';
@@ -538,61 +540,111 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    List<Widget> items = [];
-    bool promptAdded = false;
+    return FutureBuilder<DateTime?>(
+      future: _getPromptTimestamp(),
+      builder: (context, snapshot) {
+        List<Widget> items = [];
+        bool promptAdded = false;
+        final promptTime = snapshot.data;
 
-    for (int i = 0; i < _messages.length; i++) {
-      final message = _messages[i];
+        for (int i = 0; i < _messages.length; i++) {
+          final message = _messages[i];
 
-      if (!promptAdded && _hasAnsweredToday && _hasDailyQuestion && _currentUser != null && i == 2) {
-        items.add(
-          PromptResponseFeed(
-            key: ValueKey(_promptFeedKey),
-            chatId: widget.chatId,
-            currentUserId: _currentUser!.uid,
-            dqService: _dqService,
-          ),
+          if (!promptAdded && 
+            _hasAnsweredToday && 
+            _hasDailyQuestion && 
+            _currentUser != null &&
+            promptTime != null) {
+
+            if (message.timestamp.isAfter(promptTime)) {
+              items.add(
+                PromptResponseFeed(
+                  key: ValueKey(_promptFeedKey),
+                  chatId: widget.chatId,
+                  currentUserId: _currentUser!.uid,
+                  dqService: _dqService,
+                  onLoaded: _scrollToBottom,
+                ),
+              );
+              promptAdded = true;
+            }
+          }
+
+          final showTimestamp =
+          i == _messages.length -1 ||
+          _messages[i+1].timestamp.difference(message.timestamp).inMinutes.abs() >=
+            1;
+          
+          final isFirstInGroup =
+            i == 0 || message.senderId != _messages[i-1].senderId;
+
+          items.add(
+            Column(
+              children: [
+                _buildMessageBubble(message, isFirstInGroup),
+                if (showTimestamp) _buildTimestamp(message.timestamp),
+                SizedBox(height: AppSpacing.sm),
+              ],
+            ),
+          );
+        }
+
+        if (!promptAdded && _hasAnsweredToday && _hasDailyQuestion && _currentUser != null) {
+          items.add(
+            PromptResponseFeed(
+              key: ValueKey(_promptFeedKey),
+              chatId: widget.chatId,
+              currentUserId: _currentUser!.uid,
+              dqService: _dqService,
+              onLoaded: _scrollToBottom,
+            ),
+          );
+        }
+
+        return ListView.builder(
+          controller: _scrollController,
+          padding: EdgeInsets.all(AppSpacing.md),
+          itemCount: items.length,
+          itemBuilder: (context, index) => items[index],
         );
-        promptAdded = true;
-      }
-
-      final showTimestamp =
-          i == _messages.length - 1 ||
-          _messages[i + 1].timestamp.difference(message.timestamp).inMinutes.abs() >=
-              1;
-
-      final isFirstInGroup =
-          i == 0 || message.senderId != _messages[i - 1].senderId;
-
-      items.add(
-        Column(
-          children: [
-            _buildMessageBubble(message, isFirstInGroup),
-            if (showTimestamp) _buildTimestamp(message.timestamp),
-            SizedBox(height: AppSpacing.sm),
-          ],
-        ),
-      );
-    }
-
-    // If prompt wasn't added yet and should be shown, add at end
-    if (!promptAdded && _hasAnsweredToday && _hasDailyQuestion && _currentUser != null) {
-      items.add(
-        PromptResponseFeed(
-          key: ValueKey(_promptFeedKey),
-          chatId: widget.chatId,
-          currentUserId: _currentUser!.uid,
-          dqService: _dqService,
-        ),
-      );
-    }
-
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.all(AppSpacing.md),
-      itemCount: items.length,
-      itemBuilder: (context, index) => items[index],
+      },
     );
+  }
+
+  Future<DateTime?> _getPromptTimestamp() async {
+    if (!_hasAnsweredToday || !_hasDailyQuestion || _currentUser == null) return null;
+  
+    try {
+      final controller = DailyPromptController(
+        _dqService,
+        widget.chatId,
+        _currentUser!.uid,
+      );
+      final result = await controller.getTodaysResponses();
+      
+      if (result['success']) {
+        final responsesList = result['responses'] as List?;
+        if (responsesList == null || responsesList.isEmpty) return null;
+        
+        final responses = responsesList
+            .whereType<PromptResponse>()
+            .toList();
+        
+        if (responses.isEmpty) return null;
+        
+        // return the most recent response timestamp
+        DateTime? latest;
+        for (final response in responses) {
+          if (latest == null || response.answeredAt.isAfter(latest)) {
+            latest = response.answeredAt;
+          }
+        }
+        return latest;
+      }
+    } catch (e) {
+      print('Failed to get prompt timestamp: $e');
+    }
+    return null;
   }
 
   Widget _buildChatContent() {

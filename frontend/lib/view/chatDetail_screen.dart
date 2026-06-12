@@ -406,13 +406,15 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
 
                     if (model.isEditingQuestionPreferences) //if editing
-                      Text(
-                        "Fine-grain Question Control", //without on/off
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 16.0,
-                          color: AppColors.darkBrown,
-                        ),
-                        textAlign: TextAlign.left,
+                      Flexible(
+                        child: Text(
+                            "Fine-grain Question Control", //without on/off
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: 16.0,
+                              color: AppColors.darkBrown,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
                       ),
 
                     if (model.isEditingQuestionPreferences) //if editing, toggle
@@ -798,15 +800,17 @@ class ChatDetailScreenState extends State<ChatDetailScreen> {
                                         color: AppColors.darkBrown,
                                       ),
 
-                                    Text(
-                                      user.username,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            fontSize: 20.0,
-                                            color: AppColors.darkBrown,
-                                          ),
+                                    Flexible(
+                                      child: Text(
+                                        user.username,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              fontSize: 20.0,
+                                              color: AppColors.darkBrown,
+                                            ),
+                                      ),
                                     ),
                                   ],
                                 ),
